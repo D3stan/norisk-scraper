@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modulo Assicurazione Eventi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Add custom styles here */
+    </style>
+</head>
+<body class="bg-gray-50 p-6">
+
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900">Chi sei?</h2>
+        
+        <form action="/your-backend-endpoint" method="POST">
+            <!-- Hidden Fields often required by the target system -->
+            <!-- You will need to populate these in your backend proxy -->
+            
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <div class="col-span-4 sm:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Iniziali</label>
+                    <input type="text" name="initials" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div class="col-span-4 sm:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700">Preposizione</label>
+                    <input type="text" name="preposition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div class="col-span-4 sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Cognome</label>
+                    <input type="text" name="last_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Telefono</label>
+                    <input type="tel" name="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700">Qual è il tuo ruolo?</label>
+                <select name="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
+                    <option value="">Seleziona...</option>
+                    <option value="event_organiser">Organizzatore Eventi</option>
+                    <option value="intermediary">Intermediario</option>
+                    <option value="proxy">Intermediario Affiliato</option>
+                    <option value="other">Altro</option>
+                </select>
+            </div>
+
+            <hr class="my-8 border-gray-200">
+
+            <h2 class="text-2xl font-bold mb-6 text-gray-900">L'evento</h2>
+            <p class="mb-6 text-gray-500 text-sm">Rispondi alle domande seguenti per stimare il rischio e calcolare il premio.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Riferimento (Nome Evento)</label>
+                    <input type="text" name="title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo di evento</label>
+                    <select name="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
+                        <option value="">Seleziona...</option>
+                        <option value="8">Matrimonio</option>
+                        <option value="11">Concerto</option>
+                        <option value="12">Conferenza</option>
+                        <option value="17">Festa</option>
+                        <option value="18">Festival</option>
+                        <option value="48">Evento Sportivo</option>
+                        <option value="0">Altro</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data Inizio</label>
+                    <input type="date" name="start" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Numero di giorni</label>
+                    <input type="number" name="days" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Visitatori Totali</label>
+                    <input type="number" name="visitors" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700">Descrizione breve</label>
+                <textarea name="description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"></textarea>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700">Descrizione location (parco, castello, spiaggia...)</label>
+                <textarea name="venue_description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"></textarea>
+            </div>
+
+            <div class="grid grid-cols-6 gap-4 mb-6">
+                <div class="col-span-4">
+                    <label class="block text-sm font-medium text-gray-700">Indirizzo</label>
+                    <input type="text" name="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Numero Civico</label>
+                    <input type="text" name="house_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-6 gap-4 mb-6">
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">CAP</label>
+                    <input type="text" name="zipcode" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div class="col-span-4">
+                    <label class="block text-sm font-medium text-gray-700">Città</label>
+                    <input type="text" name="city" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700">Paese</label>
+                <select name="region" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
+                    <option value="it">Italia</option>
+                    <option value="nl">Paesi Bassi</option>
+                    <option value="de">Germania</option>
+                    <!-- Add more countries as needed -->
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700">Interno / Esterno</label>
+                <select name="environment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
+                    <option value="indoor">Interno</option>
+                    <option value="outdoor">Esterno</option>
+                    <option value="both">Entrambi</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline">
+                    Avanti
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
