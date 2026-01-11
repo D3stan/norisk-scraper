@@ -24,8 +24,22 @@ To bypass the lack of Italian support and the complex security mechanisms (Livew
 2.  **Backend Relay (The Proxy)**: An intermediate server-side component (e.g., in Node.js, PHP, or Python) that sits between the Italian Frontend and the NoRisk system.
 
 ### Workflow
-1.  **User Interaction**: The user fills out the form in Italian.
+1.  **User Interaction**: The user fills out the form in Italian (ONLY one time with all the necessary fields).
 2.  **Internal Submission**: The data is sent to the Backend Relay, not the external provider.
 3.  **Session Handshake**: The Backend Relay autonomously initiates a session with the NoRisk server (background GET request) to acquire a valid session cookie and specific CSRF security tokens (`_token`).
 4.  **Authenticated Forwarding**: The Backend Relay constructs a mirrored POST request, combining the user's data with the scraped security tokens, and submits it to NoRisk.
 5.  **Response Translation**: The result is captured by the Relay and returned to the Italian Frontend to display success or error messages.
+
+## 5. Implementation Findings (Reverse Engineering)
+
+### Security & Validation
+*   **Token Handling**: The CSRF `_token` is hidden in the HTML (not just cookies). The proxy **must** scrape this value from the HTML response of the GET request before making a POST.
+*   **Cookie Persistence**: The server strictly enforces session continuity. The proxy must capture `Set-Cookie` headers from the GET request and forward them exactly in the POST request headers.
+*   **Strict Validation**: The backend performs rigorous validation (e.g., email format, country codes).
+    *   **Region Code**: The country select field expects codes with a trailing space (e.g., `'nl '`, `'be '`), except for `'us'`. This inconsistency must be handled in the mapping layer.
+    *   **Livewire Compatibility**: Standard POST requests work despite the frontend using Livewire, provided all required fields (including `_token`) are present. The `wire:snapshot` data is not mandatory for initial submission.
+
+### Workflow Progression
+*   **Step 1 (Details) -> Step 2 (Coverage)**: Successful submission results in a `302 Redirect` to `.../event-int/coverages?key=...`.
+*   **Step 2 (Coverage)**: This page contains independent modules (Liability, Accidents, Equipment) that are toggled via checkboxes.
+*   **Final Quote**: The pricing/premium is **not** returned in the API response but is rendered in the HTML of the subsequent page (`/proposal`). The proxy must fetch this redirect and scrape the HTML to extract the final price for the user.
