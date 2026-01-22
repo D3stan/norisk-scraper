@@ -14,6 +14,7 @@ export const CONFIG = {
   // Playwright Options
   HEADLESS: process.env.HEADLESS === 'true',
   SLOW_MO: parseInt(process.env.SLOW_MO) || 0,
+  FIELD_DELAY: parseInt(process.env.FIELD_DELAY) || 0,
   
   // Form Selectors
   SELECTORS: {

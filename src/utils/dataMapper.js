@@ -30,7 +30,7 @@ export function mapFormData(italianData) {
   });
   
   const mapped = {
-    // Personal Details
+    // Personal Details (used in both page 1 and proposal page)
     initials: italianData.initials || '',
     preposition: italianData.preposition || '',
     last_name: italianData.lastName || '',
@@ -46,21 +46,28 @@ export function mapFormData(italianData) {
     visitors: italianData.visitors || 0,
     description: italianData.description || '',
     
-    // Location
+    // Location (used in both page 1 and proposal page)
     venue_description: italianData.venueDescription || '',
     address: italianData.address || '',
     house_number: italianData.houseNumber || '',
     zipcode: italianData.zipcode || '',
     city: italianData.city || '',
     region: normalizeCountryCode(italianData.country),
+    country: italianData.country || 'nl', // Country for proposal page
     environment: italianData.environment || 'both',
+    
+    // Proposal page specific fields
+    is_business: italianData.isBusiness || false,
+    company_name: italianData.companyName || '',
+    company_commercial_number: italianData.companyCommercialNumber || '',
+    company_duns_number: italianData.companyDunsNumber || '',
+    company_legal_form: italianData.companyLegalForm || '',
+    birthdate: italianData.birthdate || '',
     
     // Coverages (if provided)
     coverages: {
-      liability: italianData.coverages?.liability ?? false,
-      accidents: italianData.coverages?.accidents ?? false,
-      equipment: italianData.coverages?.equipment ?? false,
-      cancellation: italianData.coverages?.cancellation ?? false,
+      // Pass through coverages as-is (using exact field names from form)
+      ...(italianData.coverages || {})
     }
   };
   

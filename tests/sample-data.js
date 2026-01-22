@@ -29,12 +29,24 @@ export const sampleRequest = {
   country: "it", // Will be normalized to "it " by dataMapper
   environment: "outdoor",
   
-  // Coverages
+  // Proposal page specific fields
+  isBusiness: true, // Testing business entity
+  companyName: "Festival Internazionale SRL",
+  companyCommercialNumber: "12345678",
+  companyDunsNumber: "987654321",
+  companyLegalForm: "52", // BV (from legal form dropdown)
+  // birthdate not needed for business
+  
+  // Coverages - using exact field names from form
   coverages: {
+    // Basic coverages (checkboxes)
     liability: true,
-    accidents: true,
-    equipment: false,
-    cancellation: false
+    accident: true,
+    
+    // Sub-fields for selected coverages
+    higher_liability: "2500000", // €2.5M or €5M
+    accident_man_days: "50", // Employees in man-days
+    accident_man_days_participants: "", // No participants coverage
   }
 };
 
@@ -62,10 +74,13 @@ export const sampleRequest2 = {
   environment: "indoor",
   
   coverages: {
-    liability: true,
-    accidents: false,
+    // Equipment and cancellation coverages
     equipment: true,
-    cancellation: true
+    cancellation_costs: true,
+    
+    // Sub-fields
+    equipment_value: "50000", // €50,000 in equipment
+    budget: "100000", // €100,000 total event cost
   }
 };
 
