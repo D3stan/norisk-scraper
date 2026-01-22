@@ -33,13 +33,14 @@ async function takeScreenshot(page, name) {
 }
 
 /**
- * Extracts CSRF token from the page
+ * Extracts CSRF token from the page or frame
+ * @param {Page|Frame} context - The page or frame context
  */
-async function extractCsrfToken(page) {
+async function extractCsrfToken(context) {
   logger.debug('Extracting CSRF token');
   
   try {
-    const tokenInput = page.locator(CONFIG.SELECTORS.TOKEN);
+    const tokenInput = context.locator(CONFIG.SELECTORS.TOKEN);
     const token = await tokenInput.getAttribute('value');
     
     if (!token) {
@@ -50,7 +51,6 @@ async function extractCsrfToken(page) {
     return token;
   } catch (error) {
     logger.error('Failed to extract CSRF token', { error: error.message });
-    await takeScreenshot(page, 'token-extraction-failed');
     throw error;
   }
 }
@@ -93,20 +93,38 @@ export async function automateFormSubmission(mappedData) {
     // ========================================
     logger.info('Navigating to form page', { url: CONFIG.BASE_URL });
     await page.goto(CONFIG.BASE_URL, { 
-      waitUntil: 'networkidle',
+      waitUntil: 'load', // Changed from 'networkidle' to 'load' for pages with ongoing requests
       timeout: CONFIG.NAVIGATION_TIMEOUT 
     });
     
+    // Wait for iframe to load
+    logger.debug('Waiting for iframe to load');
+    await page.waitForSelector('iframe', { timeout: 10000 });
+    
+    // Get iframe context
+    const frameElement = await page.waitForSelector('iframe');
+    const frame = await frameElement.contentFrame();
+    
+    if (!frame) {
+      throw new Error('Failed to get iframe content frame');
+    }
+    
+    logger.info('Switched to iframe context');
+    
+    // Wait for form to be loaded inside iframe (token is hidden, so wait for 'attached' not 'visible')
+    await frame.waitForSelector(CONFIG.SELECTORS.TOKEN, { state: 'attached', timeout: 10000 });
+    logger.debug('Form loaded and CSRF token field detected inside iframe');
+    
     await takeScreenshot(page, 'initial-page');
     
-    // Extract CSRF token
-    const csrfToken = await extractCsrfToken(page);
+    // Extract CSRF token from iframe
+    const csrfToken = await extractCsrfToken(frame);
     logger.info('Session initialized with CSRF token');
     
     // ========================================
-    // STEP 2: Fill form fields
+    // STEP 2: Fill form fields (inside iframe)
     // ========================================
-    await fillFormFields(page, mappedData);
+    await fillFormFields(frame, mappedData);
     await takeScreenshot(page, 'form-filled');
     
     // ========================================
@@ -114,15 +132,28 @@ export async function automateFormSubmission(mappedData) {
     // ========================================
     logger.info('Submitting form to proceed to coverage selection');
     
-    // Click submit button
-    const submitButton = page.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
-    await submitButton.click();
+    // Click submit button inside iframe and wait for navigation
+    logger.debug('Clicking submit button inside iframe');
+    await Promise.all([
+      page.waitForURL(CONFIG.URL_PATTERNS.COVERAGES, { 
+        timeout: CONFIG.NAVIGATION_TIMEOUT 
+      }),
+      frame.locator(CONFIG.SELECTORS.SUBMIT_BUTTON).click()
+    ]);
     
-    // Wait for navigation to coverages page
-    logger.debug('Waiting for navigation to coverages page');
-    await page.waitForURL(CONFIG.URL_PATTERNS.COVERAGES, { 
-      timeout: CONFIG.NAVIGATION_TIMEOUT 
-    });
+    // Wait for page to load
+    await page.waitForLoadState('load');
+    
+    // Get new iframe context after navigation
+    const coverageFrameElement = await page.waitForSelector('iframe', { timeout: 10000 });
+    const coverageFrame = await coverageFrameElement.contentFrame();
+    
+    if (!coverageFrame) {
+      throw new Error('Failed to get iframe content frame on coverage page');
+    }
+    // ========================================
+    await selectCoverages(coverageFrame, mappedData.coverages);
+    logger.debug('Switched to new iframe context on coverage page');
     
     const coveragesUrl = page.url();
     logger.info('Navigated to coverages page', { url: coveragesUrl });
@@ -137,14 +168,16 @@ export async function automateFormSubmission(mappedData) {
     // ========================================
     // STEP 5: Proceed to proposal page
     // ========================================
-    logger.info('Proceeding to proposal page');
+    // Click next button and wait for navigation
+    await Promise.all([
+      page.waitForURL(CONFIG.URL_PATTERNS.PROPOSAL, { 
+        timeout: CONFIG.NAVIGATION_TIMEOUT 
+      }),
+      page.locator(CONFIG.SELECTORS.COVERAGE_NEXT).click()
+    ]);
     
-    const nextButton = page.locator(CONFIG.SELECTORS.COVERAGE_NEXT);
-    await nextButton.click();
-    
-    // Wait for navigation to proposal page
-    logger.debug('Waiting for navigation to proposal page');
-    await page.waitForURL(CONFIG.URL_PATTERNS.PROPOSAL, { 
+    // Wait for page to load
+    await page.waitForLoadState('load', { 
       timeout: CONFIG.NAVIGATION_TIMEOUT 
     });
     

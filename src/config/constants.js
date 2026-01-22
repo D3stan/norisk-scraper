@@ -1,6 +1,11 @@
+import dotenv from 'dotenv';
+
+// Load environment variables first
+dotenv.config();
+
 export const CONFIG = {
   // URLs
-  BASE_URL: process.env.TARGET_URL || 'https://verzekeren.norisk.eu/en/embed/product/event-int',
+  BASE_URL: process.env.TARGET_URL || 'https://google.com',
   
   // Timeouts (milliseconds)
   DEFAULT_TIMEOUT: parseInt(process.env.TIMEOUT) || 30000,
