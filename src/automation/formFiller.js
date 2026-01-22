@@ -1,0 +1,122 @@
+import logger from '../utils/logger.js';
+import { CONFIG } from '../config/constants.js';
+
+/**
+ * Fills a text input field
+ */
+async function fillInput(page, selector, value, fieldName) {
+  if (!value) {
+    logger.debug(`Skipping empty field: ${fieldName}`);
+    return;
+  }
+  
+  try {
+    await page.fill(selector, String(value), { timeout: 5000 });
+    logger.debug(`Filled field: ${fieldName}`, { value });
+  } catch (error) {
+    logger.error(`Failed to fill field: ${fieldName}`, { selector, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Selects an option from a dropdown
+ */
+async function selectDropdown(page, selector, value, fieldName) {
+  if (!value) {
+    logger.debug(`Skipping empty dropdown: ${fieldName}`);
+    return;
+  }
+  
+  try {
+    await page.selectOption(selector, String(value), { timeout: 5000 });
+    logger.debug(`Selected dropdown: ${fieldName}`, { value });
+  } catch (error) {
+    logger.error(`Failed to select dropdown: ${fieldName}`, { selector, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Fills the entire form with mapped data
+ */
+export async function fillFormFields(page, mappedData) {
+  logger.info('Starting form field population');
+  
+  try {
+    // Step 1: Personal Details
+    logger.debug('Filling personal details section');
+    await fillInput(page, CONFIG.SELECTORS.INITIALS, mappedData.initials, 'Initials');
+    await fillInput(page, CONFIG.SELECTORS.PREPOSITION, mappedData.preposition, 'Preposition');
+    await fillInput(page, CONFIG.SELECTORS.LAST_NAME, mappedData.last_name, 'Last Name');
+    await fillInput(page, CONFIG.SELECTORS.PHONE, mappedData.phone, 'Phone');
+    await fillInput(page, CONFIG.SELECTORS.EMAIL, mappedData.email, 'Email');
+    await selectDropdown(page, CONFIG.SELECTORS.ROLE, mappedData.role, 'Role');
+    
+    // Step 2: Event Details
+    logger.debug('Filling event details section');
+    await fillInput(page, CONFIG.SELECTORS.EVENT_NAME, mappedData.title, 'Event Name');
+    await selectDropdown(page, CONFIG.SELECTORS.EVENT_TYPE, mappedData.type, 'Event Type');
+    await fillInput(page, CONFIG.SELECTORS.START_DATE, mappedData.start, 'Start Date');
+    await fillInput(page, CONFIG.SELECTORS.DAYS, mappedData.days, 'Days');
+    await fillInput(page, CONFIG.SELECTORS.VISITORS, mappedData.visitors, 'Visitors');
+    await fillInput(page, CONFIG.SELECTORS.DESCRIPTION, mappedData.description, 'Description');
+    
+    // Step 3: Location
+    logger.debug('Filling location details section');
+    await fillInput(page, CONFIG.SELECTORS.VENUE_DESCRIPTION, mappedData.venue_description, 'Venue Description');
+    await fillInput(page, CONFIG.SELECTORS.ADDRESS, mappedData.address, 'Address');
+    await fillInput(page, CONFIG.SELECTORS.HOUSE_NUMBER, mappedData.house_number, 'House Number');
+    await fillInput(page, CONFIG.SELECTORS.ZIPCODE, mappedData.zipcode, 'Zipcode');
+    await fillInput(page, CONFIG.SELECTORS.CITY, mappedData.city, 'City');
+    await selectDropdown(page, CONFIG.SELECTORS.REGION, mappedData.region, 'Country/Region');
+    await selectDropdown(page, CONFIG.SELECTORS.ENVIRONMENT, mappedData.environment, 'Environment');
+    
+    logger.info('All form fields filled successfully');
+  } catch (error) {
+    logger.error('Form filling failed', { error: error.message, stack: error.stack });
+    throw error;
+  }
+}
+
+/**
+ * Handles coverage selection on the second page
+ */
+export async function selectCoverages(page, coverages) {
+  logger.info('Selecting coverage options', { coverages });
+  
+  try {
+    // Wait for coverage page to load
+    await page.waitForLoadState('networkidle');
+    
+    // Look for coverage checkboxes (names may vary, will need to inspect actual page)
+    // Common patterns: input[type="checkbox"][name*="liability"]
+    const coverageMap = {
+      liability: 'input[type="checkbox"][name*="liability"], input[type="checkbox"][id*="liability"]',
+      accidents: 'input[type="checkbox"][name*="accident"], input[type="checkbox"][id*="accident"]',
+      equipment: 'input[type="checkbox"][name*="equipment"], input[type="checkbox"][id*="equipment"]',
+      cancellation: 'input[type="checkbox"][name*="cancellation"], input[type="checkbox"][id*="cancellation"]'
+    };
+    
+    for (const [coverageType, selector] of Object.entries(coverageMap)) {
+      if (coverages[coverageType]) {
+        try {
+          const checkbox = page.locator(selector).first();
+          if (await checkbox.count() > 0) {
+            await checkbox.check({ timeout: 5000 });
+            logger.debug(`Checked coverage: ${coverageType}`);
+          } else {
+            logger.warn(`Coverage checkbox not found: ${coverageType}`);
+          }
+        } catch (error) {
+          logger.warn(`Failed to check coverage: ${coverageType}`, { error: error.message });
+        }
+      }
+    }
+    
+    logger.info('Coverage selection completed');
+  } catch (error) {
+    logger.error('Coverage selection failed', { error: error.message });
+    throw error;
+  }
+}
