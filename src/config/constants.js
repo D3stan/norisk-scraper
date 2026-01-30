@@ -4,59 +4,59 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const CONFIG = {
-  // URLs
-  BASE_URL: process.env.TARGET_URL || 'https://google.com',
-  
-  // Timeouts (milliseconds)
-  DEFAULT_TIMEOUT: parseInt(process.env.TIMEOUT) || 30000,
-  NAVIGATION_TIMEOUT: 60000,
-  
-  // Playwright Options
-  HEADLESS: process.env.HEADLESS === 'true',
-  SLOW_MO: parseInt(process.env.SLOW_MO) || 0,
-  FIELD_DELAY: parseInt(process.env.FIELD_DELAY) || 0,
-  
-  // Form Selectors
-  SELECTORS: {
-    // CSRF Token
-    TOKEN: 'input[name="_token"]',
+    // URLs
+    BASE_URL: process.env.TARGET_URL || 'https://google.com',
     
-    // Step 1: Personal Details
-    INITIALS: 'input[name="initials"]',
-    PREPOSITION: 'input[name="preposition"]',
-    LAST_NAME: 'input[name="last_name"]',
-    PHONE: 'input[name="phone"]',
-    EMAIL: 'input[name="email"]',
-    ROLE: 'select[name="data[role]"]',
+    // Timeouts (milliseconds)
+    DEFAULT_TIMEOUT: parseInt(process.env.TIMEOUT) || 30000,
+    NAVIGATION_TIMEOUT: 60000,
     
-    // Step 2: Event Details
-    EVENT_NAME: 'input[name="title"]',
-    EVENT_TYPE: 'select[name="type"]',
-    START_DATE: 'input[name="start"]',
-    DAYS: 'input[name="days"]',
-    VISITORS: 'input[name="visitors"]',
-    DESCRIPTION: 'textarea[name="description"]',
+    // Playwright Options
+    HEADLESS: process.env.HEADLESS === 'true',
+    SLOW_MO: parseInt(process.env.SLOW_MO) || 0,
+    FIELD_DELAY: parseInt(process.env.FIELD_DELAY) || 0,
     
-    // Step 3: Location
-    VENUE_DESCRIPTION: 'textarea[name="venue_description"]',
-    ADDRESS: 'input[name="address"]',
-    HOUSE_NUMBER: 'input[name="house_number"]',
-    ZIPCODE: 'input[name="zipcode"]',
-    CITY: 'input[name="city"]',
-    REGION: 'select[name="region"]',
-    ENVIRONMENT: 'select[name="environment"]',
-    
-    // Submit Button
-    SUBMIT_BUTTON: 'button[type="submit"]',
-    
-    // Coverage Page (Step 2 in workflow)
-    COVERAGE_NEXT: 'button[type="submit"]', // Button to proceed to proposal
-  },
-  
-  // Expected URL Patterns
-  URL_PATTERNS: {
-    INITIAL_FORM: /event-int/,
-    COVERAGES: /coverages/,
-    PROPOSAL: /proposal/,
-  }
+    // Form Selectors
+    SELECTORS: {
+        // CSRF Token
+        TOKEN: 'input[name="_token"]',
+
+        // Step 1: Personal Details
+        INITIALS: 'input[name="initials"]',
+        PREPOSITION: 'input[name="preposition"]',
+        LAST_NAME: 'input[name="last_name"]',
+        PHONE: 'input[name="phone"]',
+        EMAIL: 'input[name="email"]',
+        ROLE: 'select[name="data[role]"]',
+      
+        // Step 2: Event Details
+        EVENT_NAME: 'input[name="title"]',
+        EVENT_TYPE: 'select[name="type"]',
+        START_DATE: 'input[name="start"]',
+        DAYS: 'input[name="days"]',
+        VISITORS: 'input[name="visitors"]',
+        DESCRIPTION: 'textarea[name="description"]',
+
+        // Step 3: Location
+        VENUE_DESCRIPTION: 'textarea[name="venue_description"]',
+        ADDRESS: 'input[name="address"]',
+        HOUSE_NUMBER: 'input[name="house_number"]',
+        ZIPCODE: 'input[name="zipcode"]',
+        CITY: 'input[name="city"]',
+        REGION: 'select[name="region"]',
+        ENVIRONMENT: 'select[name="environment"]',
+
+        // Submit Button
+        SUBMIT_BUTTON: 'button[type="submit"]',
+
+        // Coverage Page (Step 2 in workflow)
+        COVERAGE_NEXT: 'button[type="submit"]', // Button to proceed to proposal
+    },
+
+    // Expected URL Patterns
+    URL_PATTERNS: {
+        INITIAL_FORM: /event-int/,
+        COVERAGES: /coverages/,
+        PROPOSAL: /proposal/,
+    }
 };

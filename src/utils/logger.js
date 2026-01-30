@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { CONFIG } from '../config/constants.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';

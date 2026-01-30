@@ -158,42 +158,42 @@ async function selectDropdown(context, selector, value, fieldName) {
  * @param {Page|Frame} context - The page or frame context
  */
 export async function fillFormFields(context, mappedData) {
-  logger.info('Starting form field population');
-  
-  try {
-    // Step 1: Personal Details
-    logger.debug('Filling personal details section');
-    await fillInput(context, CONFIG.SELECTORS.INITIALS, mappedData.initials, 'Initials');
-    await fillInput(context, CONFIG.SELECTORS.PREPOSITION, mappedData.preposition, 'Preposition');
-    await fillInput(context, CONFIG.SELECTORS.LAST_NAME, mappedData.last_name, 'Last Name');
-    await fillInput(context, CONFIG.SELECTORS.PHONE, mappedData.phone, 'Phone');
-    await fillInput(context, CONFIG.SELECTORS.EMAIL, mappedData.email, 'Email');
-    await selectDropdown(context, CONFIG.SELECTORS.ROLE, mappedData.role, 'Role');
-    
-    // Step 2: Event Details
-    logger.debug('Filling event details section');
-    await fillInput(context, CONFIG.SELECTORS.EVENT_NAME, mappedData.title, 'Event Name');
-    await selectDropdown(context, CONFIG.SELECTORS.EVENT_TYPE, mappedData.type, 'Event Type');
-    await fillInput(context, CONFIG.SELECTORS.START_DATE, mappedData.start, 'Start Date');
-    await fillInput(context, CONFIG.SELECTORS.DAYS, mappedData.days, 'Days');
-    await fillInput(context, CONFIG.SELECTORS.VISITORS, mappedData.visitors, 'Visitors');
-    await fillInput(context, CONFIG.SELECTORS.DESCRIPTION, mappedData.description, 'Description');
-    
-    // Step 3: Location
-    logger.debug('Filling location details section');
-    await fillInput(context, CONFIG.SELECTORS.VENUE_DESCRIPTION, mappedData.venue_description, 'Venue Description');
-    await fillInput(context, CONFIG.SELECTORS.ADDRESS, mappedData.address, 'Address');
-    await fillInput(context, CONFIG.SELECTORS.HOUSE_NUMBER, mappedData.house_number, 'House Number');
-    await fillInput(context, CONFIG.SELECTORS.ZIPCODE, mappedData.zipcode, 'Zipcode');
-    await fillInput(context, CONFIG.SELECTORS.CITY, mappedData.city, 'City');
-    await selectDropdown(context, CONFIG.SELECTORS.REGION, mappedData.region, 'Country/Region');
-    await selectDropdown(context, CONFIG.SELECTORS.ENVIRONMENT, mappedData.environment, 'Environment');
-    
-    logger.info('All form fields filled successfully');
-  } catch (error) {
-    logger.error('Form filling failed', { error: error.message, stack: error.stack });
-    throw error;
-  }
+    logger.info('Starting form field population');
+
+    try {
+        // Step 1: Personal Details
+        logger.debug('Filling personal details section');
+        await fillInput(context, CONFIG.SELECTORS.INITIALS, mappedData.initials, 'Initials');
+        await fillInput(context, CONFIG.SELECTORS.PREPOSITION, mappedData.preposition, 'Preposition');
+        await fillInput(context, CONFIG.SELECTORS.LAST_NAME, mappedData.last_name, 'Last Name');
+        await fillInput(context, CONFIG.SELECTORS.PHONE, mappedData.phone, 'Phone');
+        await fillInput(context, CONFIG.SELECTORS.EMAIL, mappedData.email, 'Email');
+        await selectDropdown(context, CONFIG.SELECTORS.ROLE, mappedData.role, 'Role');
+        
+        // Step 2: Event Details
+        logger.debug('Filling event details section');
+        await fillInput(context, CONFIG.SELECTORS.EVENT_NAME, mappedData.title, 'Event Name');
+        await selectDropdown(context, CONFIG.SELECTORS.EVENT_TYPE, mappedData.type, 'Event Type');
+        await fillInput(context, CONFIG.SELECTORS.START_DATE, mappedData.start, 'Start Date');
+        await fillInput(context, CONFIG.SELECTORS.DAYS, mappedData.days, 'Days');
+        await fillInput(context, CONFIG.SELECTORS.VISITORS, mappedData.visitors, 'Visitors');
+        await fillInput(context, CONFIG.SELECTORS.DESCRIPTION, mappedData.description, 'Description');
+        
+        // Step 3: Location
+        logger.debug('Filling location details section');
+        await fillInput(context, CONFIG.SELECTORS.VENUE_DESCRIPTION, mappedData.venue_description, 'Venue Description');
+        await fillInput(context, CONFIG.SELECTORS.ADDRESS, mappedData.address, 'Address');
+        await fillInput(context, CONFIG.SELECTORS.HOUSE_NUMBER, mappedData.house_number, 'House Number');
+        await fillInput(context, CONFIG.SELECTORS.ZIPCODE, mappedData.zipcode, 'Zipcode');
+        await fillInput(context, CONFIG.SELECTORS.CITY, mappedData.city, 'City');
+        await selectDropdown(context, CONFIG.SELECTORS.REGION, mappedData.region, 'Country/Region');
+        await selectDropdown(context, CONFIG.SELECTORS.ENVIRONMENT, mappedData.environment, 'Environment');
+        
+        logger.info('All form fields filled successfully');
+    } catch (error) {
+        logger.error('Form filling failed', { error: error.message, stack: error.stack });
+        throw error;
+    }
 }
 
 /**
