@@ -20,16 +20,16 @@ if (!existsSync(screenshotsDir)) {
  * Takes a screenshot for debugging purposes
  */
 async function takeScreenshot(page, name) {
-  try {
-    const timestamp = Date.now();
-    const filename = `${name}-${timestamp}.png`;
-    const filepath = join(screenshotsDir, filename);
-    await page.screenshot({ path: filepath, fullPage: true });
-    logger.debug(`Screenshot saved: ${filename}`);
-    return filepath;
-  } catch (error) {
-    logger.error('Failed to take screenshot', { error: error.message });
-  }
+    try {
+        const timestamp = Date.now();
+        const filename = `${name}-${timestamp}.png`;
+        const filepath = join(screenshotsDir, filename);
+        await page.screenshot({ path: filepath, fullPage: true });
+        logger.debug(`Screenshot saved: ${filename}`);
+        return filepath;
+    } catch (error) {
+        logger.error('Failed to take screenshot', { error: error.message });
+    }
 }
 
 /**
@@ -37,22 +37,22 @@ async function takeScreenshot(page, name) {
  * @param {Page|Frame} context - The page or frame context
  */
 async function extractCsrfToken(context) {
-  logger.debug('Extracting CSRF token');
-  
-  try {
-    const tokenInput = context.locator(CONFIG.SELECTORS.TOKEN);
-    const token = await tokenInput.getAttribute('value');
+    logger.debug('Extracting CSRF token');
     
-    if (!token) {
-      throw new Error('CSRF token not found or empty');
+    try {
+        const tokenInput = context.locator(CONFIG.SELECTORS.TOKEN);
+        const token = await tokenInput.getAttribute('value');
+        
+        if (!token) {
+          throw new Error('CSRF token not found or empty');
+        }
+        
+        logger.debug('CSRF token extracted', { tokenPreview: token.substring(0, 10) + '...' });
+        return token;
+    } catch (error) {
+        logger.error('Failed to extract CSRF token', { error: error.message });
+        throw error;
     }
-    
-    logger.debug('CSRF token extracted', { tokenPreview: token.substring(0, 10) + '...' });
-    return token;
-  } catch (error) {
-    logger.error('Failed to extract CSRF token', { error: error.message });
-    throw error;
-  }
 }
 
 /**
@@ -103,14 +103,14 @@ export async function automateFormSubmission(mappedData) {
         
         // Try to handle cookie consent if it appears
         try {
-            const cookieButton = page.locator('button:has-text("Accept"), button:has-text("Accepteren"), button:has-text("Akkoord")');
+            const cookieButton = page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowallSelection');
             await cookieButton.click({ timeout: 3000 });
             logger.debug('Clicked cookie consent button');
             // await page.waitForTimeout(1000);
         } catch (error) {
             logger.debug('No cookie consent banner detected or already accepted');
         }
-        
+
         // Wait for iframe to load
         logger.debug('Waiting for iframe to load');
         const frameElement = await page.waitForSelector('iframe', { timeout: 10000 });
