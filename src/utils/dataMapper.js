@@ -52,7 +52,8 @@ export function mapFormData(italianData) {
         house_number: italianData.houseNumber || '',
         zipcode: italianData.zipcode || '',
         city: italianData.city || '',
-        region: normalizeCountryCode(italianData.country),
+        // region: normalizeCountryCode(italianData.country),
+        region: italianData.country || '',
         country: italianData.country || 'nl', // Country for proposal page
         environment: italianData.environment || 'both',
         

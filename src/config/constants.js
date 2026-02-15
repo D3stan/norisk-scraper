@@ -28,6 +28,8 @@ export const CONFIG = {
         PHONE: 'input[name="phone"]',
         EMAIL: 'input[name="email"]',
         ROLE: 'select[name="data[role]"]',
+        COMPANY_NAME: 'input[name="data[role_company]"]',
+        AFM_NUMBER: 'input[name="data[role_verification]"]',
       
         // Step 2: Event Details
         EVENT_NAME: 'input[name="title"]',

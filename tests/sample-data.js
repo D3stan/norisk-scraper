@@ -26,7 +26,7 @@ export const sampleRequest = {
     houseNumber: "1",
     zipcode: "00186",
     city: "Roma",
-    country: "it", // Will be normalized to "it " by dataMapper
+    country: "Italy", // Will be normalized to "it " by dataMapper
     environment: "outdoor",
     
     // Proposal page specific fields
