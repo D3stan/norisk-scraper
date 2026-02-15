@@ -65,6 +65,18 @@ export const CONFIG = {
             money: 'input[type="checkbox"][name="money"]',
             accident: 'input[type="checkbox"][name="accident"]'
         },
+
+        // Conditional Fields (Step 2)
+        CONDITIONAL_FIELDS: {
+            BUDGET: 'input[name="budget"]',
+            INCOME_ESTIMATE: 'input[name="cancellation_income_estimate"]',
+            HIGHER_LIABILITY: 'input[name="higher_liability"]',
+            EQUIPMENT_VALUE: 'input[name="equipment_value"]',
+            MONEY_VALUE: 'input[name="money_value"]',
+            ACCIDENT_MAN_DAYS: 'select[name="accident_man_days"]',
+            ACCIDENT_PARTICIPANTS: 'select[name="accident_man_days_participants"]',
+            ACCIDENT_SPORT: 'input[name="accident_man_days_participants_sport"]'
+        },
     },
 
     // Expected URL Patterns

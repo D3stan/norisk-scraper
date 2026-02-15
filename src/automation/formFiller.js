@@ -265,7 +265,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
             case 'cancellation_costs':
                 // Budget field appears
                 if (coverages.budget) {
-                    await fillInput(context, 'input[name="budget"]', coverages.budget, 'Budget');
+                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET, coverages.budget, 'Budget');
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
@@ -273,7 +273,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
             case 'cancellation_income':
                 // Income estimate field appears
                 if (coverages.cancellation_income_estimate) {
-                    await fillInput(context, 'input[name="cancellation_income_estimate"]', 
+                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE, 
                                    coverages.cancellation_income_estimate, 'Income Estimate');
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
@@ -283,7 +283,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 // Radio buttons for liability amount appear
                 if (coverages.higher_liability) {
                     const amount = coverages.higher_liability;
-                    await context.locator(`input[name="higher_liability"][value="${amount}"]`).check();
+                    await context.locator(`${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${amount}"]`).check();
                     logger.debug(`Selected liability amount: €${amount}`);
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
@@ -292,7 +292,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
             case 'equipment':
                 // Equipment value field appears
                 if (coverages.equipment_value) {
-                    await fillInput(context, 'input[name="equipment_value"]', 
+                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE, 
                                    coverages.equipment_value, 'Equipment Value');
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
@@ -301,7 +301,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
             case 'money':
                 // Money value field appears
                 if (coverages.money_value) {
-                    await fillInput(context, 'input[name="money_value"]', 
+                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE, 
                                    coverages.money_value, 'Money Value');
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
@@ -310,19 +310,19 @@ async function handleConditionalFields(context, coverageType, coverages) {
             case 'accident':
                 // Multiple accident-related fields appear
                 if (coverages.accident_man_days) {
-                    await context.locator('select[name="accident_man_days"]')
+                    await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_MAN_DAYS)
                         .selectOption(coverages.accident_man_days);
                     logger.debug(`Selected accident man days: ${coverages.accident_man_days}`);
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 if (coverages.accident_man_days_participants) {
-                    await context.locator('select[name="accident_man_days_participants"]')
+                    await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_PARTICIPANTS)
                         .selectOption(coverages.accident_man_days_participants);
                     logger.debug(`Selected accident participants: ${coverages.accident_man_days_participants}`);
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 if (coverages.accident_man_days_participants_sport) {
-                    await context.locator('input[name="accident_man_days_participants_sport"]').check();
+                    await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_SPORT).check();
                     logger.debug('Checked sport coverage for participants');
                     await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
