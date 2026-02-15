@@ -53,6 +53,18 @@ export const CONFIG = {
 
         // Coverage Page (Step 2 in workflow)
         COVERAGE_NEXT: 'button[type="submit"]', // Button to proceed to proposal
+
+        // Coverage Checkboxes
+        COVERAGE_CHECKBOXES: {
+            cancellation_costs: 'input[type="checkbox"][name="cancellation_costs"]',
+            cancellation_non_appearance: 'input[type="checkbox"][name="cancellation_non_appearance"]',
+            cancellation_weather: 'input[type="checkbox"][name="cancellation_weather"]',
+            cancellation_income: 'input[type="checkbox"][name="cancellation_income"]',
+            liability: 'input[type="checkbox"][name="liability"]',
+            equipment: 'input[type="checkbox"][name="equipment"]',
+            money: 'input[type="checkbox"][name="money"]',
+            accident: 'input[type="checkbox"][name="accident"]'
+        },
     },
 
     // Expected URL Patterns

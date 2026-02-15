@@ -209,16 +209,7 @@ export async function selectCoverages(context, coverages = {}) {
         await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
         
         // Available coverage checkboxes with exact field names from actual form
-        const coverageFields = {
-            cancellation_costs: 'input[type="checkbox"][name="cancellation_costs"]',
-            cancellation_non_appearance: 'input[type="checkbox"][name="cancellation_non_appearance"]',
-            cancellation_weather: 'input[type="checkbox"][name="cancellation_weather"]',
-            cancellation_income: 'input[type="checkbox"][name="cancellation_income"]',
-            liability: 'input[type="checkbox"][name="liability"]',
-            equipment: 'input[type="checkbox"][name="equipment"]',
-            money: 'input[type="checkbox"][name="money"]',
-            accident: 'input[type="checkbox"][name="accident"]'
-        };
+        const coverageFields = CONFIG.SELECTORS.COVERAGE_CHECKBOXES;
         
         // Select coverages based on provided data
         for (const [fieldName, selector] of Object.entries(coverageFields)) {
