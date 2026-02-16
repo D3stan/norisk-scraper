@@ -42,9 +42,9 @@ After login, verify success by checking for the presence of a hidden input with 
 No dropdown interaction needed - direct URL navigation replaces the dropdown selection.
 
 ### 3. About the Event Page
-**Status**: Fields are **PRE-FILLED** by the system
+**Status**: Adviser data fields are **PRE-FILLED** by the system, Event and Location fields are **EMPTY**
 
-**Fields Present**:
+**Adviser Data Section (DO NOT MODIFY)**:
 - Initials
 - Preposition
 - Last Name
@@ -52,9 +52,24 @@ No dropdown interaction needed - direct URL navigation replaces the dropdown sel
 - Email
 - Role
 
-**Action**: **DO NOT MODIFY** these fields. They are automatically populated by the system based on the logged-in agent's profile.
+**The Event Section (MUST FILL)**:
+- Reference (title)
+- Type of event
+- First day (start date)
+- Number of days
+- Number of visitors
+- Description
 
-**Implementation**: Simply verify the page loaded correctly and click "Next" or "Continue" to proceed.
+**The Location Section (MUST FILL)**:
+- Venue
+- Address
+- Number
+- Zipcode
+- City
+- Country
+- Environment
+
+**Action**: Fill only the event and location sections. Personal/adviser data is automatically populated by the system based on the logged-in agent's profile and should NOT be modified.
 
 ### 4. What to Cover Page
 **Status**: Same as before - coverage selection page

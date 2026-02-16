@@ -156,22 +156,29 @@ async function selectDropdown(context, selector, value, fieldName) {
 
 /**
  * @param {Page|Frame} context - The page or frame context
+ * @param {Object} mappedData - The mapped form data
+ * @param {Object} options - Options for filling
+ * @param {boolean} options.skipPersonalDetails - Skip personal details (for pre-filled pages)
  */
-export async function fillFormFields(context, mappedData) {
-    logger.info('Starting form field population');
+export async function fillFormFields(context, mappedData, options = {}) {
+    logger.info('Starting form field population', { skipPersonalDetails: options.skipPersonalDetails });
 
     try {
-        // Step 1: Personal Details
-        logger.debug('Filling personal details section');
-        await fillInput(context, CONFIG.SELECTORS.INITIALS, mappedData.initials, 'Initials');
-        await fillInput(context, CONFIG.SELECTORS.PREPOSITION, mappedData.preposition, 'Preposition');
-        await fillInput(context, CONFIG.SELECTORS.LAST_NAME, mappedData.last_name, 'Last Name');
-        await fillInput(context, CONFIG.SELECTORS.PHONE, mappedData.phone, 'Phone');
-        await fillInput(context, CONFIG.SELECTORS.EMAIL, mappedData.email, 'Email');
-        await selectDropdown(context, CONFIG.SELECTORS.ROLE, mappedData.role, 'Role');
-        
-        // Handle conditional role fields (intermediary/proxy)
-        await handleRoleConditionalFields(context, mappedData);
+        // Step 1: Personal Details (skip if already pre-filled)
+        if (!options.skipPersonalDetails) {
+            logger.debug('Filling personal details section');
+            await fillInput(context, CONFIG.SELECTORS.INITIALS, mappedData.initials, 'Initials');
+            await fillInput(context, CONFIG.SELECTORS.PREPOSITION, mappedData.preposition, 'Preposition');
+            await fillInput(context, CONFIG.SELECTORS.LAST_NAME, mappedData.last_name, 'Last Name');
+            await fillInput(context, CONFIG.SELECTORS.PHONE, mappedData.phone, 'Phone');
+            await fillInput(context, CONFIG.SELECTORS.EMAIL, mappedData.email, 'Email');
+            await selectDropdown(context, CONFIG.SELECTORS.ROLE, mappedData.role, 'Role');
+            
+            // Handle conditional role fields (intermediary/proxy)
+            await handleRoleConditionalFields(context, mappedData);
+        } else {
+            logger.info('Skipping personal details section (pre-filled)');
+        }
         
         // Step 2: Event Details
         logger.debug('Filling event details section');

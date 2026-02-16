@@ -114,15 +114,14 @@ async function performLogin(page) {
 
 /**
  * Extracts CSRF token from the page or frame
- * @param {Page|Frame} context - The page or frame context
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
  */
 async function extractCsrfToken(context) {
     logger.debug('Extracting CSRF token');
     
     try {
-        // Multiple _token inputs may exist (logout form + main form)
-        // Target the one in the main content area, not the logout form
-        const tokenInput = context.getByRole('main').locator(CONFIG.SELECTORS.TOKEN).first();
+        // Context is already scoped to main, just find the token
+        const tokenInput = context.locator(CONFIG.SELECTORS.TOKEN).first();
         const token = await tokenInput.getAttribute('value');
         
         if (!token) {
@@ -271,51 +270,31 @@ export async function automateFormSubmission(mappedData) {
             logger.debug('No cookie consent banner detected or already accepted');
         }
 
+        // Wait for main content area to be loaded
+        await page.waitForSelector('main', { state: 'attached', timeout: 10000 });
+        logger.debug('Main content area detected');
+        
+        // Create main context to scope all selectors (avoids header/footer elements)
+        const mainContext = page.locator('main');
+        
         // Wait for form to be loaded (token is hidden, so wait for 'attached' not 'visible')
-        await page.waitForSelector(CONFIG.SELECTORS.TOKEN, { state: 'attached', timeout: 10000 });
+        await mainContext.locator(CONFIG.SELECTORS.TOKEN).waitFor({ state: 'attached', timeout: 10000 });
         logger.debug('Form loaded and CSRF token field detected');
         
         await takeScreenshot(page, 'form-loaded');
         
         // Extract CSRF token
-        const csrfToken = await extractCsrfToken(page);
+        const csrfToken = await extractCsrfToken(mainContext);
         logger.info('Session initialized with CSRF token');
-        
-        // ========================================
-        // STEP 3: Skip "About the Event" page (pre-filled)
-        // ========================================
-        logger.info('Checking if we are on "About the Event" page');
-        
-        // Check if we're on the "About the Event" page by looking for specific text or URL
-        const pageContent = await page.textContent('body');
-        const isAboutEventPage = pageContent.includes('About the event') || 
-                                 pageContent.includes('Over het evenement') ||
-                                 await page.locator('h1, h2, h3').filter({ hasText: /About the event|Over het evenement/i }).count() > 0;
-        
-        if (isAboutEventPage) {
-            logger.info('"About the Event" page detected - skipping (fields are pre-filled)');
-            await takeScreenshot(page, 'about-event-page-skip');
-            
-            // Click Next/Submit to proceed to event details
-            const submitButton = page.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
-            await submitButton.click();
-            
-            // Wait for navigation
-            await page.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-            await page.waitForTimeout(1000);
-            
-            logger.info('Skipped "About the Event" page, proceeding to next step');
-            await takeScreenshot(page, 'after-about-event-skip');
-        } else {
-            logger.info('Not on "About the Event" page, continuing with form');
-        }
         
         await takeScreenshot(page, 'initial-page');
         
         // ========================================
-        // STEP 4: Fill form fields
+        // STEP 3: Fill form fields
         // ========================================
-        await fillFormFields(page, mappedData);
+        // Note: On "About the Event" page, adviser data is pre-filled, so we skip it
+        // We only fill event details and location
+        await fillFormFields(mainContext, mappedData, { skipPersonalDetails: true });
         await takeScreenshot(page, 'form-filled');
         
         // ========================================
@@ -325,7 +304,7 @@ export async function automateFormSubmission(mappedData) {
         
         // Click submit button and wait for navigation
         logger.debug('Clicking submit button');
-        const submitButton = page.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
+        const submitButton = mainContext.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
         
         // Wait for page to navigate to coverages page
         await Promise.all([
@@ -344,14 +323,17 @@ export async function automateFormSubmission(mappedData) {
         logger.info('On coverage page');
         await takeScreenshot(page, 'coverages-page');
         
+        // Re-establish main context after navigation
+        const mainContextCoverage = page.locator('main');
+        
         // ========================================
         // STEP 6: Select coverage options
         // ========================================
-        await selectCoverages(page, mappedData.coverages);
+        await selectCoverages(mainContextCoverage, mappedData.coverages);
         await takeScreenshot(page, 'coverages-selected');
         
         // ========================================
-        // STEP 5: Submit coverages and handle possible intermediate pages
+        // STEP 7: Submit coverages and handle possible intermediate pages
         // ========================================
         logger.info('Submitting coverages');
         
@@ -359,14 +341,14 @@ export async function automateFormSubmission(mappedData) {
         await takeScreenshot(page, 'before-coverage-submit');
         
         // Check for validation errors before submitting
-        const validationErrors = await page.locator('.text-red-500, .text-red-600, .error, [class*="error"]').count();
+        const validationErrors = await mainContextCoverage.locator('.text-red-500, .text-red-600, .error, [class*="error"]').count();
         if (validationErrors > 0) {
-          const errorTexts = await page.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
+          const errorTexts = await mainContextCoverage.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
           logger.warn('Validation errors detected before submit', { errors: errorTexts });
         }
         
         // Click next/submit button
-        const coverageSubmitButton = page.locator('button[type="submit"]');
+        const coverageSubmitButton = mainContextCoverage.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
         await coverageSubmitButton.scrollIntoViewIfNeeded();
         
         logger.debug('Clicking coverage submit button');
@@ -387,7 +369,7 @@ export async function automateFormSubmission(mappedData) {
         } catch (error) {
             // Check if there are validation errors after click
             await takeScreenshot(page, 'coverage-submit-error');
-            const postClickErrors = await page.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
+            const postClickErrors = await mainContextCoverage.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
             if (postClickErrors.length > 0) {
                 logger.error('Form validation failed', { errors: postClickErrors });
                 throw new Error(`Coverage form validation failed: ${postClickErrors.join(', ')}`);
@@ -400,7 +382,7 @@ export async function automateFormSubmission(mappedData) {
         logger.debug('Current URL after coverage submit', { url: currentUrl });
         
         // ========================================
-        // STEP 6: Handle Guest Info Page (if cancellation_non_appearance selected)
+        // STEP 8: Handle Guest Info Page (if cancellation_non_appearance selected)
         // ========================================
         const hasNonAppearance = mappedData.coverages?.cancellation_non_appearance;
         const guests = mappedData.coverages?.non_appearance_guests;
@@ -408,20 +390,23 @@ export async function automateFormSubmission(mappedData) {
         if (hasNonAppearance && guests && guests.length > 0) {
             logger.info('Detected cancellation_non_appearance with guests, checking for guest info page');
             
+            // Re-establish main context after navigation
+            const mainContextGuest = page.locator('main');
+            
             // Check if we're on the guest info page by looking for guest name input
-            const guestNameInput = page.locator('input[type="text"][name="cancellation_non_appearance[0][name]"]');
+            const guestNameInput = mainContextGuest.locator(CONFIG.SELECTORS.GUEST_FIELDS.GUEST_NAME(0));
             const isGuestPage = await guestNameInput.count() > 0;
             
             if (isGuestPage) {
                 logger.info('Guest info page detected, filling guest information');
                 await takeScreenshot(page, 'guest-info-page');
                 
-                await fillGuestInfoPage(page, guests);
+                await fillGuestInfoPage(mainContextGuest, guests);
                 await takeScreenshot(page, 'guest-info-filled');
                 
                 // Submit guest info form
                 logger.debug('Submitting guest info form');
-                const guestSubmitButton = page.locator('button[type="submit"]').last();
+                const guestSubmitButton = mainContextGuest.locator(CONFIG.SELECTORS.SUBMIT_BUTTON).last();
                 await guestSubmitButton.click();
                 
                 // Wait for navigation after guest submit
@@ -438,16 +423,19 @@ export async function automateFormSubmission(mappedData) {
         }
         
         // ========================================
-        // STEP 7: Handle "Your Proposal" Price Quote Page (REQUIRED)
+        // STEP 9: Handle "Your Proposal" Price Quote Page (REQUIRED)
         // ========================================
         logger.info('Looking for "Your Proposal" price quote page');
+        
+        // Re-establish main context after navigation
+        const mainContextProposal = page.locator('main');
         
         // Wait for either button to appear (give it time to load)
         try {
             logger.debug('Waiting for proposal page elements to appear...');
             
             // Wait for the pricing grid to be visible (this confirms we're on the right page)
-            await page.waitForSelector('dl.grid.grid-cols-2 dt:has-text("To pay")', {
+            await mainContextProposal.locator('dl.grid.grid-cols-2 dt').filter({ hasText: 'To pay' }).waitFor({
                 timeout: 20000,
                 state: 'visible'
             });
@@ -471,7 +459,7 @@ export async function automateFormSubmission(mappedData) {
         await takeScreenshot(page, 'your-proposal-price-page');
         
         // Parse pricing data BEFORE clicking through
-        const pricing = await parsePricingData(page);
+        const pricing = await parsePricingData(mainContextProposal);
         
         // Validate that we got pricing data
         if (!pricing.toPay) {
@@ -480,7 +468,7 @@ export async function automateFormSubmission(mappedData) {
         
         // Now look for the "Quote via email" link (it's an <a> tag, not a button)
         logger.debug('Looking for "Quote via email" link');
-        const quoteEmailLink = page.locator('a:has-text("Quote via email")');
+        const quoteEmailLink = mainContextProposal.locator(CONFIG.SELECTORS.PROPOSAL_PRICE.QUOTE_EMAIL_LINK);
         
         const hasQuoteLink = await quoteEmailLink.count() > 0;
         
@@ -517,15 +505,18 @@ export async function automateFormSubmission(mappedData) {
         
         await takeScreenshot(page, 'your-details-page');
         
+        // Re-establish main context after navigation
+        const mainContextDetails = page.locator('main');
+        
         // ========================================
-        // STEP 8: Fill "Your Details" Form
+        // STEP 10: Fill "Your Details" Form
         // ========================================
         logger.info('Filling "Your Details" form');
-        await fillProposalForm(page, mappedData);
+        await fillProposalForm(mainContextDetails, mappedData);
         await takeScreenshot(page, 'your-details-filled');
         
         // ========================================
-        // STEP 9: Extract full HTML (STOPPED - no final submission)
+        // STEP 11: Extract full HTML (STOPPED - no final submission)
         // ========================================
         logger.info('Extracting full HTML from "Your Details" page');
         const htmlContent = await page.content();
