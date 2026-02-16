@@ -420,7 +420,7 @@ export async function fillGuestInfoPage(context, guests = []) {
     
     try {
         // Wait for the first guest name field to be visible
-        await context.waitForSelector('input[type="text"][name="cancellation_non_appearance[0][name]"]', {
+        await context.locator('input[type="text"][name="cancellation_non_appearance[0][name]"]').waitFor({
             timeout: 5000,
             state: 'visible'
         });
@@ -460,7 +460,7 @@ export async function fillGuestInfoPage(context, guests = []) {
                     
                     // Wait for the next guest's name field to appear
                     const nextGuestSelector = CONFIG.SELECTORS.GUEST_FIELDS.GUEST_NAME(i + 1);
-                    await context.waitForSelector(nextGuestSelector, {
+                    await context.locator(nextGuestSelector).waitFor({
                         timeout: 5000,
                         state: 'visible'
                     });
@@ -524,10 +524,6 @@ export async function fillProposalForm(context, mappedData) {
         
         if (hasBusinessType) {
             logger.debug('Business type radio buttons found');
-            await context.waitForSelector('input[type="radio"][name="is_business"]', {
-                timeout: 10000,
-                state: 'visible'
-            });
             
             logger.debug('Selecting business type', { isBusiness: mappedData.is_business });
             
