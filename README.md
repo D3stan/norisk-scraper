@@ -146,28 +146,6 @@ This will:
 - Output detailed logs to console
 - Take screenshots at each major step
 
-## 📂 Project Structure
-
-```
-norisk-scraper/
-├── src/
-│   ├── automation/
-│   │   ├── scraper.js          # Main Playwright logic
-│   │   └── formFiller.js       # Form population utilities
-│   ├── utils/
-│   │   ├── logger.js           # Winston logger
-│   │   └── dataMapper.js       # IT→NL data transformation
-│   ├── config/
-│   │   └── constants.js        # Selectors and configuration
-│   └── index.js                # Express server
-├── tests/
-│   ├── sample-data.js          # Test payloads
-│   └── manual-test.js          # Standalone test script
-├── screenshots/                # Automated screenshots
-├── logs/                       # Application logs
-└── metadata.js                 # Event types and countries
-```
-
 ## 🔍 Workflow
 
 1. **Session Initialization**: Navigate to form, extract CSRF token
