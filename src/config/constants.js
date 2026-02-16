@@ -93,7 +93,8 @@ export const CONFIG = {
             INSURANCE_TAX: 'text="Insurance tax"',
             TO_PAY: 'text="To pay"',
             QUOTE_EMAIL_BUTTON: 'a:has-text("Quote via email")',
-            TAKE_OUT_INSURANCE: 'button:has-text("Take out insurance")'
+            // Multiple variants for the button text
+            TAKE_OUT_INSURANCE: 'button:has-text("Take out insurance"), button:has-text("view proposal"), button:has-text("Next step")'
         },
 
         // Your Details Page (Step 4 - Final Form)

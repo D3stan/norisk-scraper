@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import logger from '../utils/logger.js';
 import { CONFIG } from '../config/constants.js';
-import { fillFormFields, selectCoverages } from './formFiller.js';
+import { fillFormFields, selectCoverages, fillGuestInfoPage, fillProposalForm } from './formFiller.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
@@ -52,6 +52,81 @@ async function extractCsrfToken(context) {
     } catch (error) {
         logger.error('Failed to extract CSRF token', { error: error.message });
         throw error;
+    }
+}
+
+/**
+ * Parses pricing information from "Your Proposal" page
+ * @param {Page|Frame} context - The page or frame context
+ * @returns {Object} Pricing data
+ */
+async function parsePricingData(context) {
+    logger.info('Parsing pricing data from "Your Proposal" page');
+    
+    try {
+        const pricing = {
+            sumExcl: null,
+            policyCosts: null,
+            insuranceTax: null,
+            toPay: null
+        };
+        
+        // Helper function to extract price value from text
+        const extractPrice = (text) => {
+            if (!text) return null;
+            // Match patterns like "€ 150,00" or "€ 15,00"
+            const match = text.match(/€\s*([\d.,]+)/);
+            return match ? match[1] : null;
+        };
+        
+        // Find "Sum excl." and get the next cell value
+        const sumExclRow = context.locator('text="Sum excl."').first();
+        if (await sumExclRow.count() > 0) {
+            const parent = sumExclRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
+            const text = await parent.textContent();
+            pricing.sumExcl = extractPrice(text);
+            logger.debug('Found Sum excl.', { value: pricing.sumExcl });
+        }
+        
+        // Find "Policy costs"
+        const policyCostsRow = context.locator('text="Policy costs"').first();
+        if (await policyCostsRow.count() > 0) {
+            const parent = policyCostsRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
+            const text = await parent.textContent();
+            pricing.policyCosts = extractPrice(text);
+            logger.debug('Found Policy costs', { value: pricing.policyCosts });
+        }
+        
+        // Find "Insurance tax"
+        const insuranceTaxRow = context.locator('text="Insurance tax"').first();
+        if (await insuranceTaxRow.count() > 0) {
+            const parent = insuranceTaxRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
+            const text = await parent.textContent();
+            pricing.insuranceTax = extractPrice(text);
+            logger.debug('Found Insurance tax', { value: pricing.insuranceTax });
+        }
+        
+        // Find "To pay"
+        const toPayRow = context.locator('text="To pay"').first();
+        if (await toPayRow.count() > 0) {
+            const parent = toPayRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
+            const text = await parent.textContent();
+            pricing.toPay = extractPrice(text);
+            logger.debug('Found To pay', { value: pricing.toPay });
+        }
+        
+        logger.info('Pricing data parsed successfully', pricing);
+        return pricing;
+        
+    } catch (error) {
+        logger.warn('Failed to parse pricing data', { error: error.message });
+        // Return empty pricing data if parsing fails
+        return {
+            sumExcl: null,
+            policyCosts: null,
+            insuranceTax: null,
+            toPay: null
+        };
     }
 }
 
@@ -176,9 +251,9 @@ export async function automateFormSubmission(mappedData) {
         await takeScreenshot(page, 'coverages-selected');
         
         // ========================================
-        // STEP 5: Proceed to proposal page (STOP HERE - no final submission)
+        // STEP 5: Submit coverages and handle possible intermediate pages
         // ========================================
-        logger.info('Submitting coverages (will stop at proposal page, before final send)');
+        logger.info('Submitting coverages');
         
         // Take screenshot before submit
         await takeScreenshot(page, 'before-coverage-submit');
@@ -197,15 +272,18 @@ export async function automateFormSubmission(mappedData) {
         logger.debug('Clicking coverage submit button');
         
         try {
-            // Click and wait for navigation with timeout
-            await Promise.all([
-                coverageFrame.waitForURL('**/proposal**', { 
-                  timeout: CONFIG.NAVIGATION_TIMEOUT 
-                }),
-                coverageSubmitButton.click()
-            ]);
-
-            logger.debug('Iframe navigated to proposal page');
+            // Click and wait for navigation
+            await coverageSubmitButton.click();
+            logger.debug('Coverage submit button clicked, waiting for navigation...');
+            
+            // Wait for page to load
+            await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+            await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+            
+            // Give page extra time to settle and render (important for dynamic content)
+            await coverageFrame.waitForTimeout(2000);
+            
+            logger.debug('Page load completed after coverage submit');
         } catch (error) {
             // Check if there are validation errors after click
             await takeScreenshot(page, 'coverage-submit-error');
@@ -218,44 +296,148 @@ export async function automateFormSubmission(mappedData) {
             throw error;
         }
         
-        // Wait for proposal content to load
-        await coverageFrame.waitForLoadState('load');
-        await coverageFrame.waitForTimeout(1000);
+        const currentUrl = await coverageFrame.evaluate(() => window.location.href);
+        logger.debug('Current URL after coverage submit', { url: currentUrl });
         
-        const proposalUrl = await coverageFrame.evaluate(() => window.location.href);
-        logger.info('Reached proposal page', { url: proposalUrl });
+        // ========================================
+        // STEP 6: Handle Guest Info Page (if cancellation_non_appearance selected)
+        // ========================================
+        const hasNonAppearance = mappedData.coverages?.cancellation_non_appearance;
+        const guests = mappedData.coverages?.non_appearance_guests;
+        
+        if (hasNonAppearance && guests && guests.length > 0) {
+            logger.info('Detected cancellation_non_appearance with guests, checking for guest info page');
+            
+            // Check if we're on the guest info page by looking for guest name input
+            const guestNameInput = coverageFrame.locator('input[type="text"][name="cancellation_non_appearance[0][name]"]');
+            const isGuestPage = await guestNameInput.count() > 0;
+            
+            if (isGuestPage) {
+                logger.info('Guest info page detected, filling guest information');
+                await takeScreenshot(page, 'guest-info-page');
+                
+                await fillGuestInfoPage(coverageFrame, guests);
+                await takeScreenshot(page, 'guest-info-filled');
+                
+                // Submit guest info form
+                logger.debug('Submitting guest info form');
+                const guestSubmitButton = coverageFrame.locator('button[type="submit"]').last();
+                await guestSubmitButton.click();
+                
+                // Wait for navigation after guest submit
+                await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+                await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+                await coverageFrame.waitForTimeout(2000);
+                
+                logger.info('Guest info submitted successfully');
+            } else {
+                logger.warn('Expected guest info page but it was not found, continuing');
+            }
+        }
+        
+        // ========================================
+        // STEP 7: Handle "Your Proposal" Price Quote Page (REQUIRED)
+        // ========================================
+        logger.info('Looking for "Your Proposal" price quote page');
+        
+        // Wait for either button to appear (give it time to load)
+        try {
+            logger.debug('Waiting for proposal page elements to appear...');
+            
+            // Wait for any of these indicators that we're on the proposal page
+            await coverageFrame.waitForSelector('text="To pay", button:has-text("view proposal"), button:has-text("Next step"), a:has-text("Quote via email")', {
+                timeout: 15000,
+                state: 'visible'
+            });
+            
+            logger.debug('Proposal page elements detected');
+        } catch (error) {
+            logger.error('Timeout waiting for proposal page elements', { error: error.message });
+            await takeScreenshot(page, 'proposal-page-timeout');
+            
+            // Log what's actually on the page
+            const pageText = await coverageFrame.textContent('body');
+            logger.debug('Page content preview', { preview: pageText.substring(0, 500) });
+            
+            throw new Error('Failed to reach "Your Proposal" price quote page - cannot extract pricing information');
+        }
+        
+        await takeScreenshot(page, 'your-proposal-price-page');
+        
+        // Now check which buttons are present
+        const quoteEmailButton = coverageFrame.locator(CONFIG.SELECTORS.PROPOSAL_PRICE.QUOTE_EMAIL_BUTTON);
+        // Look for the submit button more broadly
+        const takeOutButton = coverageFrame.locator('button[type="submit"]').last(); // Use the last submit button on the page
+        
+        const hasQuoteButton = await quoteEmailButton.count() > 0;
+        const hasTakeOutButton = await takeOutButton.count() > 0;
+        
+        logger.info('"Your Proposal" page confirmed', { 
+            hasQuoteButton, 
+            hasTakeOutButton 
+        });
+        
+        // Parse pricing data
+        const pricing = await parsePricingData(coverageFrame);
+        
+        // Validate that we got pricing data
+        if (!pricing.toPay) {
+            logger.warn('Failed to parse "To pay" amount from proposal page');
+        }
+        
+        // Click "Take out insurance" button to proceed to "Your Details" page
+        logger.debug('Clicking "Take out insurance" to proceed to Your Details');
+        
+        if (hasTakeOutButton) {
+            await takeOutButton.click();
+            logger.debug('Button clicked, waiting for navigation...');
+            
+            // Wait for navigation to Your Details
+            await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+            await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+            await coverageFrame.waitForTimeout(2000);
+            
+            logger.debug('Your Details page loaded');
+        } else {
+            logger.error('Could not find "Take out insurance" button to proceed');
+            throw new Error('"Take out insurance" button not found - cannot proceed to Your Details');
+        }
+        
+        const detailsUrl = await coverageFrame.evaluate(() => window.location.href);
+        logger.info('Navigated to "Your Details" page', { url: detailsUrl });
         
         // Extract quote key from URL
-        const urlParams = new URL(proposalUrl).searchParams;
+        const urlParams = new URL(detailsUrl).searchParams;
         const quoteKey = urlParams.get('key');
         logger.info('Quote key extracted', { quoteKey });
         
-        await takeScreenshot(page, 'proposal-page');
+        await takeScreenshot(page, 'your-details-page');
         
         // ========================================
-        // STEP 6: Fill proposal form (final page fields)
+        // STEP 8: Fill "Your Details" Form
         // ========================================
-        logger.info('Filling proposal form fields');
-        const { fillProposalForm } = await import('./formFiller.js');
+        logger.info('Filling "Your Details" form');
         await fillProposalForm(coverageFrame, mappedData);
-        await takeScreenshot(page, 'proposal-form-filled');
+        await takeScreenshot(page, 'your-details-filled');
         
         // ========================================
-        // STEP 6: Extract full HTML (STOPPED - no final submission)
+        // STEP 9: Extract full HTML (STOPPED - no final submission)
         // ========================================
-        logger.info('Extracting full HTML from proposal page (iframe content)');
+        logger.info('Extracting full HTML from "Your Details" page');
         const htmlContent = await coverageFrame.content();
         
         logger.info('Automation completed successfully', {
             quoteKey,
+            pricing,
             htmlLength: htmlContent.length,
-            finalUrl: proposalUrl
+            finalUrl: detailsUrl
         });
         
         return {
             success: true,
             quoteKey,
-            proposalUrl,
+            proposalUrl: detailsUrl,
+            pricing,
             htmlContent,
             csrfToken
         };

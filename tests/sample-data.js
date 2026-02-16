@@ -51,7 +51,7 @@ export const sampleRequest = {
         // Sub-fields
         higher_liability: "2500000", // €2.5M
         accident_man_days: "50", 
-        accident_man_days_participants: "", 
+        accident_man_days_participants: "50", 
     }
 };
 

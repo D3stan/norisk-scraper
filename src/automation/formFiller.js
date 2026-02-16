@@ -374,3 +374,145 @@ async function handleConditionalFields(context, coverageType, coverages) {
         // Don't throw - conditional fields might not be needed
     }
 }
+
+/**
+ * Fills guest information page for cancellation_non_appearance
+ * @param {Page|Frame} context - The page or frame context
+ * @param {Array} guests - Array of guest objects with name, birthdate, artist fields
+ */
+export async function fillGuestInfoPage(context, guests = []) {
+    if (!guests || guests.length === 0) {
+        logger.warn('No guests provided for cancellation_non_appearance page');
+        return;
+    }
+    
+    logger.info(`Filling guest information for ${guests.length} guest(s)`);
+    
+    try {
+        // Give page time to load
+        await context.waitForTimeout(500);
+        
+        for (let i = 0; i < guests.length; i++) {
+            const guest = guests[i];
+            logger.debug(`Filling guest ${i + 1}`, { name: guest.name });
+            
+            // Fill guest name
+            if (guest.name) {
+                const nameSelector = CONFIG.SELECTORS.GUEST_FIELDS.GUEST_NAME(i);
+                await fillInput(context, nameSelector, guest.name, `Guest ${i + 1} Name`);
+            }
+            
+            // Fill guest birthdate (DD-MM-YYYY format)
+            if (guest.birthdate) {
+                const birthdateSelector = CONFIG.SELECTORS.GUEST_FIELDS.GUEST_BIRTHDATE(i);
+                await fillInput(context, birthdateSelector, guest.birthdate, `Guest ${i + 1} Birthdate`);
+            }
+            
+            // Check artist checkbox if applicable
+            if (guest.artist) {
+                const artistSelector = CONFIG.SELECTORS.GUEST_FIELDS.GUEST_ARTIST(i);
+                const checkbox = context.locator(artistSelector);
+                if (await checkbox.count() > 0) {
+                    await checkbox.check();
+                    logger.debug(`Checked artist checkbox for guest ${i + 1}`);
+                }
+            }
+            
+            // If there are more guests, click "Add Person" button
+            if (i < guests.length - 1) {
+                logger.debug('Clicking "Add Person" button');
+                const addButton = context.locator(CONFIG.SELECTORS.GUEST_FIELDS.ADD_PERSON_BUTTON).last();
+                if (await addButton.count() > 0) {
+                    await addButton.click();
+                    await context.waitForTimeout(500); // Wait for new fields to appear
+                } else {
+                    logger.warn('Add Person button not found');
+                }
+            }
+        }
+        
+        logger.info('Guest information filled successfully');
+    } catch (error) {
+        logger.error('Failed to fill guest information', { error: error.message, stack: error.stack });
+        throw error;
+    }
+}
+
+/**
+ * Fills the "Your Details" form on the proposal page
+ * @param {Page|Frame} context - The page or frame context
+ * @param {Object} mappedData - The mapped form data
+ */
+export async function fillProposalForm(context, mappedData) {
+    logger.info('Starting "Your Details" form population');
+    
+    try {
+        // Give page time to fully load and render
+        await context.waitForTimeout(1000);
+        
+        // Wait for the business type radio buttons to be available
+        logger.debug('Waiting for business type radio buttons...');
+        await context.waitForSelector('input[type="radio"][name="is_business"]', {
+            timeout: 10000,
+            state: 'attached'
+        });
+        
+        // ========================================
+        // STEP 1: Select Business Type
+        // ========================================
+        logger.debug('Selecting business type', { isBusiness: mappedData.is_business });
+        
+        if (mappedData.is_business === true || mappedData.is_business === 1 || mappedData.is_business === '1') {
+            await context.locator(CONFIG.SELECTORS.YOUR_DETAILS.IS_BUSINESS_YES).check();
+            logger.debug('Selected business entity');
+        } else {
+            await context.locator(CONFIG.SELECTORS.YOUR_DETAILS.IS_BUSINESS_NO).check();
+            logger.debug('Selected individual entity');
+        }
+        
+        // Wait for conditional fields to appear
+        await context.waitForTimeout(500);
+        
+        // ========================================
+        // STEP 2: Fill Common Fields
+        // ========================================
+        logger.debug('Filling common address fields');
+        
+        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ADDRESS, mappedData.address, 'Address');
+        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.HOUSE_NUMBER, mappedData.house_number, 'House Number');
+        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ZIPCODE, mappedData.zipcode, 'Zipcode');
+        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.CITY, mappedData.city, 'City');
+        
+        // Country selector (custom UI component)
+        await selectDropdown(context, CONFIG.SELECTORS.YOUR_DETAILS.COUNTRY, mappedData.country, 'Country');
+        
+        // ========================================
+        // STEP 3: Fill Conditional Fields
+        // ========================================
+        if (mappedData.is_business === true || mappedData.is_business === 1 || mappedData.is_business === '1') {
+            logger.debug('Filling business-specific fields');
+            
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_NAME, mappedData.company_name, 'Company Name');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_COMMERCIAL_NUMBER, mappedData.company_commercial_number, 'Commercial Number');
+            
+            // DUNS number is optional
+            if (mappedData.company_duns_number) {
+                await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_DUNS_NUMBER, mappedData.company_duns_number, 'DUNS Number');
+            }
+            
+            // Legal form dropdown
+            await selectDropdown(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_LEGAL_FORM, mappedData.company_legal_form, 'Legal Form');
+            
+        } else {
+            logger.debug('Filling individual-specific fields');
+            
+            // Birthdate for individual
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.BIRTHDATE, mappedData.birthdate, 'Birthdate');
+        }
+        
+        logger.info('"Your Details" form filled successfully');
+    } catch (error) {
+        logger.error('Failed to fill "Your Details" form', { error: error.message, stack: error.stack });
+        throw error;
+    }
+}
