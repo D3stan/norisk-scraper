@@ -120,7 +120,9 @@ async function extractCsrfToken(context) {
     logger.debug('Extracting CSRF token');
     
     try {
-        const tokenInput = context.locator(CONFIG.SELECTORS.TOKEN);
+        // Multiple _token inputs may exist (logout form + main form)
+        // Target the one in the main content area, not the logout form
+        const tokenInput = context.getByRole('main').locator(CONFIG.SELECTORS.TOKEN).first();
         const token = await tokenInput.getAttribute('value');
         
         if (!token) {
