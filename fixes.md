@@ -86,3 +86,5 @@ additional person has [1] instead of [0] in the selector and so on
 when navigating to the next page of the form, it could appear a "your propostal" page, which can be identified by a "Quote via email" button (<a class="inline-block py-2 px-4 border border-primary-600 shadow-sm text-white text-center font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 w-full mb-2 md:w-auto md:mb-0" href="https://verzekeren.norisk.eu/en/embed/product/event-int/email?key=d82bca94-f505-4869-ad39-a9cfb704a31a">Quote via email</a>).
 Here, we just need to press the button that will navigate us to the next page.
 
+
+# Your Details
