@@ -77,6 +77,50 @@ export const CONFIG = {
             ACCIDENT_PARTICIPANTS: 'select[name="accident_man_days_participants"]',
             ACCIDENT_SPORT: 'input[type="checkbox"][name="accident_man_days_participants_sport"]'
         },
+
+        // Guest Info Page (for cancellation_non_appearance)
+        GUEST_FIELDS: {
+            GUEST_NAME: (index) => `input[type="text"][name="cancellation_non_appearance[${index}][name]"]`,
+            GUEST_BIRTHDATE: (index) => `input[type="text"][name="cancellation_non_appearance[${index}][birthdate]"]`,
+            GUEST_ARTIST: (index) => `input[type="checkbox"][name="cancellation_non_appearance[${index}][artist]"]`,
+            ADD_PERSON_BUTTON: 'button[type="button"]'
+        },
+
+        // Your Proposal Page (Price Quote)
+        PROPOSAL_PRICE: {
+            SUM_EXCL: 'text="Sum excl."',
+            POLICY_COSTS: 'text="Policy costs"',
+            INSURANCE_TAX: 'text="Insurance tax"',
+            TO_PAY: 'text="To pay"',
+            QUOTE_EMAIL_BUTTON: 'a:has-text("Quote via email")',
+            TAKE_OUT_INSURANCE: 'button:has-text("Take out insurance")'
+        },
+
+        // Your Details Page (Step 4 - Final Form)
+        YOUR_DETAILS: {
+            // Business type radio
+            IS_BUSINESS_YES: 'input[type="radio"][name="is_business"][value="1"]',
+            IS_BUSINESS_NO: 'input[type="radio"][name="is_business"][value="0"]',
+            
+            // Common fields (both business and individual)
+            ADDRESS: 'input[type="text"][name="address"]',
+            HOUSE_NUMBER: 'input[type="text"][name="house_number"]',
+            ZIPCODE: 'input[type="text"][name="zipcode"]',
+            CITY: 'input[type="text"][name="city"]',
+            COUNTRY: 'ui-select#region input[role="combobox"]',
+            
+            // Business-specific fields
+            COMPANY_NAME: 'input[type="text"][name="company_name"]',
+            COMPANY_COMMERCIAL_NUMBER: 'input[type="text"][name="company_commercial_number"]',
+            COMPANY_DUNS_NUMBER: 'input[type="text"][name="company_duns_number"]',
+            COMPANY_LEGAL_FORM: 'select[name="company_legal_form"]',
+            
+            // Individual-specific fields
+            BIRTHDATE: 'input[type="text"][name="birthdate"]',
+            
+            // Submit button
+            SUBMIT: 'button[type="submit"]'
+        },
     },
 
     // Expected URL Patterns
