@@ -7,7 +7,7 @@
 - other
 
 ### Specific Roles
-- intermediary and proxy have 2 more inputs to be filled: COMPANY_NAME and  AFM_NUMBER
+- intermediary and proxy have 2 more inputs to be filled: COMPANY_NAME and AFM_NUMBER
 
 ## Type of Event Selector
 - 1 Four evenings' walk
