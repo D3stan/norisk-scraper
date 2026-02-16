@@ -91,3 +91,63 @@ const API_TIMEOUT_MS = 45000; // 45 seconds
 
 ### Styling Changes
 Modify `style.css` and re-upload. Changes are immediate.
+
+---
+
+## Local Testing (Optional)
+
+You can test the form locally without connecting to the automation API.
+
+### Enable Test Mode
+
+Add this at the top of `page-preventivo.php` (after the opening `<?php` tag):
+
+```php
+// TEST MODE - Uncomment for local testing without API
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if this is an AJAX request
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (strpos($contentType, 'json') !== false) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'quoteKey' => 'TEST-' . uniqid(),
+            'proposalUrl' => 'https://example.com/proposal',
+            'duration' => '5000ms'
+        ]);
+        exit;
+    }
+}
+```
+
+### Form Validation Test Checklist
+
+1. **Empty Form Submission**
+   - Click submit without filling any fields
+   - Verify HTML5 validation prevents submission
+   - Required fields should be highlighted
+
+2. **Invalid Email**
+   - Enter "not-an-email" in email field
+   - Submit should show email validation error
+
+3. **Past Date**
+   - Select yesterday's date
+   - Verify min date validation works
+
+4. **Privacy Checkbox**
+   - Try submitting without checking privacy
+   - Verify browser prevents submission
+
+5. **Complete Form**
+   - Fill all required fields correctly
+   - Submit should show success message
+   - Verify quote reference is displayed
+
+6. **Reset Form**
+   - Click "Richiedi Nuovo Preventivo"
+   - Form should reset and be visible again
+
+### Remove Test Code Before Deploy
+
+Delete the test mode block before uploading to production.
