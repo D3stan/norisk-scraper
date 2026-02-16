@@ -71,49 +71,43 @@ async function parsePricingData(context) {
             toPay: null
         };
         
-        // Helper function to extract price value from text
-        const extractPrice = (text) => {
-            if (!text) return null;
-            // Match patterns like "€ 150,00" or "€ 15,00"
-            const match = text.match(/€\s*([\d.,]+)/);
-            return match ? match[1] : null;
+        // Helper function to extract price value from a dd element following a dt
+        const extractPriceFromDD = async (labelText) => {
+            try {
+                // Find the dt element containing the label
+                const dtElement = context.locator(`dt:has-text("${labelText}")`).first();
+                
+                if (await dtElement.count() === 0) {
+                    logger.warn(`Could not find dt element with text: ${labelText}`);
+                    return null;
+                }
+                
+                // Get the next sibling dd element
+                const ddElement = dtElement.locator('xpath=following-sibling::dd[1]');
+                
+                if (await ddElement.count() === 0) {
+                    logger.warn(`Could not find dd element after: ${labelText}`);
+                    return null;
+                }
+                
+                // Get the text content from the dd
+                const text = await ddElement.textContent();
+                logger.debug(`Found ${labelText}`, { rawText: text });
+                
+                // Extract just the price part (remove €, spaces)
+                const match = text.match(/€\s*([\d.,]+)/);
+                return match ? match[1] : text.trim();
+            } catch (error) {
+                logger.warn(`Failed to extract ${labelText}`, { error: error.message });
+                return null;
+            }
         };
         
-        // Find "Sum excl." and get the next cell value
-        const sumExclRow = context.locator('text="Sum excl."').first();
-        if (await sumExclRow.count() > 0) {
-            const parent = sumExclRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
-            const text = await parent.textContent();
-            pricing.sumExcl = extractPrice(text);
-            logger.debug('Found Sum excl.', { value: pricing.sumExcl });
-        }
-        
-        // Find "Policy costs"
-        const policyCostsRow = context.locator('text="Policy costs"').first();
-        if (await policyCostsRow.count() > 0) {
-            const parent = policyCostsRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
-            const text = await parent.textContent();
-            pricing.policyCosts = extractPrice(text);
-            logger.debug('Found Policy costs', { value: pricing.policyCosts });
-        }
-        
-        // Find "Insurance tax"
-        const insuranceTaxRow = context.locator('text="Insurance tax"').first();
-        if (await insuranceTaxRow.count() > 0) {
-            const parent = insuranceTaxRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
-            const text = await parent.textContent();
-            pricing.insuranceTax = extractPrice(text);
-            logger.debug('Found Insurance tax', { value: pricing.insuranceTax });
-        }
-        
-        // Find "To pay"
-        const toPayRow = context.locator('text="To pay"').first();
-        if (await toPayRow.count() > 0) {
-            const parent = toPayRow.locator('xpath=ancestor::*[contains(@class, "flex") or contains(@class, "grid")]').first();
-            const text = await parent.textContent();
-            pricing.toPay = extractPrice(text);
-            logger.debug('Found To pay', { value: pricing.toPay });
-        }
+        // Extract each price field
+        pricing.sumExcl = await extractPriceFromDD('Sum excl.');
+        pricing.policyCosts = await extractPriceFromDD('Policy costs');
+        pricing.insuranceTax = await extractPriceFromDD('Insurance tax');
+        pricing.toPay = await extractPriceFromDD('To pay');
         
         logger.info('Pricing data parsed successfully', pricing);
         return pricing;
@@ -276,12 +270,12 @@ export async function automateFormSubmission(mappedData) {
             await coverageSubmitButton.click();
             logger.debug('Coverage submit button clicked, waiting for navigation...');
             
-            // Wait for page to load
+            // Wait for page to load completely
             await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
             await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-            
-            // Give page extra time to settle and render (important for dynamic content)
-            await coverageFrame.waitForTimeout(2000);
+            await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
+                logger.debug('Network idle timeout - continuing anyway');
+            });
             
             logger.debug('Page load completed after coverage submit');
         } catch (error) {
@@ -327,7 +321,9 @@ export async function automateFormSubmission(mappedData) {
                 // Wait for navigation after guest submit
                 await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
                 await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-                await coverageFrame.waitForTimeout(2000);
+                await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
+                    logger.debug('Network idle timeout after guest submit - continuing anyway');
+                });
                 
                 logger.info('Guest info submitted successfully');
             } else {
@@ -344,16 +340,20 @@ export async function automateFormSubmission(mappedData) {
         try {
             logger.debug('Waiting for proposal page elements to appear...');
             
-            // Wait for any of these indicators that we're on the proposal page
-            await coverageFrame.waitForSelector('text="To pay", button:has-text("view proposal"), button:has-text("Next step"), a:has-text("Quote via email")', {
-                timeout: 15000,
+            // Wait for the pricing grid to be visible (this confirms we're on the right page)
+            await coverageFrame.waitForSelector('dl.grid.grid-cols-2 dt:has-text("To pay")', {
+                timeout: 20000,
                 state: 'visible'
             });
             
-            logger.debug('Proposal page elements detected');
+            logger.debug('Proposal page pricing elements detected');
         } catch (error) {
-            logger.error('Timeout waiting for proposal page elements', { error: error.message });
+            logger.error('Timeout waiting for proposal page pricing elements', { error: error.message });
             await takeScreenshot(page, 'proposal-page-timeout');
+            
+            // Log current URL
+            const currentUrl = await coverageFrame.evaluate(() => window.location.href);
+            logger.debug('Current URL', { url: currentUrl });
             
             // Log what's actually on the page
             const pageText = await coverageFrame.textContent('body');
@@ -395,7 +395,9 @@ export async function automateFormSubmission(mappedData) {
             // Wait for navigation to Your Details
             await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
             await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-            await coverageFrame.waitForTimeout(2000);
+            await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
+                logger.debug('Network idle timeout after proposal click - continuing anyway');
+            });
             
             logger.debug('Your Details page loaded');
         } else {

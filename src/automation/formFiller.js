@@ -389,8 +389,11 @@ export async function fillGuestInfoPage(context, guests = []) {
     logger.info(`Filling guest information for ${guests.length} guest(s)`);
     
     try {
-        // Give page time to load
-        await context.waitForTimeout(500);
+        // Wait for the first guest name field to be visible
+        await context.waitForSelector('input[type="text"][name="cancellation_non_appearance[0][name]"]', {
+            timeout: 5000,
+            state: 'visible'
+        });
         
         for (let i = 0; i < guests.length; i++) {
             const guest = guests[i];
@@ -424,7 +427,14 @@ export async function fillGuestInfoPage(context, guests = []) {
                 const addButton = context.locator(CONFIG.SELECTORS.GUEST_FIELDS.ADD_PERSON_BUTTON).last();
                 if (await addButton.count() > 0) {
                     await addButton.click();
-                    await context.waitForTimeout(500); // Wait for new fields to appear
+                    
+                    // Wait for the next guest's name field to appear
+                    const nextGuestSelector = CONFIG.SELECTORS.GUEST_FIELDS.GUEST_NAME(i + 1);
+                    await context.waitForSelector(nextGuestSelector, {
+                        timeout: 5000,
+                        state: 'visible'
+                    });
+                    logger.debug(`Guest ${i + 2} fields appeared`);
                 } else {
                     logger.warn('Add Person button not found');
                 }
@@ -447,14 +457,11 @@ export async function fillProposalForm(context, mappedData) {
     logger.info('Starting "Your Details" form population');
     
     try {
-        // Give page time to fully load and render
-        await context.waitForTimeout(1000);
-        
         // Wait for the business type radio buttons to be available
         logger.debug('Waiting for business type radio buttons...');
         await context.waitForSelector('input[type="radio"][name="is_business"]', {
             timeout: 10000,
-            state: 'attached'
+            state: 'visible'
         });
         
         // ========================================
