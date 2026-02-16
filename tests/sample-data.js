@@ -114,3 +114,37 @@ export const sampleRequest3 = {
         cancellation: true
     }
 };
+
+// Sample request testing intermediary role with conditional fields
+export const sampleRequestIntermediary = {
+    initials: "F",
+    preposition: "",
+    lastName: "Ferrari",
+    phone: "+39 06 5551234",
+    email: "f.ferrari@events-agency.it",
+    role: "intermediary",
+    roleCompany: "Events & Partners Agency",
+    roleVerification: "IT12345678901",
+    
+    eventName: "Corporate Gala Dinner",
+    eventType: "17", // Party
+    startDate: "2026-10-15",
+    days: 1,
+    visitors: 300,
+    description: "Exclusive corporate gala dinner for VIP clients",
+    
+    venueDescription: "Luxury hotel conference hall",
+    address: "Via Veneto",
+    houseNumber: "125",
+    zipcode: "00187",
+    city: "Roma",
+    country: "it",
+    environment: "indoor",
+    
+    coverages: {
+        liability: true,
+        higher_liability: "5000000",
+        equipment: true,
+        equipment_value: "75000"
+    }
+};

@@ -37,6 +37,8 @@ export function mapFormData(italianData) {
         phone: italianData.phone || '',
         email: italianData.email || '',
         role: italianData.role || 'event_organiser',
+        role_company: italianData.roleCompany || '',
+        role_verification: italianData.roleVerification || '',
         
         // Event Details
         title: italianData.eventName || '',
@@ -93,6 +95,16 @@ export function validateFormData(data) {
     ];
     
     const errors = [];
+    
+    // Check role-specific required fields
+    if (data.role === 'intermediary' || data.role === 'proxy') {
+        if (!data.roleCompany) {
+            errors.push('Company name is required for intermediary/proxy role');
+        }
+        if (!data.roleVerification) {
+            errors.push('AFM/Verification number is required for intermediary/proxy role');
+        }
+    }
     
     for (const { field, message } of requiredFields) {
         if (!data[field]) {

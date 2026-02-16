@@ -170,6 +170,9 @@ export async function fillFormFields(context, mappedData) {
         await fillInput(context, CONFIG.SELECTORS.EMAIL, mappedData.email, 'Email');
         await selectDropdown(context, CONFIG.SELECTORS.ROLE, mappedData.role, 'Role');
         
+        // Handle conditional role fields (intermediary/proxy)
+        await handleRoleConditionalFields(context, mappedData);
+        
         // Step 2: Event Details
         logger.debug('Filling event details section');
         await fillInput(context, CONFIG.SELECTORS.EVENT_NAME, mappedData.title, 'Event Name');
@@ -247,6 +250,44 @@ export async function selectCoverages(context, coverages = {}) {
     } catch (error) {
         logger.error('Coverage selection failed', { error: error.message });
         throw error;
+    }
+}
+
+/**
+ * Handles conditional fields that appear based on role selection
+ * @param {Page|Frame} context - The page or frame context
+ * @param {Object} mappedData - The mapped form data
+ */
+async function handleRoleConditionalFields(context, mappedData) {
+    const role = mappedData.role;
+    
+    // Only intermediary and proxy roles require additional fields
+    if (role !== 'intermediary' && role !== 'proxy') {
+        return;
+    }
+    
+    try {
+        // Wait for conditional fields to appear (Alpine.js/Livewire)
+        await context.waitForTimeout(300);
+        
+        // Fill company name
+        if (mappedData.role_company) {
+            await fillInput(context, CONFIG.SELECTORS.COMPANY_NAME, mappedData.role_company, 'Role Company Name');
+        } else {
+            logger.warn(`Company name not provided for role: ${role}`);
+        }
+        
+        // Fill AFM/verification number
+        if (mappedData.role_verification) {
+            await fillInput(context, CONFIG.SELECTORS.AFM_NUMBER, mappedData.role_verification, 'AFM/Verification Number');
+        } else {
+            logger.warn(`Verification number not provided for role: ${role}`);
+        }
+        
+        logger.debug(`Filled conditional fields for role: ${role}`);
+    } catch (error) {
+        logger.error(`Failed to fill role conditional fields for ${role}`, { error: error.message });
+        // Don't throw - these might be optional in some scenarios
     }
 }
 
