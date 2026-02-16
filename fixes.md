@@ -76,10 +76,10 @@
 ### Concellation due to non-appearance
 if selected, another page will be added when the form is navigated to the next page.
 The extra page will ask for the guest info:
-* Guest name: input[type="text"][name="cancellation_non_appearance[0][name]"]
-* Date of Birth (DD-MM-YYYY): input[type="text"][name="cancellation_non_appearance[0][birthdate]"]
-* Artist (checkbox): input[type="checkbox"][name="cancellation_non_appearance[0][artist]"]
-* Add Person: button[type="button"]
+* Guest name: `input[type="text"][name="cancellation_non_appearance[0][name]"]`
+* Date of Birth (DD-MM-YYYY): `input[type="text"][name="cancellation_non_appearance[0][birthdate]"]`
+* Artist (checkbox): `input[type="checkbox"][name="cancellation_non_appearance[0][artist]"]`
+* Add Person: `button[type="button"]`
 additional person has [1] instead of [0] in the selector and so on
 
 
@@ -88,3 +88,38 @@ Here, we just need to press the button that will navigate us to the next page.
 
 
 # Your Details
+
+## Business type
+
+Must be selected with a conditional check box:
+* if business: `input[type="radio"][name="is_business"][value="1"]`
+* if individual: `input[type="radio"][name="is_business"][value="0"]`
+Based on the selection, the form will show additional fields to be filled.
+For both of them, the following fields are required:
+- Address: `input[type="text"][name="address"]`
+- House number: `input[type="text"][name="house_number"]`
+- Zipcode: `input[type="text"][name="zipcode"]`
+- City: `input[type="text"][name="city"]`
+- Country: currently in the code works with `ui-select#region input[role="combobox"]` in the `selectDropdown` function, but it is applied only to the first page.
+
+### Business
+
+- Company name: `input[type="text"][name="company_name"]`
+- Commercial number: `input[type="text"][name="company_commercial_number"]`
+- DUNS number (optional): `input[type="text"][name="company_duns_number"]`
+- Legal form: `select[name="company_legal_form"]`
+    * `association`
+    * `church`
+    * `cooperative_and_mutual_insurance_company`
+    * `foundation`
+    * `general_partnership`
+    * `limited_partnership`
+    * `partnership`
+    * `private_limited_company`
+    * `public_legal_entity`
+    * `public_limited_company`
+    * `sole_proprietorship`
+
+### Individual
+
+- Birth date (DD-MM-YYYY): `input[type="text"][name="birthdate"]`
