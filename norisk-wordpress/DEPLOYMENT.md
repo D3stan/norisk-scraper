@@ -1,0 +1,93 @@
+# WordPress Form Deployment Guide
+
+## Prerequisites
+- WordPress admin access
+- FTP/sFTP access to server
+- VPS IP address for automation API
+
+## Step 1: Update Configuration
+
+Edit `page-preventivo.php` and update the API URL:
+
+```php
+const API_URL = 'http://YOUR_VPS_IP:3000/api/quote';
+```
+
+## Step 2: Upload to WordPress
+
+1. Connect to your WordPress site via FTP
+2. Navigate to: `wp-content/themes/`
+3. Create folder: `royal-elementor-kit-child/`
+4. Upload both files:
+   - `style.css`
+   - `page-preventivo.php`
+
+## Step 3: Activate Child Theme
+
+1. Log into WordPress admin
+2. Go to Appearance → Themes
+3. Activate "Royal Elementor Kit Child"
+
+## Step 4: Create the Page
+
+1. Go to Pages → Add New
+2. Title: "Richiedi Preventivo Evento"
+3. Page Attributes → Template: select "Preventivo Evento"
+4. Publish the page
+5. Note the URL (e.g., `/richiedi-preventivo-evento/`)
+
+## Step 5: Add Link to Main Site
+
+1. Edit the page where you want the button
+2. Add a button linking to the new page
+3. Button text: "Richiedi Preventivo"
+
+## Step 6: Test
+
+1. Visit the new page
+2. Fill the form with test data
+3. Submit and verify quote is generated
+4. Check all error states work
+
+## Troubleshooting
+
+### CORS Errors
+If you see CORS errors in browser console:
+- Ensure your Express API has CORS enabled for golinucci.it
+- Add to your Express app:
+  ```javascript
+  app.use(cors({ origin: 'https://golinucci.it' }));
+  ```
+
+### Form Not Styled
+- Verify child theme is activated
+- Clear browser cache
+- Check that style.css is in the correct folder
+
+### API Timeout
+Adjust timeout in `page-preventivo.php`:
+```php
+const API_TIMEOUT_MS = 60000; // 60 seconds
+```
+
+### Page Template Not Showing
+- Ensure file is named exactly `page-preventivo.php`
+- Check that the PHP comment header is present
+- Try re-uploading the file
+
+## Maintenance
+
+### Updating API URL
+If your VPS IP changes, edit:
+```php
+const API_URL = 'http://NEW_IP:3000/api/quote';
+```
+
+### Adjusting Timeout
+If quotes take longer to generate, increase:
+```php
+const API_TIMEOUT_MS = 45000; // 45 seconds
+```
+
+### Styling Changes
+Modify `style.css` and re-upload. Changes are immediate.
