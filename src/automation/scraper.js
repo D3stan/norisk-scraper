@@ -33,6 +33,86 @@ async function takeScreenshot(page, name) {
 }
 
 /**
+ * Performs login to NoRisk agent portal
+ * @param {Page} page - The Playwright page
+ * @returns {Promise<boolean>} True if login successful
+ */
+async function performLogin(page) {
+    logger.info('Starting login process', { url: CONFIG.LOGIN_URL });
+    
+    try {
+        // Navigate to login page
+        await page.goto(CONFIG.LOGIN_URL, {
+            waitUntil: 'load',
+            timeout: CONFIG.NAVIGATION_TIMEOUT
+        });
+        
+        logger.debug('Login page loaded');
+        await takeScreenshot(page, 'login-page');
+        
+        // Wait for login form elements
+        await page.waitForSelector(CONFIG.SELECTORS.LOGIN_EMAIL, { state: 'visible', timeout: 10000 });
+        await page.waitForSelector(CONFIG.SELECTORS.LOGIN_PASSWORD, { state: 'visible', timeout: 10000 });
+        
+        // Check if credentials are configured
+        if (!CONFIG.NORISK_EMAIL || !CONFIG.NORISK_PASSWORD) {
+            throw new Error('NORISK_EMAIL and NORISK_PASSWORD must be set in environment variables');
+        }
+        
+        // Fill login form
+        logger.debug('Filling login credentials');
+        await page.fill(CONFIG.SELECTORS.LOGIN_EMAIL, CONFIG.NORISK_EMAIL);
+        await page.fill(CONFIG.SELECTORS.LOGIN_PASSWORD, CONFIG.NORISK_PASSWORD);
+        
+        await takeScreenshot(page, 'login-filled');
+        
+        // Submit login form
+        logger.debug('Submitting login form');
+        await Promise.all([
+            page.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT }),
+            page.click(CONFIG.SELECTORS.LOGIN_SUBMIT)
+        ]);
+        
+        // Wait for page to stabilize
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(1000);
+        
+        await takeScreenshot(page, 'after-login');
+        
+        // Verify login success by checking for _token hidden input
+        logger.debug('Verifying login success');
+        const tokenInput = await page.locator(CONFIG.SELECTORS.TOKEN).count();
+        
+        if (tokenInput > 0) {
+            const currentUrl = page.url();
+            logger.info('Login successful', { url: currentUrl });
+            return true;
+        } else {
+            // Check if we're still on the login page (login failed)
+            const emailInput = await page.locator(CONFIG.SELECTORS.LOGIN_EMAIL).count();
+            if (emailInput > 0) {
+                logger.error('Login failed - still on login page');
+                
+                // Try to extract error messages
+                const errorMessages = await page.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
+                if (errorMessages.length > 0) {
+                    logger.error('Login error messages', { errors: errorMessages });
+                }
+                
+                throw new Error('Login failed - invalid credentials or login error');
+            }
+            
+            logger.warn('Login verification inconclusive - no token found but not on login page');
+            return true; // Assume success if we're not on login page
+        }
+    } catch (error) {
+        logger.error('Login process failed', { error: error.message });
+        throw error;
+    }
+}
+
+
+/**
  * Extracts CSRF token from the page or frame
  * @param {Page|Frame} context - The page or frame context
  */
@@ -162,86 +242,110 @@ export async function automateFormSubmission(mappedData) {
         page.setDefaultTimeout(CONFIG.DEFAULT_TIMEOUT);
         
         // ========================================
-        // STEP 1: Navigate to form and extract token
+        // STEP 1: Perform Login
         // ========================================
-        logger.info('Navigating to form page', { url: CONFIG.BASE_URL });
-        await page.goto(CONFIG.BASE_URL, { 
-            waitUntil: 'load', // Changed from 'networkidle' to 'load' for pages with ongoing requests
+        await performLogin(page);
+        
+        // ========================================
+        // STEP 2: Navigate to form with parameters
+        // ========================================
+        const formUrl = `${CONFIG.FORM_URL}?tp=${CONFIG.TP_PARAM}`;
+        logger.info('Navigating to form page', { url: formUrl });
+        await page.goto(formUrl, { 
+            waitUntil: 'load',
             timeout: CONFIG.NAVIGATION_TIMEOUT 
         });
+        
+        // Wait for page to be fully loaded
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(1000);
         
         // Try to handle cookie consent if it appears
         try {
             const cookieButton = page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowallSelection');
             await cookieButton.click({ timeout: 3000 });
             logger.debug('Clicked cookie consent button');
-            // await page.waitForTimeout(1000);
         } catch (error) {
             logger.debug('No cookie consent banner detected or already accepted');
         }
 
-        // Wait for iframe to load
-        logger.debug('Waiting for iframe to load');
-        const frameElement = await page.waitForSelector('iframe', { timeout: 10000 });
-
-        // Get iframe context
-        const frame = await frameElement.contentFrame();
-
-        if (!frame) {
-            throw new Error('Failed to get iframe content frame');
-        }
+        // Wait for form to be loaded (token is hidden, so wait for 'attached' not 'visible')
+        await page.waitForSelector(CONFIG.SELECTORS.TOKEN, { state: 'attached', timeout: 10000 });
+        logger.debug('Form loaded and CSRF token field detected');
         
-        logger.info('Switched to iframe context');
+        await takeScreenshot(page, 'form-loaded');
         
-        // Wait for form to be loaded inside iframe (token is hidden, so wait for 'attached' not 'visible')
-        await frame.waitForSelector(CONFIG.SELECTORS.TOKEN, { state: 'attached', timeout: 10000 });
-        logger.debug('Form loaded and CSRF token field detected inside iframe');
-        
-        await takeScreenshot(page, 'initial-page');
-        
-        // Extract CSRF token from iframe
-        const csrfToken = await extractCsrfToken(frame);
+        // Extract CSRF token
+        const csrfToken = await extractCsrfToken(page);
         logger.info('Session initialized with CSRF token');
         
         // ========================================
-        // STEP 2: Fill form fields (inside iframe)
+        // STEP 3: Skip "About the Event" page (pre-filled)
         // ========================================
-        await fillFormFields(frame, mappedData);
+        logger.info('Checking if we are on "About the Event" page');
+        
+        // Check if we're on the "About the Event" page by looking for specific text or URL
+        const pageContent = await page.textContent('body');
+        const isAboutEventPage = pageContent.includes('About the event') || 
+                                 pageContent.includes('Over het evenement') ||
+                                 await page.locator('h1, h2, h3').filter({ hasText: /About the event|Over het evenement/i }).count() > 0;
+        
+        if (isAboutEventPage) {
+            logger.info('"About the Event" page detected - skipping (fields are pre-filled)');
+            await takeScreenshot(page, 'about-event-page-skip');
+            
+            // Click Next/Submit to proceed to event details
+            const submitButton = page.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
+            await submitButton.click();
+            
+            // Wait for navigation
+            await page.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+            await page.waitForTimeout(1000);
+            
+            logger.info('Skipped "About the Event" page, proceeding to next step');
+            await takeScreenshot(page, 'after-about-event-skip');
+        } else {
+            logger.info('Not on "About the Event" page, continuing with form');
+        }
+        
+        await takeScreenshot(page, 'initial-page');
+        
+        // ========================================
+        // STEP 4: Fill form fields
+        // ========================================
+        await fillFormFields(page, mappedData);
         await takeScreenshot(page, 'form-filled');
         
         // ========================================
-        // STEP 3: Submit form to proceed to coverages page
+        // STEP 5: Submit form to proceed to coverages page
         // ========================================
         logger.info('Submitting form to proceed to coverage selection');
         
-        // Click submit button inside iframe and wait for navigation
-        logger.debug('Clicking submit button inside iframe');
-        const submitButton = frame.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
+        // Click submit button and wait for navigation
+        logger.debug('Clicking submit button');
+        const submitButton = page.locator(CONFIG.SELECTORS.SUBMIT_BUTTON);
         
-        // Wait for iframe to navigate to coverages page
+        // Wait for page to navigate to coverages page
         await Promise.all([
-            frame.waitForURL('**/coverages**', { 
+            page.waitForURL('**/coverages**', { 
               timeout: CONFIG.NAVIGATION_TIMEOUT 
             }),
             submitButton.click()
         ]);
         
-        logger.debug('Iframe navigated to coverages page');
+        logger.debug('Navigated to coverages page');
         
-        // Give iframe content time to fully load
-        await frame.waitForLoadState('load');
-        await frame.waitForTimeout(1000);
+        // Give page time to fully load
+        await page.waitForLoadState('load');
+        await page.waitForTimeout(1000);
         
-        // We can continue using the same frame reference - iframe context persists
-        const coverageFrame = frame;
-        
-        logger.info('Using iframe context on coverage page');
+        logger.info('On coverage page');
         await takeScreenshot(page, 'coverages-page');
         
         // ========================================
-        // STEP 4: Select coverage options
+        // STEP 6: Select coverage options
         // ========================================
-        await selectCoverages(coverageFrame, mappedData.coverages);
+        await selectCoverages(page, mappedData.coverages);
         await takeScreenshot(page, 'coverages-selected');
         
         // ========================================
@@ -253,14 +357,14 @@ export async function automateFormSubmission(mappedData) {
         await takeScreenshot(page, 'before-coverage-submit');
         
         // Check for validation errors before submitting
-        const validationErrors = await coverageFrame.locator('.text-red-500, .text-red-600, .error, [class*="error"]').count();
+        const validationErrors = await page.locator('.text-red-500, .text-red-600, .error, [class*="error"]').count();
         if (validationErrors > 0) {
-          const errorTexts = await coverageFrame.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
+          const errorTexts = await page.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
           logger.warn('Validation errors detected before submit', { errors: errorTexts });
         }
         
-        // Click next/submit button inside iframe
-        const coverageSubmitButton = coverageFrame.locator('button[type="submit"]');
+        // Click next/submit button
+        const coverageSubmitButton = page.locator('button[type="submit"]');
         await coverageSubmitButton.scrollIntoViewIfNeeded();
         
         logger.debug('Clicking coverage submit button');
@@ -271,9 +375,9 @@ export async function automateFormSubmission(mappedData) {
             logger.debug('Coverage submit button clicked, waiting for navigation...');
             
             // Wait for page to load completely
-            await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-            await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-            await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
+            await page.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+            await page.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+            await page.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
                 logger.debug('Network idle timeout - continuing anyway');
             });
             
@@ -281,7 +385,7 @@ export async function automateFormSubmission(mappedData) {
         } catch (error) {
             // Check if there are validation errors after click
             await takeScreenshot(page, 'coverage-submit-error');
-            const postClickErrors = await coverageFrame.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
+            const postClickErrors = await page.locator('.text-red-500, .text-red-600, .error, [class*="error"]').allTextContents();
             if (postClickErrors.length > 0) {
                 logger.error('Form validation failed', { errors: postClickErrors });
                 throw new Error(`Coverage form validation failed: ${postClickErrors.join(', ')}`);
@@ -290,7 +394,7 @@ export async function automateFormSubmission(mappedData) {
             throw error;
         }
         
-        const currentUrl = await coverageFrame.evaluate(() => window.location.href);
+        const currentUrl = await page.evaluate(() => window.location.href);
         logger.debug('Current URL after coverage submit', { url: currentUrl });
         
         // ========================================
@@ -303,25 +407,25 @@ export async function automateFormSubmission(mappedData) {
             logger.info('Detected cancellation_non_appearance with guests, checking for guest info page');
             
             // Check if we're on the guest info page by looking for guest name input
-            const guestNameInput = coverageFrame.locator('input[type="text"][name="cancellation_non_appearance[0][name]"]');
+            const guestNameInput = page.locator('input[type="text"][name="cancellation_non_appearance[0][name]"]');
             const isGuestPage = await guestNameInput.count() > 0;
             
             if (isGuestPage) {
                 logger.info('Guest info page detected, filling guest information');
                 await takeScreenshot(page, 'guest-info-page');
                 
-                await fillGuestInfoPage(coverageFrame, guests);
+                await fillGuestInfoPage(page, guests);
                 await takeScreenshot(page, 'guest-info-filled');
                 
                 // Submit guest info form
                 logger.debug('Submitting guest info form');
-                const guestSubmitButton = coverageFrame.locator('button[type="submit"]').last();
+                const guestSubmitButton = page.locator('button[type="submit"]').last();
                 await guestSubmitButton.click();
                 
                 // Wait for navigation after guest submit
-                await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-                await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-                await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
+                await page.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+                await page.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+                await page.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
                     logger.debug('Network idle timeout after guest submit - continuing anyway');
                 });
                 
@@ -341,7 +445,7 @@ export async function automateFormSubmission(mappedData) {
             logger.debug('Waiting for proposal page elements to appear...');
             
             // Wait for the pricing grid to be visible (this confirms we're on the right page)
-            await coverageFrame.waitForSelector('dl.grid.grid-cols-2 dt:has-text("To pay")', {
+            await page.waitForSelector('dl.grid.grid-cols-2 dt:has-text("To pay")', {
                 timeout: 20000,
                 state: 'visible'
             });
@@ -352,11 +456,11 @@ export async function automateFormSubmission(mappedData) {
             await takeScreenshot(page, 'proposal-page-timeout');
             
             // Log current URL
-            const currentUrl = await coverageFrame.evaluate(() => window.location.href);
+            const currentUrl = await page.evaluate(() => window.location.href);
             logger.debug('Current URL', { url: currentUrl });
             
             // Log what's actually on the page
-            const pageText = await coverageFrame.textContent('body');
+            const pageText = await page.textContent('body');
             logger.debug('Page content preview', { preview: pageText.substring(0, 500) });
             
             throw new Error('Failed to reach "Your Proposal" price quote page - cannot extract pricing information');
@@ -365,7 +469,7 @@ export async function automateFormSubmission(mappedData) {
         await takeScreenshot(page, 'your-proposal-price-page');
         
         // Parse pricing data BEFORE clicking through
-        const pricing = await parsePricingData(coverageFrame);
+        const pricing = await parsePricingData(page);
         
         // Validate that we got pricing data
         if (!pricing.toPay) {
@@ -374,7 +478,7 @@ export async function automateFormSubmission(mappedData) {
         
         // Now look for the "Quote via email" link (it's an <a> tag, not a button)
         logger.debug('Looking for "Quote via email" link');
-        const quoteEmailLink = coverageFrame.locator('a:has-text("Quote via email")');
+        const quoteEmailLink = page.locator('a:has-text("Quote via email")');
         
         const hasQuoteLink = await quoteEmailLink.count() > 0;
         
@@ -393,15 +497,15 @@ export async function automateFormSubmission(mappedData) {
         logger.debug('Link clicked, waiting for navigation...');
         
         // Wait for navigation to Your Details
-        await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-        await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-        await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
+        await page.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+        await page.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+        await page.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
             logger.debug('Network idle timeout after quote email click - continuing anyway');
         });
         
         logger.debug('Your Details page loaded');
         
-        const detailsUrl = await coverageFrame.evaluate(() => window.location.href);
+        const detailsUrl = await page.evaluate(() => window.location.href);
         logger.info('Navigated to "Your Details" page', { url: detailsUrl });
         
         // Extract quote key from URL
@@ -415,14 +519,14 @@ export async function automateFormSubmission(mappedData) {
         // STEP 8: Fill "Your Details" Form
         // ========================================
         logger.info('Filling "Your Details" form');
-        await fillProposalForm(coverageFrame, mappedData);
+        await fillProposalForm(page, mappedData);
         await takeScreenshot(page, 'your-details-filled');
         
         // ========================================
         // STEP 9: Extract full HTML (STOPPED - no final submission)
         // ========================================
         logger.info('Extracting full HTML from "Your Details" page');
-        const htmlContent = await coverageFrame.content();
+        const htmlContent = await page.content();
         
         logger.info('Automation completed successfully', {
             quoteKey,

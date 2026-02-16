@@ -5,7 +5,13 @@ dotenv.config();
 
 export const CONFIG = {
     // URLs
-    BASE_URL: process.env.TARGET_URL || 'https://google.com',
+    LOGIN_URL: process.env.LOGIN_URL || 'https://verzekeren.norisk.eu/agents',
+    FORM_URL: process.env.FORM_URL || 'https://verzekeren.norisk.eu/en/agents/product/event-int',
+    TP_PARAM: process.env.NORISK_TP_PARAM || '30028',
+    
+    // Authentication
+    NORISK_EMAIL: process.env.NORISK_EMAIL,
+    NORISK_PASSWORD: process.env.NORISK_PASSWORD,
     
     // Timeouts (milliseconds)
     DEFAULT_TIMEOUT: parseInt(process.env.TIMEOUT) || 30000,
@@ -20,6 +26,11 @@ export const CONFIG = {
     SELECTORS: {
         // CSRF Token
         TOKEN: 'input[name="_token"]',
+        
+        // Login Page
+        LOGIN_EMAIL: 'input[name="email"]',
+        LOGIN_PASSWORD: 'input[name="password"]',
+        LOGIN_SUBMIT: 'button[type="submit"]',
 
         // Step 1: Personal Details
         INITIALS: 'input[name="initials"]',

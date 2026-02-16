@@ -457,64 +457,97 @@ export async function fillProposalForm(context, mappedData) {
     logger.info('Starting "Your Details" form population');
     
     try {
-        // Wait for the business type radio buttons to be available
-        logger.debug('Waiting for business type radio buttons...');
-        await context.waitForSelector('input[type="radio"][name="is_business"]', {
-            timeout: 10000,
-            state: 'visible'
-        });
-        
         // ========================================
-        // STEP 1: Select Business Type
+        // STEP 1: Fill Personal Details (NEW FLOW)
         // ========================================
-        logger.debug('Selecting business type', { isBusiness: mappedData.is_business });
+        // In the new flow, "Your Details" page contains personal information fields
+        // that were previously pre-filled in "About the Event" page
+        logger.debug('Checking for personal details fields on Your Details page');
         
-        if (mappedData.is_business === true || mappedData.is_business === 1 || mappedData.is_business === '1') {
-            await context.locator(CONFIG.SELECTORS.YOUR_DETAILS.IS_BUSINESS_YES).check();
-            logger.debug('Selected business entity');
-        } else {
-            await context.locator(CONFIG.SELECTORS.YOUR_DETAILS.IS_BUSINESS_NO).check();
-            logger.debug('Selected individual entity');
-        }
+        // Check if personal detail fields exist on this page
+        const hasPersonalFields = await context.locator(CONFIG.SELECTORS.INITIALS).count() > 0;
         
-        // Wait for conditional fields to appear
-        await context.waitForTimeout(500);
-        
-        // ========================================
-        // STEP 2: Fill Common Fields
-        // ========================================
-        logger.debug('Filling common address fields');
-        
-        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ADDRESS, mappedData.address, 'Address');
-        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.HOUSE_NUMBER, mappedData.house_number, 'House Number');
-        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ZIPCODE, mappedData.zipcode, 'Zipcode');
-        await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.CITY, mappedData.city, 'City');
-        
-        // Country selector (custom UI component)
-        await selectDropdown(context, CONFIG.SELECTORS.YOUR_DETAILS.COUNTRY, mappedData.country, 'Country');
-        
-        // ========================================
-        // STEP 3: Fill Conditional Fields
-        // ========================================
-        if (mappedData.is_business === true || mappedData.is_business === 1 || mappedData.is_business === '1') {
-            logger.debug('Filling business-specific fields');
+        if (hasPersonalFields) {
+            logger.debug('Personal details fields detected, filling them');
             
-            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_NAME, mappedData.company_name, 'Company Name');
-            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_COMMERCIAL_NUMBER, mappedData.company_commercial_number, 'Commercial Number');
+            // Fill personal information
+            await fillInput(context, CONFIG.SELECTORS.INITIALS, mappedData.initials, 'Initials');
             
-            // DUNS number is optional
-            if (mappedData.company_duns_number) {
-                await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_DUNS_NUMBER, mappedData.company_duns_number, 'DUNS Number');
+            // Preposition is optional
+            if (mappedData.preposition) {
+                await fillInput(context, CONFIG.SELECTORS.PREPOSITION, mappedData.preposition, 'Preposition');
             }
             
-            // Legal form dropdown
-            await selectDropdown(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_LEGAL_FORM, mappedData.company_legal_form, 'Legal Form');
+            await fillInput(context, CONFIG.SELECTORS.LAST_NAME, mappedData.last_name, 'Last Name');
+            await fillInput(context, CONFIG.SELECTORS.PHONE, mappedData.phone, 'Phone');
+            await fillInput(context, CONFIG.SELECTORS.EMAIL, mappedData.email, 'Email');
             
-        } else {
-            logger.debug('Filling individual-specific fields');
+            logger.info('Personal details filled on Your Details page');
+        }
+        
+        // ========================================
+        // STEP 2: Check for Business Type Radio (if present)
+        // ========================================
+        // Wait for the business type radio buttons to be available (if they exist)
+        logger.debug('Checking for business type radio buttons...');
+        const hasBusinessType = await context.locator('input[type="radio"][name="is_business"]').count() > 0;
+        
+        if (hasBusinessType) {
+            logger.debug('Business type radio buttons found');
+            await context.waitForSelector('input[type="radio"][name="is_business"]', {
+                timeout: 10000,
+                state: 'visible'
+            });
             
-            // Birthdate for individual
-            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.BIRTHDATE, mappedData.birthdate, 'Birthdate');
+            logger.debug('Selecting business type', { isBusiness: mappedData.is_business });
+            
+            if (mappedData.is_business === true || mappedData.is_business === 1 || mappedData.is_business === '1') {
+                await context.locator(CONFIG.SELECTORS.YOUR_DETAILS.IS_BUSINESS_YES).check();
+                logger.debug('Selected business entity');
+            } else {
+                await context.locator(CONFIG.SELECTORS.YOUR_DETAILS.IS_BUSINESS_NO).check();
+                logger.debug('Selected individual entity');
+            }
+            
+            // Wait for conditional fields to appear
+            await context.waitForTimeout(500);
+            
+            // ========================================
+            // STEP 3: Fill Common Address Fields
+            // ========================================
+            logger.debug('Filling common address fields');
+            
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ADDRESS, mappedData.address, 'Address');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.HOUSE_NUMBER, mappedData.house_number, 'House Number');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ZIPCODE, mappedData.zipcode, 'Zipcode');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.CITY, mappedData.city, 'City');
+            
+            // Country selector (custom UI component)
+            await selectDropdown(context, CONFIG.SELECTORS.YOUR_DETAILS.COUNTRY, mappedData.country, 'Country');
+            
+            // ========================================
+            // STEP 4: Fill Conditional Fields (Business/Individual)
+            // ========================================
+            if (mappedData.is_business === true || mappedData.is_business === 1 || mappedData.is_business === '1') {
+                logger.debug('Filling business-specific fields');
+                
+                await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_NAME, mappedData.company_name, 'Company Name');
+                await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_COMMERCIAL_NUMBER, mappedData.company_commercial_number, 'Commercial Number');
+                
+                // DUNS number is optional
+                if (mappedData.company_duns_number) {
+                    await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_DUNS_NUMBER, mappedData.company_duns_number, 'DUNS Number');
+                }
+                
+                // Legal form dropdown
+                await selectDropdown(context, CONFIG.SELECTORS.YOUR_DETAILS.COMPANY_LEGAL_FORM, mappedData.company_legal_form, 'Legal Form');
+                
+            } else {
+                logger.debug('Filling individual-specific fields');
+                
+                // Birthdate for individual
+                await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.BIRTHDATE, mappedData.birthdate, 'Birthdate');
+            }
         }
         
         logger.info('"Your Details" form filled successfully');
