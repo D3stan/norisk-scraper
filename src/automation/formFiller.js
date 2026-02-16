@@ -2,8 +2,23 @@ import logger from '../utils/logger.js';
 import { CONFIG } from '../config/constants.js';
 
 /**
+ * Gets the page object from context (handles Page, Frame, or Locator)
+ */
+function getPage(context) {
+    // If context has a page() method (Locator), use it
+    if (typeof context.page === 'function') {
+        return context.page();
+    }
+    // If context has waitForTimeout (Page or Frame), it's already a page-like object
+    if (typeof context.waitForTimeout === 'function') {
+        return context;
+    }
+    throw new Error('Unable to get page from context');
+}
+
+/**
  * Fills a text input field
- * @param {Page|Frame} context - The page or frame context
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
  */
 async function fillInput(context, selector, value, fieldName) {
     if (!value) {
@@ -14,7 +29,8 @@ async function fillInput(context, selector, value, fieldName) {
     try {
         // Add configurable delay before filling
         if (CONFIG.FIELD_DELAY > 0) {
-            await context.waitForTimeout(CONFIG.FIELD_DELAY);
+            const page = getPage(context);
+            await page.waitForTimeout(CONFIG.FIELD_DELAY);
         }
         
         const element = context.locator(selector).first();
@@ -40,8 +56,8 @@ async function fillInput(context, selector, value, fieldName) {
                 el.dispatchEvent(new Event('change', { bubbles: true }));
             }, String(value));
         } else {
-            // For visible fields, use normal fill
-            await context.fill(selector, String(value), { timeout: 5000 });
+            // For visible fields, use fill on the element
+            await element.fill(String(value), { timeout: 5000 });
         }
         
         logger.debug(`Filled field: ${fieldName}`, { value });
@@ -53,7 +69,7 @@ async function fillInput(context, selector, value, fieldName) {
 
 /**
  * Selects an option from a dropdown
- * @param {Page|Frame} context - The page or frame context
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
  */
 async function selectDropdown(context, selector, value, fieldName) {
     if (!value) {
@@ -64,7 +80,8 @@ async function selectDropdown(context, selector, value, fieldName) {
     try {
         // Add configurable delay before selecting
         if (CONFIG.FIELD_DELAY > 0) {
-            await context.waitForTimeout(CONFIG.FIELD_DELAY);
+            const page = getPage(context);
+            await page.waitForTimeout(CONFIG.FIELD_DELAY);
         }
         
         const element = context.locator(selector).first();
@@ -72,7 +89,7 @@ async function selectDropdown(context, selector, value, fieldName) {
         
         if (count > 0) {
             // Standard select element found
-            await context.selectOption(selector, String(value), { timeout: 5000 });
+            await element.selectOption(String(value), { timeout: 5000 });
             logger.debug(`Selected dropdown: ${fieldName}`, { value });
             return;
         }
@@ -105,9 +122,11 @@ async function selectDropdown(context, selector, value, fieldName) {
             if (await trigger.count() > 0) {
                 logger.debug(`Found custom select trigger: ${triggerSelector}`);
                 
+                const page = getPage(context);
+                
                 // Click to open dropdown
                 await trigger.click();
-                await context.waitForTimeout(500);
+                await page.waitForTimeout(500);
                 
                 // Wait for options container to be visible
                 const optionsVisible = await context.locator('ui-options[role="listbox"]').isVisible().catch(() => false);
@@ -128,14 +147,15 @@ async function selectDropdown(context, selector, value, fieldName) {
                 for (const optionSelector of optionSelectors) {
                     const option = context.locator(optionSelector).first();
                     if (await option.count() > 0) {
+                        const page = getPage(context);
                         // Scroll into view if needed
                         await option.scrollIntoViewIfNeeded().catch(() => {});
-                        await context.waitForTimeout(200);
+                        await page.waitForTimeout(200);
                         
                         // Click the option
                         await option.click();
                         logger.debug(`Selected custom dropdown option: ${fieldName}`, { value });
-                        await context.waitForTimeout(300);
+                        await page.waitForTimeout(300);
                         return;
                     }
                 }
@@ -208,15 +228,16 @@ export async function fillFormFields(context, mappedData, options = {}) {
 
 /**
  * Handles coverage selection on the second page
- * @param {Page|Frame} context - The page or frame context
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
  * @param {Object} coverages - Coverage options to select
  */
 export async function selectCoverages(context, coverages = {}) {
     logger.info('Selecting coverage options', { coverages });
     
     try {
+        const page = getPage(context);
         // Wait for coverage form to be ready
-        await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+        await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
         
         // Available coverage checkboxes with exact field names from actual form
         const coverageFields = CONFIG.SELECTORS.COVERAGE_CHECKBOXES;
@@ -243,7 +264,7 @@ export async function selectCoverages(context, coverages = {}) {
                         await handleConditionalFields(context, fieldName, coverages);
                         
                         // Add delay after handling conditional fields to slow down automation
-                        await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                        await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                     } else {
                         logger.warn(`Coverage checkbox not found: ${fieldName}`);
                     }
@@ -274,8 +295,9 @@ async function handleRoleConditionalFields(context, mappedData) {
     }
     
     try {
+        const page = getPage(context);
         // Wait for conditional fields to appear (Alpine.js/Livewire)
-        await context.waitForTimeout(300);
+        await page.waitForTimeout(300);
         
         // Fill company name
         if (mappedData.role_company) {
@@ -300,21 +322,22 @@ async function handleRoleConditionalFields(context, mappedData) {
 
 /**
  * Handles conditional sub-fields that appear when coverage checkbox is checked
- * @param {Page|Frame} context - The page or frame context
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
  * @param {string} coverageType - The coverage type that was checked
  * @param {Object} coverages - Coverage data including sub-field values
  */
 async function handleConditionalFields(context, coverageType, coverages) {
     try {
+        const page = getPage(context);
         // Wait for conditional fields to appear (Alpine.js x-show)
-        await context.waitForTimeout(300);
+        await page.waitForTimeout(300);
         
         switch (coverageType) {
             case 'cancellation_costs':
                 // Budget field appears
                 if (coverages.budget) {
                     await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET, coverages.budget, 'Budget');
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
               
@@ -323,7 +346,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 if (coverages.cancellation_income_estimate) {
                     await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE, 
                                    coverages.cancellation_income_estimate, 'Income Estimate');
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
               
@@ -333,7 +356,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
                     const amount = coverages.higher_liability;
                     await context.locator(`${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${amount}"]`).check();
                     logger.debug(`Selected liability amount: €${amount}`);
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
               
@@ -342,7 +365,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 if (coverages.equipment_value) {
                     await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE, 
                                    coverages.equipment_value, 'Equipment Value');
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
               
@@ -351,7 +374,7 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 if (coverages.money_value) {
                     await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE, 
                                    coverages.money_value, 'Money Value');
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
               
@@ -361,18 +384,18 @@ async function handleConditionalFields(context, coverageType, coverages) {
                     await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_MAN_DAYS)
                         .selectOption(coverages.accident_man_days);
                     logger.debug(`Selected accident man days: ${coverages.accident_man_days}`);
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 if (coverages.accident_man_days_participants) {
                     await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_PARTICIPANTS)
                         .selectOption(coverages.accident_man_days_participants);
                     logger.debug(`Selected accident participants: ${coverages.accident_man_days_participants}`);
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 if (coverages.accident_man_days_participants_sport) {
                     await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_SPORT).check();
                     logger.debug('Checked sport coverage for participants');
-                    await context.waitForTimeout(CONFIG.FIELD_DELAY || 500);
+                    await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
         }
@@ -517,7 +540,7 @@ export async function fillProposalForm(context, mappedData) {
             }
             
             // Wait for conditional fields to appear
-            await context.waitForTimeout(500);
+            await getPage(context).waitForTimeout(500);
             
             // ========================================
             // STEP 3: Fill Common Address Fields
