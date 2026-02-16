@@ -364,20 +364,7 @@ export async function automateFormSubmission(mappedData) {
         
         await takeScreenshot(page, 'your-proposal-price-page');
         
-        // Now check which buttons are present
-        const quoteEmailButton = coverageFrame.locator(CONFIG.SELECTORS.PROPOSAL_PRICE.QUOTE_EMAIL_BUTTON);
-        // Look for the submit button more broadly
-        const takeOutButton = coverageFrame.locator('button[type="submit"]').last(); // Use the last submit button on the page
-        
-        const hasQuoteButton = await quoteEmailButton.count() > 0;
-        const hasTakeOutButton = await takeOutButton.count() > 0;
-        
-        logger.info('"Your Proposal" page confirmed', { 
-            hasQuoteButton, 
-            hasTakeOutButton 
-        });
-        
-        // Parse pricing data
+        // Parse pricing data BEFORE clicking through
         const pricing = await parsePricingData(coverageFrame);
         
         // Validate that we got pricing data
@@ -385,25 +372,34 @@ export async function automateFormSubmission(mappedData) {
             logger.warn('Failed to parse "To pay" amount from proposal page');
         }
         
-        // Click "Take out insurance" button to proceed to "Your Details" page
-        logger.debug('Clicking "Take out insurance" to proceed to Your Details');
+        // Now look for the "Quote via email" link (it's an <a> tag, not a button)
+        logger.debug('Looking for "Quote via email" link');
+        const quoteEmailLink = coverageFrame.locator('a:has-text("Quote via email")');
         
-        if (hasTakeOutButton) {
-            await takeOutButton.click();
-            logger.debug('Button clicked, waiting for navigation...');
-            
-            // Wait for navigation to Your Details
-            await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-            await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
-            await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
-                logger.debug('Network idle timeout after proposal click - continuing anyway');
-            });
-            
-            logger.debug('Your Details page loaded');
-        } else {
-            logger.error('Could not find "Take out insurance" button to proceed');
-            throw new Error('"Take out insurance" button not found - cannot proceed to Your Details');
+        const hasQuoteLink = await quoteEmailLink.count() > 0;
+        
+        if (!hasQuoteLink) {
+            logger.error('"Quote via email" link not found');
+            await takeScreenshot(page, 'quote-link-not-found');
+            throw new Error('"Quote via email" link not found - cannot proceed to Your Details');
         }
+        
+        logger.info('"Quote via email" link found', { count: await quoteEmailLink.count() });
+        
+        // Click "Quote via email" link to proceed to "Your Details" page
+        logger.debug('Clicking "Quote via email" to proceed to Your Details');
+        
+        await quoteEmailLink.click();
+        logger.debug('Link clicked, waiting for navigation...');
+        
+        // Wait for navigation to Your Details
+        await coverageFrame.waitForLoadState('load', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+        await coverageFrame.waitForLoadState('domcontentloaded', { timeout: CONFIG.NAVIGATION_TIMEOUT });
+        await coverageFrame.waitForLoadState('networkidle', { timeout: CONFIG.NAVIGATION_TIMEOUT }).catch(() => {
+            logger.debug('Network idle timeout after quote email click - continuing anyway');
+        });
+        
+        logger.debug('Your Details page loaded');
         
         const detailsUrl = await coverageFrame.evaluate(() => window.location.href);
         logger.info('Navigated to "Your Details" page', { url: detailsUrl });

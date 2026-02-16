@@ -92,9 +92,8 @@ export const CONFIG = {
             POLICY_COSTS: 'text="Policy costs"',
             INSURANCE_TAX: 'text="Insurance tax"',
             TO_PAY: 'text="To pay"',
-            QUOTE_EMAIL_BUTTON: 'a:has-text("Quote via email")',
-            // Multiple variants for the button text
-            TAKE_OUT_INSURANCE: 'button:has-text("Take out insurance"), button:has-text("view proposal"), button:has-text("Next step")'
+            // This is an <a> link, not a button - click it to proceed to "Your Details" (email) page
+            QUOTE_EMAIL_LINK: 'a:has-text("Quote via email")'
         },
 
         // Your Details Page (Step 4 - Final Form)
