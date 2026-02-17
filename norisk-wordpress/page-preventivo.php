@@ -13,6 +13,68 @@ get_header();
 
 <style>
 <?php include 'style.css'; ?>
+
+/* Pricing Table Styles */
+.norisk-pricing-table {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    margin: 25px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+.norisk-pricing-table h4 {
+    margin: 0 0 20px 0;
+    color: #1a1a1a;
+    font-size: 18px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+.norisk-pricing-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed #e0e0e0;
+    font-size: 16px;
+}
+
+.norisk-pricing-row:last-child {
+    border-bottom: none;
+}
+
+.norisk-pricing-total {
+    margin-top: 10px;
+    padding-top: 15px;
+    border-top: 2px solid #1a1a1a;
+    border-bottom: none;
+    font-size: 18px;
+    color: #1a1a1a;
+}
+
+.norisk-quote-note {
+    color: #666;
+    font-style: italic;
+    margin: 20px 0;
+    font-size: 14px;
+}
+
+/* Results section enhancements */
+.norisk-results {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.norisk-quote-ref {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
 </style>
 
 <div class="norisk-form-container">
@@ -522,20 +584,191 @@ async function submitQuote(data) {
     }
 }
 
-// Show success results
+// Show success results with Bozza di Preventivo
 function showSuccess(result) {
     form.classList.add('hidden');
     resultsSection.classList.add('active', 'success');
     resultsSection.classList.remove('error');
 
-    resultsTitle.textContent = 'Preventivo Richiesto con Successo!';
+    const quoteKey = result.quoteKey || 'N/A';
+    const pricing = result.pricing || {};
+    const status = result.status || 'draft';
+
+    // Build pricing table if pricing data exists
+    let pricingHtml = '';
+    if (pricing.sumExcl) {
+        pricingHtml = `
+            <div class="norisk-pricing-table">
+                <h4>Dettaglio Costi</h4>
+                <div class="norisk-pricing-row">
+                    <span>Premio Lordo:</span>
+                    <span>€ ${pricing.sumExcl}</span>
+                </div>
+                <div class="norisk-pricing-row">
+                    <span>Costi Polizza:</span>
+                    <span>€ ${pricing.policyCosts}</span>
+                </div>
+                <div class="norisk-pricing-row">
+                    <span>Imposta Assicurativa:</span>
+                    <span>€ ${pricing.insuranceTax}</span>
+                </div>
+                <div class="norisk-pricing-row norisk-pricing-total">
+                    <span><strong>Totale da Pagare:</strong></span>
+                    <span><strong>€ ${pricing.toPay}</strong></span>
+                </div>
+            </div>
+        `;
+    }
+
+    // Determine button based on status
+    let actionButton = '';
+    let statusMessage = '';
+
+    if (status === 'draft' || status === 'submitted_waiting_email') {
+        // Still waiting for PDF from NoRisk
+        actionButton = `
+            <button type="button" class="norisk-submit-btn" onclick="checkQuoteStatus('${quoteKey}')" id="checkStatusBtn">
+                Verifica stato preventivo
+            </button>
+        `;
+        statusMessage = `<p class="norisk-quote-note">Stiamo elaborando il tuo preventivo. Clicca il pulsante per verificare se il documento è pronto.</p>`;
+    } else if (status === 'email_received') {
+        // PDF received, can send to user
+        actionButton = `
+            <button type="button" class="norisk-submit-btn" onclick="sendQuoteToUser('${quoteKey}')" id="sendQuoteBtn">
+                Invia preventivo via email
+            </button>
+        `;
+        statusMessage = `<p class="norisk-quote-note">Il preventivo è pronto! Clicca il pulsante per riceverlo via email.</p>`;
+    } else if (status === 'sent') {
+        // Already sent to user
+        statusMessage = `
+            <div class="norisk-success-message" style="color: #27ae60; padding: 15px; background: #f0fff4; border-radius: 4px; margin: 20px 0;">
+                <strong>✓ Il preventivo è stato inviato alla tua email!</strong><br>
+                Controlla la tua casella di posta (anche nella cartella spam).
+            </div>
+        `;
+    } else {
+        // Default case
+        actionButton = `
+            <button type="button" class="norisk-submit-btn" onclick="checkQuoteStatus('${quoteKey}')" id="checkStatusBtn">
+                Verifica stato preventivo
+            </button>
+        `;
+        statusMessage = `<p class="norisk-quote-note">Stato: ${status}</p>`;
+    }
+
+    resultsTitle.textContent = 'Bozza di Preventivo';
     resultsContent.innerHTML = `
         <div class="norisk-quote-ref">
-            Riferimento: ${result.quoteKey || 'N/A'}
+            Riferimento: ${quoteKey}
         </div>
-        <p>Grazie per la tua richiesta. Il nostro team ti contattera a breve con i dettagli del preventivo.</p>
-        ${result.proposalUrl ? `<p><a href="${result.proposalUrl}" target="_blank">Visualizza proposta completa</a></p>` : ''}
+        ${pricingHtml}
+        ${statusMessage}
+        ${actionButton}
+        <div id="actionStatus" style="margin-top: 15px;"></div>
     `;
+}
+
+// Check quote status and update UI accordingly
+async function checkQuoteStatus(quoteKey) {
+    const btn = document.getElementById('checkStatusBtn');
+    const statusDiv = document.getElementById('actionStatus');
+
+    btn.disabled = true;
+    btn.textContent = 'Verifica in corso...';
+
+    try {
+        const response = await fetch(CONFIG.API_URL.replace('/quote', `/quote/${quoteKey}/status`), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Errore durante la verifica');
+        }
+
+        const result = await response.json();
+
+        if (result.hasPdf) {
+            // PDF is ready, update UI to show send button
+            statusDiv.innerHTML = `
+                <div class="norisk-success-message" style="color: #27ae60; padding: 15px; background: #f0fff4; border-radius: 4px;">
+                    <strong>✓ Il preventivo è pronto!</strong>
+                </div>
+            `;
+            btn.outerHTML = `
+                <button type="button" class="norisk-submit-btn" onclick="sendQuoteToUser('${quoteKey}')" id="sendQuoteBtn">
+                    Invia preventivo via email
+                </button>
+            `;
+        } else {
+            // Still waiting
+            statusDiv.innerHTML = `
+                <div class="norisk-warning-message" style="color: #f0ad4e; padding: 15px; background: #fff8e6; border-radius: 4px;">
+                    <strong>⏳ Il preventivo è ancora in elaborazione...</strong><br>
+                    Riprova tra qualche minuto.
+                </div>
+            `;
+            btn.disabled = false;
+            btn.textContent = 'Verifica stato preventivo';
+        }
+
+    } catch (error) {
+        btn.disabled = false;
+        btn.textContent = 'Verifica stato preventivo';
+        statusDiv.innerHTML = `
+            <div class="norisk-error-message" style="color: #e74c3c; padding: 15px; background: #fdf2f2; border-radius: 4px;">
+                <strong>Errore:</strong> ${error.message}
+            </div>
+        `;
+    }
+}
+
+// Send quote PDF to user
+async function sendQuoteToUser(quoteKey) {
+    const btn = document.getElementById('sendQuoteBtn');
+    const statusDiv = document.getElementById('actionStatus');
+
+    btn.disabled = true;
+    btn.textContent = 'Invio in corso...';
+
+    try {
+        const response = await fetch(CONFIG.API_URL + '/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ quoteKey: quoteKey })
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Errore durante l\'invio');
+        }
+
+        const result = await response.json();
+
+        statusDiv.innerHTML = `
+            <div class="norisk-success-message" style="color: #27ae60; padding: 15px; background: #f0fff4; border-radius: 4px;">
+                <strong>✓ Il preventivo è stato inviato alla tua email!</strong><br>
+                Controlla la tua casella di posta (anche nella cartella spam).
+            </div>
+        `;
+        btn.style.display = 'none';
+
+    } catch (error) {
+        btn.disabled = false;
+        btn.textContent = 'Invia preventivo via email';
+        statusDiv.innerHTML = `
+            <div class="norisk-error-message" style="color: #e74c3c; padding: 15px; background: #fdf2f2; border-radius: 4px;">
+                <strong>Errore:</strong> ${error.message}
+            </div>
+        `;
+    }
 }
 
 // Show error message

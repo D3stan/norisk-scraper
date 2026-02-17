@@ -2,6 +2,8 @@ import { chromium } from 'playwright';
 import logger from '../utils/logger.js';
 import { CONFIG } from '../config/constants.js';
 import { fillFormFields, selectCoverages, fillGuestInfoPage, fillProposalForm } from './formFiller.js';
+import { createQuoteRecord, updateQuoteStatus, storePdfPath } from '../utils/storage.js';
+import { waitForQuoteEmail } from '../utils/emailReceiver.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
@@ -502,40 +504,121 @@ export async function automateFormSubmission(mappedData) {
         const urlParams = new URL(detailsUrl).searchParams;
         const quoteKey = urlParams.get('key');
         logger.info('Quote key extracted', { quoteKey });
-        
+
+        // Create quote record in storage
+        createQuoteRecord(quoteKey, mappedData.email, mappedData);
+        logger.info('Quote record created', { quoteKey, userEmail: mappedData.email });
+
         await takeScreenshot(page, 'your-details-page');
-        
+
         // Re-establish main context after navigation
         const mainContextDetails = page.locator('main');
-        
+
         // ========================================
         // STEP 10: Fill "Your Details" Form
         // ========================================
         logger.info('Filling "Your Details" form');
         await fillProposalForm(mainContextDetails, mappedData);
         await takeScreenshot(page, 'your-details-filled');
-        
+
         // ========================================
-        // STEP 11: Extract full HTML (STOPPED - no final submission)
+        // STEP 11: Handle COMPLETED mode
         // ========================================
-        logger.info('Extracting full HTML from "Your Details" page');
-        const htmlContent = await page.content();
-        
-        logger.info('Automation completed successfully', {
-            quoteKey,
-            pricing,
-            htmlLength: htmlContent.length,
-            finalUrl: detailsUrl
-        });
-        
-        return {
-            success: true,
-            quoteKey,
-            proposalUrl: detailsUrl,
-            pricing,
-            htmlContent,
-            csrfToken
-        };
+        if (CONFIG.COMPLETED) {
+            logger.info('COMPLETED mode enabled - auto-submitting proposal');
+
+            // Check GDPR checkbox
+            logger.debug('Checking GDPR checkbox');
+            const gdprCheckbox = mainContextDetails.locator('input[type="checkbox"][name="gdpr"]');
+            if (await gdprCheckbox.count() > 0) {
+                const isChecked = await gdprCheckbox.isChecked();
+                if (!isChecked) {
+                    await gdprCheckbox.check();
+                    logger.debug('GDPR checkbox checked');
+                }
+            }
+
+            // Click Mail proposal button
+            logger.debug('Clicking Mail proposal button');
+            const mailButton = mainContextDetails.locator('button[type="submit"]');
+            await mailButton.click();
+
+            logger.debug('Waiting for submission to process...');
+            await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+            await page.waitForTimeout(2000);
+
+            await takeScreenshot(page, 'proposal-submitted');
+
+            // Update status
+            updateQuoteStatus(quoteKey, 'submitted');
+
+            // ========================================
+            // STEP 12: Wait for email with PDF (if IMAP configured)
+            // ========================================
+            if (CONFIG.IMAP.HOST) {
+                logger.info('Waiting for quote email with PDF');
+                try {
+                    const emailResult = await waitForQuoteEmail(quoteKey);
+                    logger.info('Quote email received', {
+                        quoteKey,
+                        pdfPath: emailResult.pdfPath
+                    });
+
+                    return {
+                        success: true,
+                        quoteKey,
+                        proposalUrl: detailsUrl,
+                        pricing,
+                        status: 'email_received',
+                        pdfPath: emailResult.pdfPath,
+                        message: 'Quote submitted and PDF received via email'
+                    };
+                } catch (error) {
+                    logger.error('Failed to receive quote email', { quoteKey, error: error.message });
+                    updateQuoteStatus(quoteKey, 'error', error.message);
+
+                    // Return success but with warning
+                    return {
+                        success: true,
+                        quoteKey,
+                        proposalUrl: detailsUrl,
+                        pricing,
+                        status: 'submitted_waiting_email',
+                        warning: 'Quote submitted but PDF not yet received via email'
+                    };
+                }
+            } else {
+                logger.info('IMAP not configured, skipping email wait');
+                return {
+                    success: true,
+                    quoteKey,
+                    proposalUrl: detailsUrl,
+                    pricing,
+                    status: 'submitted',
+                    message: 'Quote submitted, email reception not configured'
+                };
+            }
+        } else {
+            // ========================================
+            // STEP 12: Draft mode - return without submission
+            // ========================================
+            logger.info('COMPLETED mode disabled - stopping at draft');
+
+            const htmlContent = await page.content();
+
+            updateQuoteStatus(quoteKey, 'draft');
+
+            return {
+                success: true,
+                quoteKey,
+                proposalUrl: detailsUrl,
+                pricing,
+                status: 'draft',
+                htmlContent,
+                csrfToken,
+                message: 'Draft ready - awaiting user confirmation to send'
+            };
+        }
         
     } catch (error) {
         logger.error('Automation failed', { 
@@ -559,7 +642,181 @@ export async function automateFormSubmission(mappedData) {
             error: error.message,
             stack: error.stack
         };
-        
+
+    } finally {
+        // Cleanup
+        if (browser) {
+            logger.debug('Closing browser');
+            await browser.close();
+        }
+    }
+}
+
+/**
+ * Submits the email quote request by checking GDPR and clicking Mail proposal
+ * @param {string} quoteKey - The quote key from the previous submission
+ * @returns {Promise<Object>} Result of the email submission
+ */
+export async function submitEmailQuote(quoteKey) {
+    logger.info('Starting email quote submission', { quoteKey });
+
+    let browser;
+    let context;
+    let page;
+
+    try {
+        // Launch browser
+        logger.debug('Launching browser for email submission', {
+            headless: CONFIG.HEADLESS,
+            slowMo: CONFIG.SLOW_MO
+        });
+
+        browser = await chromium.launch({
+            headless: CONFIG.HEADLESS,
+            slowMo: CONFIG.SLOW_MO,
+            args: ['--disable-blink-features=AutomationControlled']
+        });
+
+        context = await browser.newContext({
+            viewport: { width: 1920, height: 1080 },
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            extraHTTPHeaders: {
+                'Accept-Language': 'en-US,en;q=0.9'
+            }
+        });
+
+        page = await context.newPage();
+        page.setDefaultTimeout(CONFIG.DEFAULT_TIMEOUT);
+
+        // ========================================
+        // STEP 1: Perform Login
+        // ========================================
+        await performLogin(page);
+
+        // ========================================
+        // STEP 2: Navigate directly to Your Details page using quote key
+        // ========================================
+        const detailsUrl = `${CONFIG.FORM_URL.replace(/\?.*$/, '').replace(/\/event$/, '')}/your-details?key=${quoteKey}`;
+        logger.info('Navigating to Your Details page', { url: detailsUrl });
+
+        await page.goto(detailsUrl, {
+            waitUntil: 'load',
+            timeout: CONFIG.NAVIGATION_TIMEOUT
+        });
+
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(1000);
+
+        await takeScreenshot(page, 'your-details-for-email');
+
+        // Re-establish main context
+        const mainContext = page.locator('main');
+
+        // ========================================
+        // STEP 3: Check if GDPR checkbox exists and check it
+        // ========================================
+        logger.debug('Looking for GDPR checkbox');
+
+        const gdprCheckbox = mainContext.locator('input[type="checkbox"][name="gdpr"]');
+        const gdprCount = await gdprCheckbox.count();
+
+        if (gdprCount > 0) {
+            logger.info('GDPR checkbox found, checking it');
+
+            // Check if already checked
+            const isChecked = await gdprCheckbox.isChecked();
+
+            if (!isChecked) {
+                await gdprCheckbox.check();
+                logger.debug('GDPR checkbox checked');
+            } else {
+                logger.debug('GDPR checkbox already checked');
+            }
+        } else {
+            logger.warn('GDPR checkbox not found');
+        }
+
+        await takeScreenshot(page, 'gdpr-checked');
+
+        // ========================================
+        // STEP 4: Click Mail proposal button
+        // ========================================
+        logger.debug('Looking for Mail proposal button');
+
+        // Look for the submit button (type="submit")
+        const mailButton = mainContext.locator('button[type="submit"]').filter({ hasText: /mail|proposal|send/i });
+        const buttonCount = await mailButton.count();
+
+        if (buttonCount === 0) {
+            // Try alternative selectors
+            const altButton = mainContext.locator('button:has-text("Mail"), button:has-text("Proposal"), button:has-text("Send"), input[type="submit"]');
+            const altCount = await altButton.count();
+
+            if (altCount === 0) {
+                logger.error('Mail proposal button not found');
+                throw new Error('Mail proposal button not found on Your Details page');
+            }
+
+            logger.info('Found alternative submit button, clicking it');
+            await altButton.first().click();
+        } else {
+            logger.info('Found Mail proposal button, clicking it');
+            await mailButton.first().click();
+        }
+
+        logger.debug('Mail proposal button clicked, waiting for response...');
+
+        // ========================================
+        // STEP 5: Wait for confirmation
+        // ========================================
+        try {
+            // Wait for page to process the submission
+            await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+                logger.debug('Network idle timeout - checking for success indicators');
+            });
+
+            await page.waitForTimeout(2000);
+
+            await takeScreenshot(page, 'email-submission-complete');
+
+            // Check for success indicators
+            const pageContent = await page.textContent('body');
+            const hasSuccessMessage = /success|sent|confirm|thank/i.test(pageContent);
+            const hasErrorMessage = /error|fail|invalid/i.test(pageContent);
+
+            if (hasErrorMessage && !hasSuccessMessage) {
+                logger.error('Error detected after email submission');
+                throw new Error('Email submission failed - error message detected on page');
+            }
+
+            logger.info('Email quote submission completed successfully');
+
+            return {
+                success: true,
+                quoteKey,
+                message: 'Proposal email sent successfully'
+            };
+
+        } catch (error) {
+            logger.error('Error waiting for email submission confirmation', { error: error.message });
+            throw error;
+        }
+
+    } catch (error) {
+        logger.error('Email quote submission failed', {
+            error: error.message,
+            stack: error.stack
+        });
+
+        if (page) {
+            await takeScreenshot(page, 'email-submission-error');
+        }
+
+        return {
+            success: false,
+            error: error.message
+        };
+
     } finally {
         // Cleanup
         if (browser) {

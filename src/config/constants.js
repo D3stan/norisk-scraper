@@ -21,7 +21,37 @@ export const CONFIG = {
     HEADLESS: process.env.HEADLESS === 'true',
     SLOW_MO: parseInt(process.env.SLOW_MO) || 0,
     FIELD_DELAY: parseInt(process.env.FIELD_DELAY) || 0,
-    
+
+    // Automation Mode
+    // If true: automatically submits proposal and waits for email
+    // If false: stops at Your Details page for manual review
+    COMPLETED: process.env.COMPLETED === 'true',
+
+    // Email Reception (IMAP) - for receiving NoRisk PDFs
+    IMAP: {
+        HOST: process.env.IMAP_HOST,
+        PORT: parseInt(process.env.IMAP_PORT) || 993,
+        USER: process.env.IMAP_USER,
+        PASS: process.env.IMAP_PASS,
+        TLS: process.env.IMAP_TLS !== 'false',
+        CHECK_INTERVAL: parseInt(process.env.IMAP_CHECK_INTERVAL) || 30000, // 30 seconds
+        MAX_WAIT_TIME: parseInt(process.env.IMAP_MAX_WAIT) || 300000, // 5 minutes
+    },
+
+    // Email Sending (SMTP) - for forwarding PDFs to users
+    SMTP: {
+        HOST: process.env.SMTP_HOST,
+        PORT: parseInt(process.env.SMTP_PORT) || 587,
+        USER: process.env.SMTP_USER,
+        PASS: process.env.SMTP_PASS,
+        FROM: process.env.SMTP_FROM || 'noreply@golinucci.it',
+        SECURE: process.env.SMTP_SECURE === 'true',
+    },
+
+    // Storage
+    STORAGE_DIR: process.env.STORAGE_DIR || './storage',
+    PDF_STORAGE_DIR: process.env.PDF_STORAGE_DIR || './storage/pdfs',
+
     // Form Selectors
     SELECTORS: {
         // CSRF Token
