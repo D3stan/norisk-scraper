@@ -4,6 +4,10 @@ import logger from './utils/logger.js';
 import { mapFormData, validateFormData } from './utils/dataMapper.js';
 import { automateFormSubmission } from './automation/scraper.js';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +21,10 @@ app.use(express.json());
 app.use(cors({
     origin: [process.env.DOMAIN, process.env.DOMAIN.replace('://', '://api.')]
 }));
+
+if (process.env.NODE_ENV === 'development') {
+    app.use('/debug/screenshots', express.static(path.join(__dirname, '../screenshots')));
+}
 
 // Request logging middleware
 app.use((req, res, next) => {
