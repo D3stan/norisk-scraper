@@ -4,6 +4,12 @@ import logger from './utils/logger.js';
 import { mapFormData, validateFormData } from './utils/dataMapper.js';
 import { automateFormSubmission } from './automation/scraper.js';
 
+const cors = require('cors');
+
+app.use(cors({
+    origin: [process.env.DOMAIN, process.env.DOMAIN.replace('://', '://api.')]
+}));
+
 // Load environment variables
 dotenv.config();
 
