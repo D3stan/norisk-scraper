@@ -351,13 +351,18 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 break;
               
             case 'liability':
+                logger.debug('Handling liability conditional fields');
                 // Radio buttons for liability amount appear (€2.5M or €5M)
                 // Default to 2500000 (€2.5M) if no amount specified
                 const liabilityAmount = coverages.higher_liability || coverages.liability?.amount || '2500000';
+                logger.debug(`Liability amount to select: ${liabilityAmount}`);
                 if (liabilityAmount) {
                     const radioSelector = `${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${liabilityAmount}"]`;
+                    logger.debug(`Looking for radio button with selector: ${radioSelector}`);
                     const radio = context.locator(radioSelector);
-                    if (await radio.count() > 0) {
+                    const radioCount = await radio.count();
+                    logger.debug(`Found ${radioCount} radio buttons for liability amount`);
+                    if (radioCount > 0) {
                         await radio.check();
                         logger.debug(`Selected liability amount: €${liabilityAmount}`);
                     } else {
