@@ -351,11 +351,18 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 break;
               
             case 'liability':
-                // Radio buttons for liability amount appear
-                if (coverages.higher_liability) {
-                    const amount = coverages.higher_liability;
-                    await context.locator(`${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${amount}"]`).check();
-                    logger.debug(`Selected liability amount: €${amount}`);
+                // Radio buttons for liability amount appear (€2.5M or €5M)
+                // Default to 2500000 (€2.5M) if no amount specified
+                const liabilityAmount = coverages.higher_liability || coverages.liability?.amount || '2500000';
+                if (liabilityAmount) {
+                    const radioSelector = `${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${liabilityAmount}"]`;
+                    const radio = context.locator(radioSelector);
+                    if (await radio.count() > 0) {
+                        await radio.check();
+                        logger.debug(`Selected liability amount: €${liabilityAmount}`);
+                    } else {
+                        logger.warn(`Liability radio button not found for amount: ${liabilityAmount}`);
+                    }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
