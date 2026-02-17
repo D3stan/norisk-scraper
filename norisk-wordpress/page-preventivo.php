@@ -5,7 +5,7 @@
  */
 
 // CONFIGURATION - Update these values
-const API_URL = 'http://YOUR_VPS_IP:3000/api/quote';
+const API_URL = 'http://192.168.2.100:3000/api/quote';
 const API_TIMEOUT_MS = 30000; // 30 seconds - easily tunable
 
 get_header();

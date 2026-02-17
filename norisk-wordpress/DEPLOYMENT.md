@@ -4,7 +4,7 @@
 - WordPress admin access
 - FTP/sFTP access to server
 - VPS IP address for automation API
-
+root@dokploy:/var/lib/docker/volumes/b7ceba9e223b48315a6982cef57d0b21ee857cbd4d14b1a84b07d25bb1287d5a/_data/wordpress-themes/royal-elementor-kit-child#
 ## Step 1: Update Configuration
 
 Edit `page-preventivo.php` and update the API URL:
@@ -17,16 +17,11 @@ const API_URL = 'http://YOUR_VPS_IP:3000/api/quote';
 
 1. Connect to your WordPress site via FTP
 2. Navigate to: `wp-content/themes/`
-3. Create folder: `royal-elementor-kit-child/`
-4. Upload both files:
+3. Create folder: `preventivo/`
+4. Upload files:
+   - `functions.php`
    - `style.css`
    - `page-preventivo.php`
-
-## Step 3: Activate Child Theme
-
-1. Log into WordPress admin
-2. Go to Appearance → Themes
-3. Activate "Royal Elementor Kit Child"
 
 ## Step 4: Create the Page
 
@@ -34,7 +29,7 @@ const API_URL = 'http://YOUR_VPS_IP:3000/api/quote';
 2. Title: "Richiedi Preventivo Evento"
 3. Page Attributes → Template: select "Preventivo Evento"
 4. Publish the page
-5. Note the URL (e.g., `/richiedi-preventivo-evento/`)
+5. URL must match the file name (e.g., `/preventivo/` or `/richiedi-preventivo/` if you change the file name to `page-richiedi-preventivo.php`)
 
 ## Step 5: Add Link to Main Site
 
