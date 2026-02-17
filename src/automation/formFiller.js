@@ -327,6 +327,7 @@ async function handleRoleConditionalFields(context, mappedData) {
  * @param {Object} coverages - Coverage data including sub-field values
  */
 async function handleConditionalFields(context, coverageType, coverages) {
+    logger.debug(`handleConditionalFields called for: ${coverageType}`);
     try {
         const page = getPage(context);
         // Wait for conditional fields to appear (Alpine.js x-show)
@@ -357,15 +358,37 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 const liabilityAmount = coverages.higher_liability || coverages.liability?.amount || '2500000';
                 logger.debug(`Liability amount to select: ${liabilityAmount}`);
                 if (liabilityAmount) {
-                    const radioSelector = `${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${liabilityAmount}"]`;
-                    logger.debug(`Looking for radio button with selector: ${radioSelector}`);
-                    const radio = context.locator(radioSelector);
-                    const radioCount = await radio.count();
-                    logger.debug(`Found ${radioCount} radio buttons for liability amount`);
-                    if (radioCount > 0) {
-                        await radio.check();
-                        logger.debug(`Selected liability amount: €${liabilityAmount}`);
-                    } else {
+                    // Try multiple selector patterns
+                    const selectorsToTry = [
+                        `${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${liabilityAmount}"]`,
+                        `input[name="higher_liability"][value="${liabilityAmount}"]`,
+                        `input[type="radio"][name="higher_liability"][value="${liabilityAmount}"]`,
+                        // Try without the amount filter to see if any radio exists
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY
+                    ];
+
+                    let found = false;
+                    for (const selector of selectorsToTry) {
+                        logger.debug(`Trying selector: ${selector}`);
+                        const radio = context.locator(selector);
+                        const radioCount = await radio.count();
+                        logger.debug(`Found ${radioCount} elements`);
+
+                        if (radioCount > 0) {
+                            if (selector === CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY) {
+                                // Just logging what values exist
+                                const values = await radio.evaluateAll(els => els.map(el => ({value: el.value, id: el.id, name: el.name})));
+                                logger.debug('Available radio buttons:', values);
+                            } else {
+                                await radio.first().check();
+                                logger.debug(`Selected liability amount: €${liabilityAmount}`);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found) {
                         logger.warn(`Liability radio button not found for amount: ${liabilityAmount}`);
                     }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
