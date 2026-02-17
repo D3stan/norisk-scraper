@@ -13,68 +13,6 @@ get_header();
 
 <style>
 <?php include 'style.css'; ?>
-
-/* Pricing Table Styles */
-.norisk-pricing-table {
-    background: white;
-    border-radius: 8px;
-    padding: 25px;
-    margin: 25px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    text-align: left;
-}
-
-.norisk-pricing-table h4 {
-    margin: 0 0 20px 0;
-    color: #1a1a1a;
-    font-size: 18px;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 10px;
-}
-
-.norisk-pricing-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px dashed #e0e0e0;
-    font-size: 16px;
-}
-
-.norisk-pricing-row:last-child {
-    border-bottom: none;
-}
-
-.norisk-pricing-total {
-    margin-top: 10px;
-    padding-top: 15px;
-    border-top: 2px solid #1a1a1a;
-    border-bottom: none;
-    font-size: 18px;
-    color: #1a1a1a;
-}
-
-.norisk-quote-note {
-    color: #666;
-    font-style: italic;
-    margin: 20px 0;
-    font-size: 14px;
-}
-
-/* Results section enhancements */
-.norisk-results {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.norisk-quote-ref {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 20px;
-    padding: 15px;
-    background: #f5f5f5;
-    border-radius: 4px;
-}
 </style>
 
 <div class="norisk-form-container">
