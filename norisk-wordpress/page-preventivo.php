@@ -51,17 +51,6 @@ get_header();
                     <input type="email" id="email" name="email" required>
                 </div>
             </div>
-            <div class="norisk-form-row">
-                <div class="norisk-form-group full-width">
-                    <label for="role">Ruolo *</label>
-                    <select id="role" name="role" required>
-                        <option value="">Seleziona...</option>
-                        <option value="event_organiser">Organizzatore Evento</option>
-                        <option value="participant">Partecipante</option>
-                        <option value="company_representative">Rappresentante Azienda</option>
-                    </select>
-                </div>
-            </div>
         </div>
 
         <!-- Event Information -->
@@ -104,19 +93,6 @@ get_header();
                 <div class="norisk-form-group">
                     <label for="visitors">Numero Partecipanti *</label>
                     <input type="number" id="visitors" name="visitors" min="1" required>
-                </div>
-                <div class="norisk-form-group">
-                    <label>Ambiente *</label>
-                    <div class="norisk-radio-group">
-                        <label>
-                            <input type="radio" name="environment" value="outdoor" checked>
-                            All'aperto
-                        </label>
-                        <label>
-                            <input type="radio" name="environment" value="indoor">
-                            Al chiuso
-                        </label>
-                    </div>
                 </div>
             </div>
             <div class="norisk-form-row">
@@ -170,28 +146,176 @@ get_header();
                     </select>
                 </div>
             </div>
+            <div class="norisk-form-row">
+                <div class="norisk-form-group full-width">
+                    <label>Ambiente *</label>
+                    <div class="norisk-radio-group">
+                        <label>
+                            <input type="radio" name="environment" value="outdoor" checked>
+                            All'aperto
+                        </label>
+                        <label>
+                            <input type="radio" name="environment" value="indoor">
+                            Al chiuso
+                        </label>
+                        <label>
+                            <input type="radio" name="environment" value="both">
+                            Entrambi
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Coverage Options -->
         <div class="norisk-form-section">
             <h3>Coperture Richieste</h3>
-            <div class="norisk-checkbox-group">
-                <label>
-                    <input type="checkbox" name="coverages" value="liability" checked>
-                    Responsabilità Civile
+            <p class="norisk-coverage-note">Seleziona le coperture desiderate e configura le opzioni.</p>
+
+            <!-- Cancellation Costs -->
+            <div class="norisk-coverage-item">
+                <label class="norisk-coverage-toggle">
+                    <input type="checkbox" id="coverage_cancellation" name="coverage_cancellation" value="1">
+                    <span class="norisk-coverage-title">Costi di Annullamento</span>
                 </label>
-                <label>
-                    <input type="checkbox" name="coverages" value="accidents">
-                    Infortuni
+                <div class="norisk-coverage-options" id="options_cancellation">
+                    <div class="norisk-form-group">
+                        <label for="cancellation_total_cost">Qual è il costo totale per organizzare questo evento?</label>
+                        <input type="number" id="cancellation_total_cost" name="cancellation_total_cost" min="0" placeholder="€">
+                    </div>
+                    <div class="norisk-checkbox-group">
+                        <label>
+                            <input type="checkbox" name="cancellation_reasons" value="non_appearance">
+                            Annullamento per mancata partecipazione (artista/ospite)
+                        </label>
+                        <div class="norisk-sub-options" id="non_appearance_guests_container" style="display: none; margin-left: 30px;">
+                            <div id="guests_list">
+                                <div class="norisk-guest-entry">
+                                    <input type="text" name="guest_name[]" placeholder="Nome ospite" class="norisk-guest-name">
+                                    <input type="date" name="guest_birthdate[]" class="norisk-guest-date">
+                                    <label><input type="checkbox" name="guest_artist[]" value="1"> Artista</label>
+                                </div>
+                            </div>
+                            <button type="button" onclick="addGuest()" class="norisk-add-btn">+ Aggiungi ospite</button>
+                        </div>
+                        <label>
+                            <input type="checkbox" name="cancellation_reasons" value="extreme_weather">
+                            Annullamento per condizioni meteorologiche estreme
+                        </label>
+                        <label>
+                            <input type="checkbox" name="cancellation_reasons" value="profit_max_50">
+                            Profitto massimo 50% dei costi secondo il budget
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liability -->
+            <div class="norisk-coverage-item">
+                <label class="norisk-coverage-toggle">
+                    <input type="checkbox" id="coverage_liability" name="coverage_liability" value="1" checked>
+                    <span class="norisk-coverage-title">Responsabilità Civile</span>
                 </label>
-                <label>
-                    <input type="checkbox" name="coverages" value="equipment">
-                    Attrezzature
+                <div class="norisk-coverage-options" id="options_liability">
+                    <div class="norisk-form-group">
+                        <label>Per quale importo vuoi assicurare la tua responsabilità?</label>
+                        <div class="norisk-radio-group">
+                            <label>
+                                <input type="radio" name="liability_amount" value="2500000" checked>
+                                € 2.500.000
+                            </label>
+                            <label>
+                                <input type="radio" name="liability_amount" value="5000000">
+                                € 5.000.000
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="norisk-coverage-item">
+                <label class="norisk-coverage-toggle">
+                    <input type="checkbox" id="coverage_equipment" name="coverage_equipment" value="1">
+                    <span class="norisk-coverage-title">Attrezzature</span>
                 </label>
-                <label>
-                    <input type="checkbox" name="coverages" value="cancellation">
-                    Annullamento
+                <div class="norisk-coverage-options" id="options_equipment">
+                    <div class="norisk-form-group">
+                        <label for="equipment_value">Valore del materiale da assicurare</label>
+                        <input type="number" id="equipment_value" name="equipment_value" min="0" placeholder="€">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Money -->
+            <div class="norisk-coverage-item">
+                <label class="norisk-coverage-toggle">
+                    <input type="checkbox" id="coverage_money" name="coverage_money" value="1">
+                    <span class="norisk-coverage-title">Denaro</span>
                 </label>
+                <div class="norisk-coverage-options" id="options_money">
+                    <div class="norisk-form-group">
+                        <label for="money_amount">Quanto denaro vuoi assicurare ogni giorno?</label>
+                        <input type="number" id="money_amount" name="money_amount" min="0" placeholder="€">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accidents -->
+            <div class="norisk-coverage-item">
+                <label class="norisk-coverage-toggle">
+                    <input type="checkbox" id="coverage_accidents" name="coverage_accidents" value="1">
+                    <span class="norisk-coverage-title">Infortuni</span>
+                </label>
+                <div class="norisk-coverage-options" id="options_accidents">
+                    <div class="norisk-form-group">
+                        <label for="accidents_employees">Numero di dipendenti (in giorni-uomo)</label>
+                        <select id="accidents_employees" name="accidents_employees">
+                            <option value="none">Nessuno</option>
+                            <option value="1-50">1 - 50</option>
+                            <option value="51-100">51 - 100</option>
+                            <option value="101-250">101 - 250</option>
+                            <option value="251-500">251 - 500</option>
+                            <option value="501-1000">501 - 1000</option>
+                            <option value="1001-1500">1001 - 1500</option>
+                            <option value="1501-2000">1501 - 2000</option>
+                            <option value="2001-2500">2001 - 2500</option>
+                            <option value="2501-3000">2501 - 3000</option>
+                            <option value="3001-3500">3001 - 3500</option>
+                            <option value="3501-4000">3501 - 4000</option>
+                            <option value="4001-5000">4001 - 5000</option>
+                        </select>
+                    </div>
+                    <div class="norisk-form-group">
+                        <label for="accidents_participants">Numero di partecipanti (in giorni-uomo)</label>
+                        <select id="accidents_participants" name="accidents_participants">
+                            <option value="none">Nessuno</option>
+                            <option value="1-50">1 - 50</option>
+                            <option value="51-100">51 - 100</option>
+                            <option value="101-250">101 - 250</option>
+                            <option value="251-500">251 - 500</option>
+                            <option value="501-1000">501 - 1000</option>
+                            <option value="1001-1500">1001 - 1500</option>
+                            <option value="1501-2000">1501 - 2000</option>
+                            <option value="2001-2500">2001 - 2500</option>
+                            <option value="2501-3000">2501 - 3000</option>
+                            <option value="3001-3500">3001 - 3500</option>
+                            <option value="3501-4000">3501 - 4000</option>
+                            <option value="4001-5000">4001 - 5000</option>
+                            <option value="5001-6000">5001 - 6000</option>
+                            <option value="6001-7000">6001 - 7000</option>
+                            <option value="7001-8000">7001 - 8000</option>
+                            <option value="8001-9000">8001 - 9000</option>
+                            <option value="9001-10000">9001 - 10000</option>
+                        </select>
+                    </div>
+                    <div class="norisk-checkbox-group">
+                        <label>
+                            <input type="checkbox" name="accidents_sport" value="1">
+                            Sport incluso
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -232,6 +356,53 @@ const resultsContent = document.getElementById('resultsContent');
 // Set minimum date to today
 document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
 
+// Coverage toggle handlers
+document.getElementById('coverage_cancellation').addEventListener('change', function() {
+    document.getElementById('options_cancellation').classList.toggle('active', this.checked);
+});
+
+document.getElementById('coverage_liability').addEventListener('change', function() {
+    document.getElementById('options_liability').classList.toggle('active', this.checked);
+});
+
+document.getElementById('coverage_equipment').addEventListener('change', function() {
+    document.getElementById('options_equipment').classList.toggle('active', this.checked);
+});
+
+document.getElementById('coverage_money').addEventListener('change', function() {
+    document.getElementById('options_money').classList.toggle('active', this.checked);
+});
+
+document.getElementById('coverage_accidents').addEventListener('change', function() {
+    document.getElementById('options_accidents').classList.toggle('active', this.checked);
+});
+
+// Non-appearance guests toggle
+document.querySelectorAll('input[name="cancellation_reasons"]').forEach(cb => {
+    cb.addEventListener('change', function() {
+        const container = document.getElementById('non_appearance_guests_container');
+        const isChecked = document.querySelector('input[name="cancellation_reasons"][value="non_appearance"]').checked;
+        container.style.display = isChecked ? 'block' : 'none';
+    });
+});
+
+// Initialize liability options (checked by default)
+document.getElementById('options_liability').classList.add('active');
+
+// Add guest function
+function addGuest() {
+    const container = document.getElementById('guests_list');
+    const entry = document.createElement('div');
+    entry.className = 'norisk-guest-entry';
+    entry.innerHTML = `
+        <input type="text" name="guest_name[]" placeholder="Nome ospite" class="norisk-guest-name">
+        <input type="date" name="guest_birthdate[]" class="norisk-guest-date">
+        <label><input type="checkbox" name="guest_artist[]" value="1"> Artista</label>
+        <button type="button" class="norisk-remove-btn" onclick="this.parentElement.remove()">Rimuovi</button>
+    `;
+    container.appendChild(entry);
+}
+
 // Form submission handler
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -252,25 +423,34 @@ form.addEventListener('submit', async function(e) {
 
 // Collect form data into API format
 function collectFormData() {
-    const coverageCheckboxes = document.querySelectorAll('input[name="coverages"]:checked');
-    const coverages = {};
-
-    // Initialize all coverages as false
-    ['liability', 'accidents', 'equipment', 'cancellation'].forEach(c => {
-        coverages[c] = false;
-    });
-
-    // Set selected to true
-    coverageCheckboxes.forEach(cb => {
-        coverages[cb.value] = true;
-    });
+    // Build coverage details
+    const coverages = {
+        cancellation: document.getElementById('coverage_cancellation').checked ? {
+            total_cost: document.getElementById('cancellation_total_cost').value,
+            reasons: Array.from(document.querySelectorAll('input[name="cancellation_reasons"]:checked')).map(cb => cb.value),
+            non_appearance_guests: collectGuests()
+        } : null,
+        liability: document.getElementById('coverage_liability').checked ? {
+            amount: document.querySelector('input[name="liability_amount"]:checked')?.value || '2500000'
+        } : null,
+        equipment: document.getElementById('coverage_equipment').checked ? {
+            value: document.getElementById('equipment_value').value
+        } : null,
+        money: document.getElementById('coverage_money').checked ? {
+            amount: document.getElementById('money_amount').value
+        } : null,
+        accidents: document.getElementById('coverage_accidents').checked ? {
+            employees: document.getElementById('accidents_employees').value,
+            participants: document.getElementById('accidents_participants').value,
+            sport: document.querySelector('input[name="accidents_sport"]').checked
+        } : null
+    };
 
     return {
         initials: document.getElementById('initials').value,
         lastName: document.getElementById('lastName').value,
         phone: document.getElementById('phone').value,
         email: document.getElementById('email').value,
-        role: document.getElementById('role').value,
         eventName: document.getElementById('eventName').value,
         eventType: document.getElementById('eventType').value,
         startDate: document.getElementById('startDate').value,
@@ -286,6 +466,24 @@ function collectFormData() {
         environment: document.querySelector('input[name="environment"]:checked').value,
         coverages: coverages
     };
+}
+
+// Collect non-appearance guests
+function collectGuests() {
+    const guests = [];
+    document.querySelectorAll('.norisk-guest-entry').forEach(entry => {
+        const name = entry.querySelector('.norisk-guest-name').value;
+        const birthdate = entry.querySelector('.norisk-guest-date').value;
+        const isArtist = entry.querySelector('input[name="guest_artist[]"]').checked;
+        if (name) {
+            guests.push({
+                name: name,
+                birthdate: birthdate,
+                artist: isArtist
+            });
+        }
+    });
+    return guests;
 }
 
 // Submit to API with timeout
@@ -361,6 +559,20 @@ function resetForm() {
     form.classList.remove('hidden');
     resultsSection.classList.remove('active', 'success', 'error');
     document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
+
+    // Reset coverage options visibility
+    document.querySelectorAll('.norisk-coverage-options').forEach(el => el.classList.remove('active'));
+    document.getElementById('options_liability').classList.add('active');
+
+    // Reset guests list
+    document.getElementById('guests_list').innerHTML = `
+        <div class="norisk-guest-entry">
+            <input type="text" name="guest_name[]" placeholder="Nome ospite" class="norisk-guest-name">
+            <input type="date" name="guest_birthdate[]" class="norisk-guest-date">
+            <label><input type="checkbox" name="guest_artist[]" value="1"> Artista</label>
+        </div>
+    `;
+    document.getElementById('non_appearance_guests_container').style.display = 'none';
 }
 </script>
 

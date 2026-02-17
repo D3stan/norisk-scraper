@@ -266,3 +266,132 @@
     color: #0066cc;
     text-decoration: underline;
 }
+
+/* Coverage Options - Dynamic */
+.norisk-coverage-note {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.norisk-coverage-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.norisk-coverage-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    background: #f9f9f9;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.norisk-coverage-toggle:hover {
+    background: #f0f0f0;
+}
+
+.norisk-coverage-toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.norisk-coverage-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #1a1a1a;
+}
+
+.norisk-coverage-options {
+    display: none;
+    padding: 20px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+}
+
+.norisk-coverage-options.active {
+    display: block;
+}
+
+.norisk-coverage-options .norisk-form-group {
+    margin-bottom: 15px;
+}
+
+.norisk-coverage-options .norisk-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.norisk-coverage-options label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Guest entries for cancellation */
+.norisk-guest-entry {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.norisk-guest-entry input[type="text"],
+.norisk-guest-entry input[type="date"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.norisk-guest-entry label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+.norisk-add-btn {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.norisk-add-btn:hover {
+    background: #0052a3;
+}
+
+.norisk-remove-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.norisk-remove-btn:hover {
+    background: #c0392b;
+}
+
+/* Sub-options styling */
+.norisk-sub-options {
+    margin-top: 10px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
