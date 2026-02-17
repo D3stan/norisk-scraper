@@ -5,10 +5,6 @@ import { mapFormData, validateFormData } from './utils/dataMapper.js';
 import { automateFormSubmission } from './automation/scraper.js';
 import cors from 'cors';
 
-app.use(cors({
-    origin: [process.env.DOMAIN, process.env.DOMAIN.replace('://', '://api.')]
-}));
-
 // Load environment variables
 dotenv.config();
 
@@ -17,6 +13,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
+
+app.use(cors({
+    origin: [process.env.DOMAIN, process.env.DOMAIN.replace('://', '://api.')]
+}));
 
 // Request logging middleware
 app.use((req, res, next) => {
