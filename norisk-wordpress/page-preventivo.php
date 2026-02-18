@@ -747,4 +747,7 @@ function resetForm() {
 }
 </script>
 
+<!-- TEMPORARY DEBUG TOOLS -->
+<script src="<?php echo get_template_directory_uri(); ?>/norisk-wordpress/debug-tools.js"></script>
+
 <?php get_footer(); ?>
