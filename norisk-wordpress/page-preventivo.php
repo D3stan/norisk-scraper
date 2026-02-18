@@ -566,10 +566,10 @@ function showSuccess(result) {
         // Still waiting for PDF from NoRisk
         actionButton = `
             <button type="button" class="norisk-submit-btn" onclick="checkQuoteStatus('${quoteKey}')" id="checkStatusBtn">
-                Verifica stato preventivo
+                Ricevi preventivo
             </button>
         `;
-        statusMessage = `<p class="norisk-quote-note">Stiamo elaborando il tuo preventivo. Clicca il pulsante per verificare se il documento è pronto.</p>`;
+        statusMessage = `<p class="norisk-quote-note">Clicca il pulsante per ricevere il preventivo via email.</p>`;
     } else if (status === 'email_received') {
         // PDF received, can send to user
         actionButton = `
@@ -590,7 +590,7 @@ function showSuccess(result) {
         // Default case
         actionButton = `
             <button type="button" class="norisk-submit-btn" onclick="checkQuoteStatus('${quoteKey}')" id="checkStatusBtn">
-                Verifica stato preventivo
+                Ricevi preventivo
             </button>
         `;
         statusMessage = `<p class="norisk-quote-note">Stato: ${status}</p>`;
@@ -652,12 +652,12 @@ async function checkQuoteStatus(quoteKey) {
                 </div>
             `;
             btn.disabled = false;
-            btn.textContent = 'Verifica stato preventivo';
+            btn.textContent = 'Ricevi preventivo';
         }
 
     } catch (error) {
         btn.disabled = false;
-        btn.textContent = 'Verifica stato preventivo';
+        btn.textContent = 'Ricevi preventivo';
         statusDiv.innerHTML = `
             <div class="norisk-error-message" style="color: #e74c3c; padding: 15px; background: #fdf2f2; border-radius: 4px;">
                 <strong>Errore:</strong> ${error.message}
