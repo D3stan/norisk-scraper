@@ -110,8 +110,7 @@ For both of them, the following fields are required:
 ### Business
 
 - Company name: `input[type="text"][name="company_name"]`
-- Commercial number: `input[type="text"][name="company_commercial_number"]`
-- DUNS number (optional): `input[type="text"][name="company_duns_number"]`
+- Commercial number (P.IVA): `input[type="text"][name="company_commercial_number"]`
 - Legal form: `select[name="company_legal_form"]`
     * `association`
     * `church`
@@ -128,3 +127,8 @@ For both of them, the following fields are required:
 ### Individual
 
 - Birth date (DD-MM-YYYY): `input[type="text"][name="birthdate"]`
+
+
+# Recap
+- address compiled in your details is different from address of the event compiled in the even details
+- individual not needed
