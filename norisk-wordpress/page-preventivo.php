@@ -409,13 +409,18 @@ form.addEventListener('submit', async function(e) {
 
     // Show loading
     loadingOverlay.classList.add('active');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Richiesta in corso...';
+    submitBtn.disabled = true;
 
     try {
         const formData = collectFormData();
         const result = await submitQuote(formData);
         showSuccess(result);
     } catch (error) {
-        showError(error.message);
+        console.error('Submission error:', error);
+        showError(error.message || 'Si è verificato un errore imprevisto. Riprova più tardi.');
     } finally {
         loadingOverlay.classList.remove('active');
     }
@@ -505,7 +510,9 @@ async function submitQuote(data) {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            throw new Error(error.message || `Errore server: ${response.status}`);
+            // Provide a user-friendly fallback if the server error message is missing or generic
+            const errorMessage = error.message || `Errore del server (${response.status}).`;
+            throw new Error(errorMessage);
         }
 
         return await response.json();
@@ -614,7 +621,7 @@ async function checkQuoteStatus(quoteKey) {
     const statusDiv = document.getElementById('actionStatus');
 
     btn.disabled = true;
-    btn.textContent = 'Verifica in corso...';
+    btn.textContent = 'Richiesta in corso...';
 
     try {
         const response = await fetch(CONFIG.API_URL.replace('/quote', `/quote/${quoteKey}/status`), {
