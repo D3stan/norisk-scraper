@@ -33,12 +33,16 @@ get_header();
             <h3>Informazioni Personali</h3>
             <div class="norisk-form-row">
                 <div class="norisk-form-group">
-                    <label for="initials">Iniziali *</label>
-                    <input type="text" id="initials" name="initials" maxlength="3" required>
+                    <label for="initials">Titolo *</label>
+                    <select id="initials" name="initials" required>
+                        <option value="">Seleziona...</option>
+                        <option value="Sig.">Sig.</option>
+                        <option value="Sign.ra">Sign.ra</option>
+                    </select>
                 </div>
                 <div class="norisk-form-group">
-                    <label for="lastName">Cognome *</label>
-                    <input type="text" id="lastName" name="lastName" required>
+                    <label for="lastName">Cognome Nome *</label>
+                    <input type="text" id="lastName" name="lastName" required placeholder="Es. Rossi Mario">
                 </div>
             </div>
             <div class="norisk-form-row">
@@ -83,6 +87,7 @@ get_header();
                 <div class="norisk-form-group">
                     <label for="startDate">Data Inizio *</label>
                     <input type="date" id="startDate" name="startDate" required>
+                    <span id="startDateError" class="norisk-field-error" style="display:none; color:#e74c3c; font-size:0.85em; margin-top:4px;"></span>
                 </div>
                 <div class="norisk-form-group">
                     <label for="days">Durata (giorni) *</label>
@@ -203,9 +208,15 @@ get_header();
                             Annullamento per condizioni meteorologiche estreme
                         </label>
                         <label>
-                            <input type="checkbox" name="cancellation_reasons" value="profit_max_50">
-                            Profitto massimo 50% dei costi secondo il budget
+                            <input type="checkbox" name="cancellation_reasons" value="profit_max_50" id="cb_profit_max_50">
+                            Perdita Profitto (fino a massimo 50% dei costi di annullamento)
                         </label>
+                        <div class="norisk-sub-options" id="profit_max_50_container" style="display: none; margin-left: 30px; margin-top: 8px;">
+                            <div class="norisk-form-group">
+                                <label for="profit_estimate">Stima guadagno</label>
+                                <input type="text" id="profit_estimate" name="profit_estimate" placeholder="€" class="norisk-number-formatted">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -213,7 +224,7 @@ get_header();
             <!-- Liability -->
             <div class="norisk-coverage-item">
                 <label class="norisk-coverage-toggle">
-                    <input type="checkbox" id="coverage_liability" name="coverage_liability" value="1" checked>
+                    <input type="checkbox" id="coverage_liability" name="coverage_liability" value="1">
                     <span class="norisk-coverage-title">Responsabilità Civile</span>
                 </label>
                 <div class="norisk-coverage-options" id="options_liability">
@@ -221,7 +232,7 @@ get_header();
                         <label>Per quale importo vuoi assicurare la tua responsabilità?</label>
                         <div class="norisk-radio-group">
                             <label>
-                                <input type="radio" name="liability_amount" value="2500000" checked>
+                                <input type="radio" name="liability_amount" value="2500000">
                                 € 2.500.000
                             </label>
                             <label>
@@ -248,7 +259,7 @@ get_header();
             </div>
 
             <!-- Money -->
-            <div class="norisk-coverage-item">
+            <div class="norisk-coverage-item" style="display: none;">
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_money" name="coverage_money" value="1">
                     <span class="norisk-coverage-title">Denaro</span>
@@ -353,8 +364,34 @@ const resultsSection = document.getElementById('resultsSection');
 const resultsTitle = document.getElementById('resultsTitle');
 const resultsContent = document.getElementById('resultsContent');
 
-// Set minimum date to today
-document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
+// Set minimum date to 15 days from today
+(function() {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 15);
+    document.getElementById('startDate').min = minDate.toISOString().split('T')[0];
+})();
+
+// Validate start date is at least 15 days from today
+function validateStartDate(input) {
+    const selected = new Date(input.value);
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 15);
+    minDate.setHours(0, 0, 0, 0);
+    selected.setHours(0, 0, 0, 0);
+    const errorEl = document.getElementById('startDateError');
+    if (selected < minDate) {
+        errorEl.textContent = 'La data dell\'evento deve essere almeno 15 giorni dalla data odierna.';
+        errorEl.style.display = 'block';
+        input.setCustomValidity('La data deve essere almeno 15 giorni in anticipo.');
+    } else {
+        errorEl.textContent = '';
+        errorEl.style.display = 'none';
+        input.setCustomValidity('');
+    }
+}
+document.getElementById('startDate').addEventListener('change', function() {
+    validateStartDate(this);
+});
 
 // Coverage toggle handlers
 document.getElementById('coverage_cancellation').addEventListener('change', function() {
@@ -386,8 +423,40 @@ document.querySelectorAll('input[name="cancellation_reasons"]').forEach(cb => {
     });
 });
 
-// Initialize liability options (checked by default)
-document.getElementById('options_liability').classList.add('active');
+// Perdita Profitto toggle — show/hide stima guadagno
+document.getElementById('cb_profit_max_50').addEventListener('change', function() {
+    document.getElementById('profit_max_50_container').style.display = this.checked ? 'block' : 'none';
+});
+
+// Thousands separator for number inputs with class norisk-number-formatted
+function formatThousands(input) {
+    // Strip everything except digits
+    let raw = input.value.replace(/[^0-9]/g, '');
+    if (raw === '') { input.value = ''; return; }
+    // Format with dots as thousands separator (Italian style)
+    input.value = parseInt(raw, 10).toLocaleString('it-IT');
+    // Store raw value in dataset for form submission
+    input.dataset.rawValue = raw;
+}
+
+document.querySelectorAll('.norisk-number-formatted').forEach(function(input) {
+    input.addEventListener('input', function() { formatThousands(this); });
+    input.addEventListener('blur', function() { formatThousands(this); });
+});
+
+// Numeric currency inputs: cancellation_total_cost, equipment_value, money_amount
+['cancellation_total_cost', 'equipment_value', 'money_amount'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('norisk-number-formatted');
+    // Re-attach listener after adding class
+    el.addEventListener('input', function() { formatThousands(this); });
+    el.addEventListener('blur', function() { formatThousands(this); });
+    // Change to text type so formatted string can be shown
+    el.type = 'text';
+    el.removeAttribute('min');
+    el.setAttribute('inputmode', 'numeric');
+});
 
 // Add guest function
 function addGuest() {
@@ -431,7 +500,8 @@ function collectFormData() {
     // Build coverage details
     const coverages = {
         cancellation: document.getElementById('coverage_cancellation').checked ? {
-            total_cost: document.getElementById('cancellation_total_cost').value,
+            total_cost: document.getElementById('cancellation_total_cost').dataset.rawValue || document.getElementById('cancellation_total_cost').value.replace(/[^0-9]/g, ''),
+            profit_estimate: document.getElementById('cb_profit_max_50').checked ? (document.getElementById('profit_estimate').dataset.rawValue || document.getElementById('profit_estimate').value.replace(/[^0-9]/g, '')) : null,
             reasons: Array.from(document.querySelectorAll('input[name="cancellation_reasons"]:checked')).map(cb => cb.value),
             non_appearance_guests: collectGuests()
         } : null,
@@ -439,10 +509,10 @@ function collectFormData() {
             amount: document.querySelector('input[name="liability_amount"]:checked')?.value || '2500000'
         } : null,
         equipment: document.getElementById('coverage_equipment').checked ? {
-            value: document.getElementById('equipment_value').value
+            value: document.getElementById('equipment_value').dataset.rawValue || document.getElementById('equipment_value').value.replace(/[^0-9]/g, '')
         } : null,
         money: document.getElementById('coverage_money').checked ? {
-            amount: document.getElementById('money_amount').value
+            amount: document.getElementById('money_amount').dataset.rawValue || document.getElementById('money_amount').value.replace(/[^0-9]/g, '')
         } : null,
         accidents: document.getElementById('coverage_accidents').checked ? {
             employees: document.getElementById('accidents_employees').value,
@@ -736,11 +806,14 @@ function resetForm() {
     form.reset();
     form.classList.remove('hidden');
     resultsSection.classList.remove('active', 'success', 'error');
-    document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 15);
+    document.getElementById('startDate').min = minDate.toISOString().split('T')[0];
+    document.getElementById('startDateError').style.display = 'none';
+    document.getElementById('profit_max_50_container').style.display = 'none';
 
     // Reset coverage options visibility
     document.querySelectorAll('.norisk-coverage-options').forEach(el => el.classList.remove('active'));
-    document.getElementById('options_liability').classList.add('active');
 
     // Reset guests list
     document.getElementById('guests_list').innerHTML = `
