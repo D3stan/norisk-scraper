@@ -4,9 +4,8 @@
  * Description: Form for requesting event insurance quotes
  */
 
-// CONFIGURATION - Update these values
-const API_URL = 'http://api.wordpress.home/api/quote';
-const API_TIMEOUT_MS = 120000; // 30 seconds - easily tunable
+// CONFIGURATION
+const API_TIMEOUT_MS = 120000;
 
 // get_header();
 ?>
@@ -415,9 +414,9 @@ const API_TIMEOUT_MS = 120000; // 30 seconds - easily tunable
 </div>
 
 <script>
-// CONFIGURATION - Update with your VPS IP
+// CONFIGURATION
 const CONFIG = {
-    API_URL: '<?php echo API_URL; ?>',
+    AJAX_URL: '<?php echo admin_url('admin-ajax.php'); ?>',
     API_TIMEOUT_MS: <?php echo API_TIMEOUT_MS; ?>
 };
 
@@ -625,36 +624,32 @@ function collectGuests() {
     return guests;
 }
 
-// Submit to API with timeout
+// Submit to API via WordPress AJAX proxy (server-side)
 async function submitQuote(data) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), CONFIG.API_TIMEOUT_MS);
 
     try {
-        const response = await fetch(CONFIG.API_URL, {
+        const response = await fetch(CONFIG.AJAX_URL + '?action=norisk_submit_quote', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
             signal: controller.signal
         });
 
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            // Provide a user-friendly fallback if the server error message is missing or generic
-            const errorMessage = error.message || `Errore del server (${response.status}).`;
-            throw new Error(errorMessage);
+        const json = await response.json().catch(() => ({}));
+
+        if (!json.success) {
+            throw new Error(json.data?.message || `Errore del server (${response.status}).`);
         }
 
-        return await response.json();
+        return json.data;
     } catch (error) {
         clearTimeout(timeoutId);
-
         if (error.name === 'AbortError') {
-            throw new Error('Il servizio sta impiegando troppo tempo. Riprova piu tardi.');
+            throw new Error('Il servizio sta impiegando troppo tempo. Riprova più tardi.');
         }
         if (error.message.includes('Failed to fetch')) {
             throw new Error('Errore di connessione al server. Verifica la tua connessione internet.');
@@ -758,19 +753,17 @@ async function checkQuoteStatus(quoteKey) {
     btn.textContent = 'Richiesta in corso...';
 
     try {
-        const response = await fetch(CONFIG.API_URL.replace('/quote', `/quote/${quoteKey}/status`), {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+        const response = await fetch(
+            CONFIG.AJAX_URL + '?action=norisk_check_quote_status&quoteKey=' + encodeURIComponent(quoteKey),
+            { method: 'GET' }
+        );
 
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.message || 'Errore durante la verifica');
+        const json = await response.json().catch(() => ({}));
+        if (!json.success) {
+            throw new Error(json.data?.message || 'Errore durante la verifica');
         }
 
-        const result = await response.json();
+        const result = json.data;
 
         if (result.hasPdf) {
             // PDF is ready, update UI to show send button
@@ -816,20 +809,18 @@ async function sendQuoteToUser(quoteKey) {
     btn.textContent = 'Invio in corso...';
 
     try {
-        const response = await fetch(CONFIG.API_URL + '/send', {
+        const response = await fetch(CONFIG.AJAX_URL + '?action=norisk_send_quote', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ quoteKey: quoteKey })
         });
 
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.message || 'Errore durante l\'invio');
+        const json = await response.json().catch(() => ({}));
+        if (!json.success) {
+            throw new Error(json.data?.message || 'Errore durante l\'invio');
         }
 
-        const result = await response.json();
+        const result = json.data;
 
         statusDiv.innerHTML = `
             <div class="norisk-success-message" style="color: #27ae60; padding: 15px; background: #f0fff4; border-radius: 4px;">
