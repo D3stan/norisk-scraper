@@ -5,10 +5,10 @@
  */
 
 // CONFIGURATION - Update these values
-const API_URL = 'http://192.168.2.100:3000/api/quote';
-const API_TIMEOUT_MS = 30000; // 30 seconds - easily tunable
+const API_URL = 'http://api.wordpress.home/api/quote';
+const API_TIMEOUT_MS = 120000; // 30 seconds - easily tunable
 
-get_header();
+// get_header();
 ?>
 
 <style>
@@ -973,4 +973,6 @@ function resetForm() {
 })();
 </script>
 
-<?php get_footer(); ?>
+<?php
+    // get_footer();
+?>
