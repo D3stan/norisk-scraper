@@ -416,7 +416,7 @@ const API_TIMEOUT_MS = 120000;
 <script>
 // CONFIGURATION
 const CONFIG = {
-    AJAX_URL: '<?php echo admin_url('admin-ajax.php'); ?>',
+    AJAX_URL: '/wp-admin/admin-ajax.php',
     API_TIMEOUT_MS: <?php echo API_TIMEOUT_MS; ?>
 };
 
@@ -905,6 +905,7 @@ function resetForm() {
     debugContainer.innerHTML = `
         <h4 style="margin: 0 0 15px 0; color: #2C2C2C; font-weight: bold; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;">🛠️ Debug Tools</h4>
         <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button id="debug-fill" style="padding: 8px 12px; cursor: pointer; background: #1a5276; color: white; border: none; border-radius: 4px; font-weight: 500;">Fill Fields</button>
             <button id="debug-success" style="padding: 8px 12px; cursor: pointer; background: #6B1C23; color: white; border: none; border-radius: 4px; font-weight: 500;">Simulate Success</button>
             <button id="debug-error" style="padding: 8px 12px; cursor: pointer; background: #dc2626; color: white; border: none; border-radius: 4px; font-weight: 500;">Simulate Error</button>
             <button id="debug-reset" style="padding: 8px 12px; cursor: pointer; background: #f3f4f6; color: #333; border: 1px solid #ccc; border-radius: 4px; font-weight: 500;">Reset Form</button>
@@ -924,6 +925,66 @@ function resetForm() {
             toPay: '1.530,65'
         }
     };
+
+    // Fill Fields with pre-made test data
+    document.getElementById('debug-fill').addEventListener('click', () => {
+        // Personal
+        document.getElementById('initials').value = 'Sig.';
+        document.getElementById('lastName').value = 'Ferri Paolo';
+        document.getElementById('phone').value = '054722351';
+        document.getElementById('email').value = 'pgol@icloud.com';
+
+        // Business
+        document.getElementById('company_name').value = 'Pro loco futuro';
+        document.getElementById('company_commercial_number').value = 'IT0239401920';
+        document.getElementById('company_legal_form').value = 'association';
+        document.getElementById('company_address').value = 'Via Roma';
+        document.getElementById('company_house_number').value = '3';
+        document.getElementById('company_zipcode').value = '47653';
+        document.getElementById('company_city').value = 'Cesena';
+        document.getElementById('company_country').value = 'it';
+
+        // Event
+        document.getElementById('eventName').value = 'Notte Bianca';
+        document.getElementById('eventType').value = '18';
+        document.getElementById('startDate').value = '2026-03-15';
+        document.getElementById('startDate').dispatchEvent(new Event('change'));
+        document.getElementById('days').value = '1';
+        document.getElementById('visitors').value = '2350';
+        document.getElementById('description').value = 'Concerto in piazza';
+
+        // Location
+        document.getElementById('venueDescription').value = 'Piazza';
+        document.getElementById('address').value = 'Piazza verdi';
+        document.getElementById('houseNumber').value = '3';
+        document.getElementById('zipcode').value = '47521';
+        document.getElementById('city').value = 'Cesena';
+        document.getElementById('country').value = 'it';
+        document.querySelector('input[name="environment"][value="outdoor"]').checked = true;
+
+        // Coverages — Cancellation
+        const cbCanc = document.getElementById('coverage_cancellation');
+        cbCanc.checked = true;
+        cbCanc.dispatchEvent(new Event('change'));
+        const cancCostEl = document.getElementById('cancellation_total_cost');
+        cancCostEl.value = '20.000';
+        cancCostEl.dataset.rawValue = '20000';
+        document.querySelector('input[name="cancellation_reasons"][value="extreme_weather"]').checked = true;
+
+        // Coverages — Liability
+        const cbLiab = document.getElementById('coverage_liability');
+        cbLiab.checked = true;
+        cbLiab.dispatchEvent(new Event('change'));
+        document.querySelector('input[name="liability_amount"][value="5000000"]').checked = true;
+
+        // Uncheck others
+        document.getElementById('coverage_equipment').checked = false;
+        document.getElementById('options_equipment').classList.remove('active');
+        document.getElementById('coverage_accidents').checked = false;
+        document.getElementById('options_accidents').classList.remove('active');
+
+        console.info('NoRisk: form filled with test data.');
+    });
 
     // Actions
     document.getElementById('debug-success').addEventListener('click', () => {
