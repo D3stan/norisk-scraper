@@ -55,6 +55,72 @@ get_header();
                     <input type="email" id="email" name="email" required>
                 </div>
             </div>
+
+            <!-- Dati Aziendali -->
+            <h4 class="norisk-subsection-title">Dati Aziendali</h4>
+            <div class="norisk-form-row">
+                <div class="norisk-form-group">
+                    <label for="company_name">Ragione Sociale *</label>
+                    <input type="text" id="company_name" name="company_name" required placeholder="Es. Mario Rossi S.r.l.">
+                </div>
+                <div class="norisk-form-group">
+                    <label for="company_commercial_number">Partita IVA *</label>
+                    <input type="text" id="company_commercial_number" name="company_commercial_number" required placeholder="Es. IT12345678901">
+                </div>
+            </div>
+            <div class="norisk-form-row">
+                <div class="norisk-form-group full-width">
+                    <label for="company_legal_form">Forma Giuridica *</label>
+                    <select id="company_legal_form" name="company_legal_form" required>
+                        <option value="">Seleziona...</option>
+                        <option value="association">Associazione</option>
+                        <option value="church">Ente Religioso</option>
+                        <option value="cooperative_and_mutual_insurance_company">Cooperativa / Società di Mutuo Soccorso</option>
+                        <option value="foundation">Fondazione</option>
+                        <option value="general_partnership">Società in Nome Collettivo (S.n.c.)</option>
+                        <option value="limited_partnership">Società in Accomandita Semplice (S.a.s.)</option>
+                        <option value="partnership">Società di Persone</option>
+                        <option value="private_limited_company">Società a Responsabilità Limitata (S.r.l.)</option>
+                        <option value="public_legal_entity">Ente Pubblico</option>
+                        <option value="public_limited_company">Società per Azioni (S.p.A.)</option>
+                        <option value="sole_proprietorship">Ditta Individuale</option>
+                    </select>
+                </div>
+            </div>
+            <div class="norisk-form-row">
+                <div class="norisk-form-group">
+                    <label for="company_address">Indirizzo *</label>
+                    <input type="text" id="company_address" name="company_address" required>
+                </div>
+                <div class="norisk-form-group">
+                    <label for="company_house_number">Numero Civico *</label>
+                    <input type="text" id="company_house_number" name="company_house_number" required>
+                </div>
+            </div>
+            <div class="norisk-form-row">
+                <div class="norisk-form-group">
+                    <label for="company_zipcode">CAP *</label>
+                    <input type="text" id="company_zipcode" name="company_zipcode" required>
+                </div>
+                <div class="norisk-form-group">
+                    <label for="company_city">Città *</label>
+                    <input type="text" id="company_city" name="company_city" required>
+                </div>
+            </div>
+            <div class="norisk-form-row">
+                <div class="norisk-form-group full-width">
+                    <label for="company_country">Paese *</label>
+                    <select id="company_country" name="company_country" required>
+                        <option value="it" selected>Italia</option>
+                        <option value="nl">Paesi Bassi</option>
+                        <option value="de">Germania</option>
+                        <option value="fr">Francia</option>
+                        <option value="es">Spagna</option>
+                        <option value="gb">Regno Unito</option>
+                        <option value="us">Stati Uniti</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <!-- Event Information -->
@@ -331,11 +397,9 @@ get_header();
         </div>
 
         <!-- Privacy -->
-        <div class="norisk-privacy-group">
-            <label>
-                <input type="checkbox" id="privacyAccept" name="privacyAccept" required>
-                Ho letto e accetto l'<a href="/privacy-policy" target="_blank">informativa sulla privacy</a> *
-            </label>
+        <div class="norisk-privacy-row">
+            <input type="checkbox" id="privacyAccept" name="privacyAccept" required>
+            <label for="privacyAccept">Ho letto e accetto l'<a href="/privacy-policy" target="_blank">informativa sulla privacy</a> <span style="color: var(--brand-primary);">*</span></label>
         </div>
 
         <!-- Submit -->

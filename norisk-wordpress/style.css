@@ -365,31 +365,42 @@ input[type="checkbox"], input[type="radio"] {
     padding: 0;
 }
 
-/* Privacy */
-.norisk-privacy-group {
-    margin: 32px 0;
-    padding: 20px;
-    background: var(--bg-light);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-default);
+/* Subsection Title (e.g. Dati Aziendali) */
+.norisk-subsection-title {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 28px 0 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 8px;
 }
 
-.norisk-privacy-group label {
+/* Privacy Row */
+.norisk-privacy-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 32px 0;
+}
+
+.norisk-privacy-row label {
     font-size: 14px;
     color: var(--text-body);
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
     line-height: 1.5;
+    cursor: pointer;
+    margin-bottom: 0;
 }
 
-.norisk-privacy-group a {
+.norisk-privacy-row a {
     color: var(--brand-primary);
     text-decoration: underline;
     font-weight: 500;
 }
 
-.norisk-privacy-group a:hover {
+.norisk-privacy-row a:hover {
     color: var(--brand-primary-hover);
 }
 
@@ -531,4 +542,104 @@ input[type="checkbox"], input[type="radio"] {
     font-style: italic;
     margin: 24px 0;
     font-size: 14px;
+}
+
+/* =========================================
+   Mobile / Responsive Styles
+   ========================================= */
+@media (max-width: 640px) {
+    /* Container */
+    .norisk-form-container {
+        padding: 24px 16px;
+    }
+
+    /* Headings */
+    .norisk-form-container h1 {
+        font-size: 1.5rem;
+    }
+
+    .norisk-form-section h3 {
+        font-size: 1.1rem;
+    }
+
+    .norisk-subsection-title {
+        font-size: 0.85rem;
+    }
+
+    /* All form rows stack to single column */
+    .norisk-form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .norisk-form-group.full-width {
+        grid-column: 1;
+    }
+
+    /* Inputs */
+    .norisk-form-group input[type="text"],
+    .norisk-form-group input[type="email"],
+    .norisk-form-group input[type="tel"],
+    .norisk-form-group input[type="number"],
+    .norisk-form-group input[type="date"],
+    .norisk-form-group select {
+        font-size: 16px; /* Prevent iOS zoom */
+        height: 44px;
+    }
+
+    /* Radio groups stack vertically */
+    .norisk-radio-group {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Coverage toggle */
+    .norisk-coverage-toggle {
+        padding: 14px 16px;
+    }
+
+    .norisk-coverage-title {
+        font-size: 15px;
+    }
+
+    .norisk-coverage-options {
+        padding: 16px;
+    }
+
+    /* Guest entries stack vertically */
+    .norisk-guest-entry {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    /* Privacy row */
+    .norisk-privacy-row {
+        margin: 24px 0;
+        align-items: flex-start;
+    }
+
+    /* Submit button full width */
+    .norisk-submit-btn {
+        width: 100%;
+        padding: 14px 24px;
+    }
+
+    /* Results section */
+    .norisk-results {
+        padding: 24px 16px;
+    }
+
+    .norisk-pricing-table {
+        padding: 16px;
+    }
+
+    .norisk-pricing-row {
+        font-size: 14px;
+    }
+
+    .norisk-pricing-total {
+        font-size: 16px;
+    }
 }
