@@ -560,29 +560,63 @@ form.addEventListener('submit', async function(e) {
 
 // Collect form data into API format
 function collectFormData() {
-    // Build coverage details
-    const coverages = {
-        cancellation: document.getElementById('coverage_cancellation').checked ? {
-            total_cost: document.getElementById('cancellation_total_cost').dataset.rawValue || document.getElementById('cancellation_total_cost').value.replace(/[^0-9]/g, ''),
-            profit_estimate: document.getElementById('cb_profit_max_50').checked ? (document.getElementById('profit_estimate').dataset.rawValue || document.getElementById('profit_estimate').value.replace(/[^0-9]/g, '')) : null,
-            reasons: Array.from(document.querySelectorAll('input[name="cancellation_reasons"]:checked')).map(cb => cb.value),
-            non_appearance_guests: collectGuests()
-        } : null,
-        liability: document.getElementById('coverage_liability').checked ? {
-            amount: document.querySelector('input[name="liability_amount"]:checked')?.value || '2500000'
-        } : null,
-        equipment: document.getElementById('coverage_equipment').checked ? {
-            value: document.getElementById('equipment_value').dataset.rawValue || document.getElementById('equipment_value').value.replace(/[^0-9]/g, '')
-        } : null,
-        money: document.getElementById('coverage_money').checked ? {
-            amount: document.getElementById('money_amount').dataset.rawValue || document.getElementById('money_amount').value.replace(/[^0-9]/g, '')
-        } : null,
-        accidents: document.getElementById('coverage_accidents').checked ? {
-            employees: document.getElementById('accidents_employees').value,
-            participants: document.getElementById('accidents_participants').value,
-            sport: document.querySelector('input[name="accidents_sport"]').checked
-        } : null
-    };
+    // Build flat coverage object matching the scraper's expected field names
+    const coverages = {};
+
+    // Cancellation Costs
+    if (document.getElementById('coverage_cancellation').checked) {
+        coverages.cancellation_costs = true;
+        const totalCost = document.getElementById('cancellation_total_cost').dataset.rawValue ||
+                          document.getElementById('cancellation_total_cost').value.replace(/[^0-9]/g, '');
+        if (totalCost) coverages.budget = totalCost;
+
+        const reasons = Array.from(document.querySelectorAll('input[name="cancellation_reasons"]:checked'))
+                            .map(cb => cb.value);
+
+        if (reasons.includes('non_appearance')) {
+            coverages.cancellation_non_appearance = true;
+            coverages.non_appearance_guests = collectGuests();
+        }
+        if (reasons.includes('extreme_weather')) {
+            coverages.cancellation_weather = true;
+        }
+        if (reasons.includes('profit_max_50')) {
+            coverages.cancellation_income = true;
+            const profitEstimate = document.getElementById('profit_estimate').dataset.rawValue ||
+                                   document.getElementById('profit_estimate').value.replace(/[^0-9]/g, '');
+            if (profitEstimate) coverages.cancellation_income_estimate = profitEstimate;
+        }
+    }
+
+    // Liability
+    if (document.getElementById('coverage_liability').checked) {
+        coverages.liability = true;
+        coverages.higher_liability = document.querySelector('input[name="liability_amount"]:checked')?.value || '2500000';
+    }
+
+    // Equipment
+    if (document.getElementById('coverage_equipment').checked) {
+        coverages.equipment = true;
+        const equipmentValue = document.getElementById('equipment_value').dataset.rawValue ||
+                               document.getElementById('equipment_value').value.replace(/[^0-9]/g, '');
+        if (equipmentValue) coverages.equipment_value = equipmentValue;
+    }
+
+    // Money
+    if (document.getElementById('coverage_money').checked) {
+        coverages.money = true;
+        const moneyAmount = document.getElementById('money_amount').dataset.rawValue ||
+                            document.getElementById('money_amount').value.replace(/[^0-9]/g, '');
+        if (moneyAmount) coverages.money_value = moneyAmount;
+    }
+
+    // Accidents
+    if (document.getElementById('coverage_accidents').checked) {
+        coverages.accident = true;
+        coverages.accident_man_days = document.getElementById('accidents_employees').value;
+        coverages.accident_man_days_participants = document.getElementById('accidents_participants').value;
+        coverages.accident_man_days_participants_sport = document.querySelector('input[name="accidents_sport"]').checked;
+    }
 
     return {
         initials: document.getElementById('initials').value,
