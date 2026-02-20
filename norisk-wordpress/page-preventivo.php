@@ -15,13 +15,16 @@ const API_TIMEOUT_MS = 120000;
 </style>
 
 <div class="norisk-form-container">
-    <h1>Richiedi Preventivo per il Tuo Evento</h1>
-    <p>Compila il modulo sottostante per ricevere un preventivo personalizzato per l'assicurazione del tuo evento.</p>
+    <h1 id="formTitle">Richiedi Preventivo per il Tuo Evento</h1>
+    <p id="formSubtitle">Compila il modulo sottostante per ricevere un preventivo personalizzato per l'assicurazione del tuo evento.</p>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="norisk-loading-overlay">
-        <div class="norisk-spinner"></div>
+        <div class="norisk-loading-bar-container">
+            <div id="loadingBar" class="norisk-loading-bar"></div>
+        </div>
         <p class="norisk-loading-text">Stiamo elaborando il tuo preventivo...</p>
+        <p class="norisk-loading-subtext">Questo potrebbe richiedere fino a 30 secondi</p>
     </div>
 
     <!-- Quote Form -->
@@ -423,9 +426,13 @@ const CONFIG = {
 // DOM Elements
 const form = document.getElementById('quoteForm');
 const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingBar = document.getElementById('loadingBar');
 const resultsSection = document.getElementById('resultsSection');
 const resultsTitle = document.getElementById('resultsTitle');
 const resultsContent = document.getElementById('resultsContent');
+
+// Store form data for summary display
+let lastFormData = null;
 
 // Set minimum date to 15 days from today
 (function() {
@@ -539,22 +546,38 @@ function addGuest() {
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    // Show loading
+    // Store form data for summary
+    lastFormData = collectFormData();
+
+    // Show loading with progress bar
     loadingOverlay.classList.add('active');
+    loadingBar.classList.add('animating');
+    loadingBar.classList.remove('complete');
+    loadingBar.style.width = '0%';
+
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.textContent;
     submitBtn.textContent = 'Richiesta in corso...';
     submitBtn.disabled = true;
 
     try {
-        const formData = collectFormData();
-        const result = await submitQuote(formData);
-        showSuccess(result);
+        const result = await submitQuote(lastFormData);
+        // Complete the loading bar animation
+        loadingBar.classList.remove('animating');
+        loadingBar.classList.add('complete');
+        loadingBar.style.width = '100%';
+        // Small delay to show completed bar before showing results
+        await new Promise(resolve => setTimeout(resolve, 300));
+        showSummary(result, lastFormData);
     } catch (error) {
         console.error('Submission error:', error);
         showError(error.message || 'Si è verificato un errore imprevisto. Riprova più tardi.');
     } finally {
         loadingOverlay.classList.remove('active');
+        loadingBar.classList.remove('animating', 'complete');
+        loadingBar.style.width = '0%';
+        submitBtn.textContent = originalBtnText;
+        submitBtn.disabled = false;
     }
 });
 
@@ -692,90 +715,215 @@ async function submitQuote(data) {
     }
 }
 
-// Show success results with Bozza di Preventivo
-function showSuccess(result) {
+// Show summary of quote with user information
+function showSummary(result, formData) {
     form.classList.add('hidden');
+    // Hide title and subtitle
+    document.getElementById('formTitle').style.display = 'none';
+    document.getElementById('formSubtitle').style.display = 'none';
     resultsSection.classList.add('active', 'success');
     resultsSection.classList.remove('error');
 
     const quoteKey = result.quoteKey || 'N/A';
     const pricing = result.pricing || {};
-    const status = result.status || 'draft';
+    const finalPrice = pricing.toPay || pricing.sumIncl || pricing.total || 'N/A';
 
-    // Build pricing table if pricing data exists
-    let pricingHtml = '';
-    if (pricing.sumExcl) {
-        pricingHtml = `
-            <div class="norisk-pricing-table">
-                <h4>Dettaglio Costi</h4>
-                <div class="norisk-pricing-row">
-                    <span>Premio Lordo:</span>
-                    <span>€ ${pricing.sumExcl}</span>
-                </div>
-                <div class="norisk-pricing-row">
-                    <span>Costi Polizza:</span>
-                    <span>€ ${pricing.policyCosts}</span>
-                </div>
-                <div class="norisk-pricing-row">
-                    <span>Imposta Assicurativa:</span>
-                    <span>€ ${pricing.insuranceTax}</span>
-                </div>
-                <div class="norisk-pricing-row norisk-pricing-total">
-                    <span><strong>Totale da Pagare:</strong></span>
-                    <span><strong>€ ${pricing.toPay}</strong></span>
-                </div>
+    // Get event type label
+    const eventTypeSelect = document.getElementById('eventType');
+    const eventTypeLabel = eventTypeSelect.options[eventTypeSelect.selectedIndex].text;
+
+    // Format date
+    const startDate = new Date(formData.startDate);
+    const formattedDate = startDate.toLocaleDateString('it-IT', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    // Get environment label
+    const environmentLabels = {
+        'outdoor': "All'aperto",
+        'indoor': 'Al chiuso',
+        'both': 'Entrambi'
+    };
+    const environmentLabel = environmentLabels[formData.environment] || formData.environment;
+
+    // Build coverages HTML - only show selected coverages
+    let coveragesHtml = '';
+
+    if (formData.coverages.cancellation_costs) {
+        const cancellationDetails = [];
+        if (formData.coverages.cancellation_weather) {
+            cancellationDetails.push('<div class="norisk-coverage-detail"><span class="label">Condizioni meteorologiche avverse</span><span class="value">inclusa</span></div>');
+        }
+        if (formData.coverages.cancellation_non_appearance) {
+            cancellationDetails.push('<div class="norisk-coverage-detail"><span class="label">Mancata partecipazione artisti/ospiti</span><span class="value">Sì</span></div>');
+        }
+        if (formData.coverages.cancellation_income) {
+            cancellationDetails.push('<div class="norisk-coverage-detail"><span class="label">Perdita profitto</span><span class="value">fino al 50%</span></div>');
+        }
+
+        const budgetFormatted = formData.coverages.budget ? '€ ' + parseInt(formData.coverages.budget).toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A';
+
+        coveragesHtml += `
+            <div class="norisk-coverage-block">
+                <h4>Assicurazione Annullamento</h4>
+                <div class="norisk-coverage-detail"><span class="label">Importo assicurato</span><span class="value">${budgetFormatted}</span></div>
+                ${cancellationDetails.join('')}
             </div>
         `;
     }
 
-    // Determine button based on status
-    let actionButton = '';
-    let statusMessage = '';
-
-    if (status === 'draft' || status === 'submitted_waiting_email') {
-        // Still waiting for PDF from NoRisk
-        actionButton = `
-            <button type="button" class="norisk-submit-btn" onclick="checkQuoteStatus('${quoteKey}')" id="checkStatusBtn">
-                Ricevi preventivo
-            </button>
-        `;
-        statusMessage = `<p class="norisk-quote-note">Clicca il pulsante per ricevere il preventivo via email.</p>`;
-    } else if (status === 'email_received') {
-        // PDF received, can send to user
-        actionButton = `
-            <button type="button" class="norisk-submit-btn" onclick="sendQuoteToUser('${quoteKey}')" id="sendQuoteBtn">
-                Invia preventivo via email
-            </button>
-        `;
-        statusMessage = `<p class="norisk-quote-note">Il preventivo è pronto! Clicca il pulsante per riceverlo via email.</p>`;
-    } else if (status === 'sent') {
-        // Already sent to user
-        statusMessage = `
-            <div class="norisk-success-message" style="color: #27ae60; padding: 15px; background: #f0fff4; border-radius: 4px; margin: 20px 0;">
-                <strong>✓ Il preventivo è stato inviato alla tua email!</strong><br>
-                Controlla la tua casella di posta (anche nella cartella spam).
+    if (formData.coverages.liability) {
+        const liabilityAmount = parseInt(formData.coverages.higher_liability || 2500000).toLocaleString('it-IT');
+        coveragesHtml += `
+            <div class="norisk-coverage-block">
+                <h4>Responsabilità Civile</h4>
+                <div class="norisk-coverage-detail"><span class="label">Massimale per sinistro</span><span class="value">€ ${liabilityAmount},00</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ 500,00 per sinistro</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Numero di visitatori</span><span class="value">${formData.visitors}</span></div>
             </div>
         `;
-    } else {
-        // Default case
-        actionButton = `
-            <button type="button" class="norisk-submit-btn" onclick="checkQuoteStatus('${quoteKey}')" id="checkStatusBtn">
-                Ricevi preventivo
-            </button>
-        `;
-        statusMessage = `<p class="norisk-quote-note">Stato: ${status}</p>`;
     }
 
-    resultsTitle.textContent = 'Bozza di Preventivo';
-    resultsContent.innerHTML = `
-        <div class="norisk-quote-ref">
-            Riferimento: ${quoteKey}
+    if (formData.coverages.equipment) {
+        const equipmentValue = formData.coverages.equipment_value ? '€ ' + parseInt(formData.coverages.equipment_value).toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A';
+        coveragesHtml += `
+            <div class="norisk-coverage-block">
+                <h4>Danni ad Attrezzatura</h4>
+                <div class="norisk-coverage-detail"><span class="label">Importo assicurato</span><span class="value">${equipmentValue}</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ 500,00 per sinistro</span></div>
+            </div>
+        `;
+    }
+
+    if (formData.coverages.accident) {
+        const employees = formData.coverages.accident_man_days !== 'none' ? formData.coverages.accident_man_days : 'Nessuno';
+        const participants = formData.coverages.accident_man_days_participants !== 'none' ? formData.coverages.accident_man_days_participants : 'Nessuno';
+        const sport = formData.coverages.accident_man_days_participants_sport ? 'Sì' : 'No';
+
+        coveragesHtml += `
+            <div class="norisk-coverage-block">
+                <h4>Infortuni</h4>
+                <div class="norisk-coverage-detail"><span class="label">Numero assicurati (staff/partecipanti)</span><span class="value">${employees} / ${participants}</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Somma assicurata Invalidità Permanente</span><span class="value">€ 75.000</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Somma assicurata Morte</span><span class="value">€ 25.000</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Sport incluso</span><span class="value">${sport}</span></div>
+                <div class="norisk-coverage-detail" style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">La copertura include i giorni di allestimento e di interruzione.</div>
+            </div>
+        `;
+    }
+
+    if (formData.coverages.money) {
+        const moneyValue = formData.coverages.money_value ? '€ ' + parseInt(formData.coverages.money_value).toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A';
+        coveragesHtml += `
+            <div class="norisk-coverage-block">
+                <h4>Denaro</h4>
+                <div class="norisk-coverage-detail"><span class="label">Importo assicurato al giorno</span><span class="value">${moneyValue}</span></div>
+            </div>
+        `;
+    }
+
+    // Build full address strings
+    const companyAddress = `${formData.company_address} ${formData.company_house_number}, ${formData.company_zipcode} ${formData.company_city}`;
+    const eventAddress = `${formData.address} ${formData.houseNumber}, ${formData.zipcode} ${formData.city}`;
+
+    resultsSection.className = 'norisk-summary-container';
+    resultsSection.innerHTML = `
+        <div class="norisk-summary-header">
+            <h2>Preventivo Assicurazione Evento</h2>
+            <div class="norisk-quote-ref">Riferimento: ${quoteKey}</div>
         </div>
-        ${pricingHtml}
-        ${statusMessage}
-        ${actionButton}
-        <div id="actionStatus" style="margin-top: 15px;"></div>
+
+        <div class="norisk-summary-section">
+            <h3>Chi si assicura</h3>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Contraente</span>
+                <span class="norisk-summary-value">${formData.company_name || 'N/A'}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Indirizzo</span>
+                <span class="norisk-summary-value">${companyAddress}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Paese</span>
+                <span class="norisk-summary-value">Italia</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Assicurato(i)</span>
+                <span class="norisk-summary-value">${formData.company_name || 'N/A'}</span>
+            </div>
+        </div>
+
+        <div class="norisk-summary-section">
+            <h3>Informazioni Evento</h3>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Titolo dell'evento</span>
+                <span class="norisk-summary-value">${formData.eventName}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Tipo di evento</span>
+                <span class="norisk-summary-value">${eventTypeLabel}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Descrizione</span>
+                <span class="norisk-summary-value">${formData.description}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Data evento</span>
+                <span class="norisk-summary-value">${formattedDate}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Numero di giorni</span>
+                <span class="norisk-summary-value">${formData.days}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Location</span>
+                <span class="norisk-summary-value">${formData.venueDescription || 'N/A'}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Indirizzo location</span>
+                <span class="norisk-summary-value">${eventAddress}</span>
+            </div>
+            <div class="norisk-summary-row">
+                <span class="norisk-summary-label">Ambiente</span>
+                <span class="norisk-summary-value">${environmentLabel}</span>
+            </div>
+        </div>
+
+        <div class="norisk-summary-section">
+            <h3>Cosa si assicura</h3>
+            ${coveragesHtml || '<p style="color: var(--text-muted);">Nessuna copertura selezionata</p>'}
+        </div>
+
+        <div class="norisk-summary-price">
+            <div class="price-label">Costo polizza (incluse imposte e spese)</div>
+            <div class="price-value">€ ${finalPrice}</div>
+        </div>
+
+        <div class="norisk-summary-actions">
+            <button type="button" class="norisk-print-btn" onclick="window.print()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Stampa / Salva PDF
+            </button>
+            <button type="button" class="norisk-new-quote-btn" onclick="resetForm()">
+                Nuovo Preventivo
+            </button>
+        </div>
     `;
+}
+
+// Legacy showSuccess function - kept for backward compatibility
+function showSuccess(result) {
+    // Delegate to showSummary with collected form data
+    if (lastFormData) {
+        showSummary(result, lastFormData);
+    } else {
+        // Fallback: create minimal formData from result
+        showSummary(result, collectFormData());
+    }
 }
 
 // Check quote status and update UI accordingly
@@ -878,8 +1026,10 @@ async function sendQuoteToUser(quoteKey) {
 // Show error message
 function showError(message) {
     form.classList.add('hidden');
-    resultsSection.classList.add('active', 'error');
-    resultsSection.classList.remove('success');
+    // Hide title and subtitle
+    document.getElementById('formTitle').style.display = 'none';
+    document.getElementById('formSubtitle').style.display = 'none';
+    resultsSection.className = 'norisk-results active error';
 
     resultsTitle.textContent = 'Si è verificato un errore';
     resultsContent.innerHTML = `
@@ -888,13 +1038,31 @@ function showError(message) {
         </div>
         <p>Si prega di riprovare. Se il problema persiste, contattaci telefonicamente.</p>
     `;
+    // Hide the default "Richiedi Nuovo Preventivo" button in error state
+    const defaultButton = resultsSection.querySelector('.norisk-new-quote-btn');
+    if (defaultButton) {
+        defaultButton.style.display = 'none';
+    }
 }
 
 // Reset form for new quote
 function resetForm() {
+    // Reset the results section to its original state
+    resultsSection.className = 'norisk-results';
+    resultsSection.innerHTML = `
+        <h2 id="resultsTitle"></h2>
+        <div id="resultsContent"></div>
+        <button type="button" class="norisk-new-quote-btn" onclick="resetForm()">Richiedi Nuovo Preventivo</button>
+    `;
+
     form.reset();
     form.classList.remove('hidden');
+    // Show title and subtitle again
+    document.getElementById('formTitle').style.display = '';
+    document.getElementById('formSubtitle').style.display = '';
     resultsSection.classList.remove('active', 'success', 'error');
+    lastFormData = null;
+
     const minDate = new Date();
     minDate.setDate(minDate.getDate() + 15);
     document.getElementById('startDate').min = minDate.toISOString().split('T')[0];
@@ -913,6 +1081,9 @@ function resetForm() {
         </div>
     `;
     document.getElementById('non_appearance_guests_container').style.display = 'none';
+
+    // Scroll to top of form
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 
@@ -957,6 +1128,43 @@ function resetForm() {
             policyCosts: '15,00',
             insuranceTax: '265,65',
             toPay: '1.530,65'
+        }
+    };
+
+    // Mock form data for summary display
+    const mockFormData = {
+        initials: 'Sig.',
+        lastName: 'Rossi Mario',
+        phone: '054722351',
+        email: 'mario.rossi@example.com',
+        company_name: 'Pro Loco Futuro',
+        company_address: 'Via Roma',
+        company_house_number: '3',
+        company_zipcode: '47653',
+        company_city: 'Cesena',
+        eventName: 'Notte Bianca',
+        eventType: '18',
+        description: 'Concerto in piazza',
+        startDate: '2026-03-15',
+        days: 1,
+        visitors: 2350,
+        venueDescription: 'Piazza principale',
+        address: 'Piazza Verdi',
+        houseNumber: '3',
+        zipcode: '47521',
+        city: 'Cesena',
+        country: 'it',
+        environment: 'outdoor',
+        coverages: {
+            cancellation_costs: true,
+            budget: '20000',
+            cancellation_weather: true,
+            cancellation_non_appearance: false,
+            cancellation_income: false,
+            liability: true,
+            higher_liability: '5000000',
+            equipment: false,
+            accident: false
         }
     };
 
@@ -1024,11 +1232,14 @@ function resetForm() {
     document.getElementById('debug-success').addEventListener('click', () => {
         const form = document.getElementById('quoteForm');
         if (form) form.classList.add('hidden');
-        
-        if (typeof showSuccess === 'function') {
-            showSuccess(mockSuccessData);
+
+        // Store mock form data for summary
+        lastFormData = mockFormData;
+
+        if (typeof showSummary === 'function') {
+            showSummary(mockSuccessData, mockFormData);
         } else {
-            alert('Error: showSuccess() function not found on page.');
+            alert('Error: showSummary() function not found on page.');
         }
     });
 
