@@ -412,7 +412,6 @@ const API_TIMEOUT_MS = 120000;
     <div id="resultsSection" class="norisk-results">
         <h2 id="resultsTitle"></h2>
         <div id="resultsContent"></div>
-        <button type="button" class="norisk-new-quote-btn" onclick="resetForm()">Richiedi Nuovo Preventivo</button>
     </div>
 </div>
 
@@ -434,11 +433,270 @@ const resultsContent = document.getElementById('resultsContent');
 // Store form data for summary display
 let lastFormData = null;
 
+// LocalStorage key for form data
+const FORM_STORAGE_KEY = 'norisk_form_data';
+
+// =========================================
+// LocalStorage Form Persistence
+// =========================================
+
+/**
+ * Save current form data to localStorage
+ */
+function saveFormToStorage() {
+    const formData = collectFormData();
+    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+}
+
+/**
+ * Clear saved form data from localStorage
+ */
+function clearFormStorage() {
+    localStorage.removeItem(FORM_STORAGE_KEY);
+}
+
+/**
+ * Check if any coverages are selected in the form data
+ */
+function hasSelectedCoverages(formData) {
+    if (!formData || !formData.coverages) return false;
+    const c = formData.coverages;
+    return c.cancellation_costs || c.liability || c.equipment || c.money || c.accident;
+}
+
+/**
+ * Show modal asking user if they want to restore saved form data
+ */
+function showRestoreModal(savedData) {
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.id = 'restoreModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            padding: 32px;
+            border-radius: var(--radius-sm, 3px);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+        ">
+            <h3 style="margin: 0 0 16px 0; color: var(--text-main, #2C2C2C); font-size: 1.25rem; font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;">Ripristinare i dati?</h3>
+            <p style="margin: 0 0 24px 0; color: var(--text-body, #333); line-height: 1.6;">
+                Abbiamo trovato dati precedenti relativi alle coperture selezionate.<br>
+                Vuoi ripristinare le informazioni inserite in precedenza?
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="restoreYes" style="
+                    padding: 12px 24px;
+                    background: var(--brand-primary, #6B1C23);
+                    color: white;
+                    border: none;
+                    border-radius: var(--radius-sm, 3px);
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 500;
+                ">Sì, ripristina</button>
+                <button id="restoreNo" style="
+                    padding: 12px 24px;
+                    background: transparent;
+                    color: var(--brand-primary, #6B1C23);
+                    border: 1px solid var(--brand-primary, #6B1C23);
+                    border-radius: var(--radius-sm, 3px);
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 500;
+                ">No, nuovo preventivo</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Handle button clicks
+    document.getElementById('restoreYes').addEventListener('click', () => {
+        restoreFormData(savedData);
+        modal.remove();
+    });
+
+    document.getElementById('restoreNo').addEventListener('click', () => {
+        clearFormStorage();
+        modal.remove();
+    });
+}
+
+/**
+ * Restore form data from saved object
+ */
+function restoreFormData(data) {
+    if (!data) return;
+
+    // Personal info
+    if (data.initials) document.getElementById('initials').value = data.initials;
+    if (data.lastName) document.getElementById('lastName').value = data.lastName;
+    if (data.phone) document.getElementById('phone').value = data.phone;
+    if (data.email) document.getElementById('email').value = data.email;
+
+    // Company info
+    if (data.company_name) document.getElementById('company_name').value = data.company_name;
+    if (data.company_commercial_number) document.getElementById('company_commercial_number').value = data.company_commercial_number;
+    if (data.company_legal_form) document.getElementById('company_legal_form').value = data.company_legal_form;
+    if (data.company_address) document.getElementById('company_address').value = data.company_address;
+    if (data.company_house_number) document.getElementById('company_house_number').value = data.company_house_number;
+    if (data.company_zipcode) document.getElementById('company_zipcode').value = data.company_zipcode;
+    if (data.company_city) document.getElementById('company_city').value = data.company_city;
+    if (data.company_country) document.getElementById('company_country').value = data.company_country;
+
+    // Event info
+    if (data.eventName) document.getElementById('eventName').value = data.eventName;
+    if (data.eventType) document.getElementById('eventType').value = data.eventType;
+    if (data.startDate) {
+        document.getElementById('startDate').value = data.startDate;
+        validateStartDate(document.getElementById('startDate'));
+    }
+    if (data.days) document.getElementById('days').value = data.days;
+    if (data.visitors) document.getElementById('visitors').value = data.visitors;
+    if (data.description) document.getElementById('description').value = data.description;
+
+    // Location
+    if (data.venueDescription) document.getElementById('venueDescription').value = data.venueDescription;
+    if (data.address) document.getElementById('address').value = data.address;
+    if (data.houseNumber) document.getElementById('houseNumber').value = data.houseNumber;
+    if (data.zipcode) document.getElementById('zipcode').value = data.zipcode;
+    if (data.city) document.getElementById('city').value = data.city;
+    if (data.country) document.getElementById('country').value = data.country;
+    if (data.environment) {
+        const envRadio = document.querySelector(`input[name="environment"][value="${data.environment}"]`);
+        if (envRadio) envRadio.checked = true;
+    }
+
+    // Coverages
+    if (data.coverages) {
+        const c = data.coverages;
+
+        // Cancellation
+        if (c.cancellation_costs) {
+            const cb = document.getElementById('coverage_cancellation');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change'));
+            if (c.budget) {
+                const el = document.getElementById('cancellation_total_cost');
+                el.value = parseInt(c.budget).toLocaleString('it-IT');
+                el.dataset.rawValue = c.budget;
+            }
+            if (c.cancellation_weather) {
+                document.querySelector('input[name="cancellation_reasons"][value="extreme_weather"]').checked = true;
+            }
+            if (c.cancellation_non_appearance) {
+                document.querySelector('input[name="cancellation_reasons"][value="non_appearance"]').checked = true;
+                document.getElementById('non_appearance_guests_container').style.display = 'block';
+            }
+            if (c.cancellation_income) {
+                document.getElementById('cb_profit_max_50').checked = true;
+                document.getElementById('profit_max_50_container').style.display = 'block';
+                if (c.cancellation_income_estimate) {
+                    const el = document.getElementById('profit_estimate');
+                    el.value = parseInt(c.cancellation_income_estimate).toLocaleString('it-IT');
+                    el.dataset.rawValue = c.cancellation_income_estimate;
+                }
+            }
+        }
+
+        // Liability
+        if (c.liability) {
+            const cb = document.getElementById('coverage_liability');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change'));
+            if (c.higher_liability) {
+                const radio = document.querySelector(`input[name="liability_amount"][value="${c.higher_liability}"]`);
+                if (radio) radio.checked = true;
+            }
+        }
+
+        // Equipment
+        if (c.equipment) {
+            const cb = document.getElementById('coverage_equipment');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change'));
+            if (c.equipment_value) {
+                const el = document.getElementById('equipment_value');
+                el.value = parseInt(c.equipment_value).toLocaleString('it-IT');
+                el.dataset.rawValue = c.equipment_value;
+            }
+        }
+
+        // Money
+        if (c.money) {
+            const cb = document.getElementById('coverage_money');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change'));
+            if (c.money_value) {
+                const el = document.getElementById('money_amount');
+                el.value = parseInt(c.money_value).toLocaleString('it-IT');
+                el.dataset.rawValue = c.money_value;
+            }
+        }
+
+        // Accidents
+        if (c.accident) {
+            const cb = document.getElementById('coverage_accidents');
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change'));
+            if (c.accident_man_days) document.getElementById('accidents_employees').value = c.accident_man_days;
+            if (c.accident_man_days_participants) document.getElementById('accidents_participants').value = c.accident_man_days_participants;
+            if (c.accident_man_days_participants_sport) {
+                document.querySelector('input[name="accidents_sport"]').checked = true;
+            }
+        }
+    }
+}
+
+/**
+ * Check for saved form data on page load
+ */
+function checkForSavedFormData() {
+    const saved = localStorage.getItem(FORM_STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+        const savedData = JSON.parse(saved);
+        if (!savedData) return;
+
+        // If coverages are selected, ask user if they want to restore
+        if (hasSelectedCoverages(savedData)) {
+            showRestoreModal(savedData);
+        } else {
+            // No coverages selected, just restore silently
+            restoreFormData(savedData);
+        }
+    } catch (e) {
+        console.error('Error parsing saved form data:', e);
+        clearFormStorage();
+    }
+}
+
 // Set minimum date to 15 days from today
 (function() {
     const minDate = new Date();
     minDate.setDate(minDate.getDate() + 15);
     document.getElementById('startDate').min = minDate.toISOString().split('T')[0];
+
+    // Check for saved form data on page load
+    checkForSavedFormData();
 })();
 
 // Validate start date is at least 15 days from today
@@ -542,12 +800,29 @@ function addGuest() {
     container.appendChild(entry);
 }
 
+// Auto-save form data on input changes (debounced)
+let saveTimeout;
+form.addEventListener('input', function() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveFormToStorage, 500);
+});
+
+// Also save on checkbox/radio changes
+form.addEventListener('change', function(e) {
+    if (e.target.type === 'checkbox' || e.target.type === 'radio') {
+        saveFormToStorage();
+    }
+});
+
 // Form submission handler
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
     // Store form data for summary
     lastFormData = collectFormData();
+
+    // Save current state before submitting
+    saveFormToStorage();
 
     // Show loading with progress bar
     loadingOverlay.classList.add('active');
@@ -569,9 +844,12 @@ form.addEventListener('submit', async function(e) {
         // Small delay to show completed bar before showing results
         await new Promise(resolve => setTimeout(resolve, 300));
         showSummary(result, lastFormData);
+        // Clear saved form data on successful submission
+        clearFormStorage();
     } catch (error) {
         console.error('Submission error:', error);
         showError(error.message || 'Si è verificato un errore imprevisto. Riprova più tardi.');
+        // Keep saved form data on error so user can retry
     } finally {
         loadingOverlay.classList.remove('active');
         loadingBar.classList.remove('animating', 'complete');
@@ -901,6 +1179,11 @@ function showSummary(result, formData) {
             <div class="price-value">€ ${finalPrice}</div>
         </div>
 
+        <div class="norisk-summary-footer" style="text-align: center; margin: 24px 0; font-size: 14px; color: var(--text-muted); line-height: 1.8;">
+            <div>Per leggere condizioni polizza : <a href="#" style="color: var(--brand-primary); text-decoration: underline;">clicca qui</a></div>
+            <div>Per acquistare la polizza o ricevere ulteriori informazioni : <a href="mailto:eventi@golinucci.it" style="color: var(--brand-primary); text-decoration: underline;">eventi@golinucci.it</a></div>
+        </div>
+
         <div class="norisk-summary-actions">
             <button type="button" class="norisk-print-btn" onclick="window.print()">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1037,12 +1320,10 @@ function showError(message) {
             ${message}
         </div>
         <p>Si prega di riprovare. Se il problema persiste, contattaci telefonicamente.</p>
+        <button type="button" class="norisk-new-quote-btn" onclick="resetForm()" style="margin-top: 24px;">
+            Torna al modulo
+        </button>
     `;
-    // Hide the default "Richiedi Nuovo Preventivo" button in error state
-    const defaultButton = resultsSection.querySelector('.norisk-new-quote-btn');
-    if (defaultButton) {
-        defaultButton.style.display = 'none';
-    }
 }
 
 // Reset form for new quote
@@ -1052,7 +1333,6 @@ function resetForm() {
     resultsSection.innerHTML = `
         <h2 id="resultsTitle"></h2>
         <div id="resultsContent"></div>
-        <button type="button" class="norisk-new-quote-btn" onclick="resetForm()">Richiedi Nuovo Preventivo</button>
     `;
 
     form.reset();
@@ -1062,6 +1342,9 @@ function resetForm() {
     document.getElementById('formSubtitle').style.display = '';
     resultsSection.classList.remove('active', 'success', 'error');
     lastFormData = null;
+
+    // Clear saved form data when starting a new quote
+    clearFormStorage();
 
     const minDate = new Date();
     minDate.setDate(minDate.getDate() + 15);
