@@ -924,6 +924,16 @@ function collectFormData() {
         lastName: document.getElementById('lastName').value,
         phone: document.getElementById('phone').value,
         email: document.getElementById('email').value,
+        // Company info
+        company_name: document.getElementById('company_name').value,
+        company_commercial_number: document.getElementById('company_commercial_number').value,
+        company_legal_form: document.getElementById('company_legal_form').value,
+        company_address: document.getElementById('company_address').value,
+        company_house_number: document.getElementById('company_house_number').value,
+        company_zipcode: document.getElementById('company_zipcode').value,
+        company_city: document.getElementById('company_city').value,
+        company_country: document.getElementById('company_country').value,
+        // Event info
         eventName: document.getElementById('eventName').value,
         eventType: document.getElementById('eventType').value,
         startDate: document.getElementById('startDate').value,
