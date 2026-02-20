@@ -870,7 +870,7 @@ function showSummary(result, formData) {
                 <span class="norisk-summary-value">${formData.description}</span>
             </div>
             <div class="norisk-summary-row">
-                <span class="norisk-summary-label">Data evento</span>
+                <span class="norisk-summary-label">Primo giorno dell&#39;evento</span>
                 <span class="norisk-summary-value">${formattedDate}</span>
             </div>
             <div class="norisk-summary-row">
@@ -878,11 +878,11 @@ function showSummary(result, formData) {
                 <span class="norisk-summary-value">${formData.days}</span>
             </div>
             <div class="norisk-summary-row">
-                <span class="norisk-summary-label">Location</span>
+                <span class="norisk-summary-label">Posizione</span>
                 <span class="norisk-summary-value">${formData.venueDescription || 'N/A'}</span>
             </div>
             <div class="norisk-summary-row">
-                <span class="norisk-summary-label">Indirizzo location</span>
+                <span class="norisk-summary-label">Indirizzo</span>
                 <span class="norisk-summary-value">${eventAddress}</span>
             </div>
             <div class="norisk-summary-row">
@@ -906,7 +906,7 @@ function showSummary(result, formData) {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
-                Stampa / Salva PDF
+                Stampa PDF
             </button>
             <button type="button" class="norisk-new-quote-btn" onclick="resetForm()">
                 Nuovo Preventivo
