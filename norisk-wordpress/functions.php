@@ -16,12 +16,59 @@ add_action( 'wp_enqueue_scripts', 'preventivo_style' );
  */
 
 // =========================================
+// NoRisk Options Helper
+// Single source of truth for all configurable values.
+// =========================================
+
+/**
+ * Returns all NoRisk options merged with defaults.
+ * Uses wp_parse_args so missing keys always fall back safely.
+ */
+function norisk_get_options(): array {
+    return wp_parse_args( get_option( 'norisk_options', [] ), [
+        // Texts
+        'page_title'             => 'Richiedi Preventivo per il Tuo Evento',
+        'page_subtitle'          => 'Compila il modulo sottostante per ricevere un preventivo personalizzato per l\'assicurazione del tuo evento.',
+        'loading_text'           => 'Stiamo elaborando il tuo preventivo...',
+        'loading_subtext'        => 'Questo potrebbe richiedere fino a 30 secondi',
+        'submit_btn_text'        => 'Richiedi Preventivo',
+        'privacy_label'          => 'Ho letto e accetto l\'informativa sulla privacy',
+        'privacy_url'            => '/privacy-policy',
+        'new_quote_btn_text'     => 'Richiedi Nuovo Preventivo',
+        'print_btn_text'         => 'Stampa / Salva PDF',
+        'section_personal_title' => 'Informazioni Personali',
+        'section_company_title'  => 'Dati Aziendali',
+        'section_event_title'    => 'Informazioni sull\'Evento',
+        'section_location_title' => 'Location',
+        'section_coverage_title' => 'Coperture Richieste',
+        'coverage_note'          => 'Seleziona le coperture desiderate e configura le opzioni.',
+        // Coverage visibility
+        'show_coverage_cancellation' => 1,
+        'show_coverage_liability'    => 1,
+        'show_coverage_equipment'    => 1,
+        'show_coverage_money'        => 0,
+        'show_coverage_accidents'    => 1,
+        // Business rules
+        'min_days_advance'               => 15,
+        'liability_amount_1'             => 2500000,
+        'liability_amount_2'             => 5000000,
+        'accidents_permanent_disability' => 75000,
+        'accidents_death'                => 25000,
+        'liability_deductible'           => 500,
+        // API
+        'api_base_url'   => 'http://api.wordpress.home/api',
+        'api_timeout'    => 120,
+        'api_timeout_ms' => 120000,
+    ] );
+}
+
+// =========================================
 // NoRisk API Proxy — server-side AJAX handlers
 // The browser never touches the internal API directly.
 // =========================================
 
-define( 'NORISK_API_BASE', 'http://api.wordpress.home/api' );
-define( 'NORISK_API_TIMEOUT', 120 ); // seconds
+define( 'NORISK_API_BASE',    norisk_get_options()['api_base_url'] );
+define( 'NORISK_API_TIMEOUT', norisk_get_options()['api_timeout'] ); // seconds
 
 /**
  * Helper: forward a POST request to the internal API.
@@ -137,4 +184,227 @@ function norisk_ajax_send_quote(): void {
         $msg = $result['body']['message'] ?? ( 'Errore del server (' . $result['status'] . ').' );
         wp_send_json_error( [ 'message' => $msg ], $result['status'] );
     }
+}
+
+// =========================================
+// NoRisk Settings API — WordPress Admin Panel
+// Settings → NoRisk Form
+// =========================================
+
+/**
+ * Register admin submenu page under Settings.
+ */
+add_action( 'admin_menu', 'norisk_register_admin_page' );
+function norisk_register_admin_page(): void {
+    add_options_page(
+        'NoRisk Form Settings',
+        'NoRisk Form',
+        'manage_options',
+        'norisk-settings',
+        'norisk_render_settings_page'
+    );
+}
+
+/**
+ * Register all settings, sections, and fields.
+ */
+add_action( 'admin_init', 'norisk_register_settings' );
+function norisk_register_settings(): void {
+    register_setting( 'norisk_group', 'norisk_options', [
+        'sanitize_callback' => 'norisk_sanitize_options',
+    ] );
+
+    // ----- Section A: Texts & Labels -----
+    add_settings_section( 'norisk_texts', 'Texts &amp; Labels', '__return_false', 'norisk-settings' );
+
+    $text_fields = [
+        'page_title'             => 'Page Title',
+        'page_subtitle'          => 'Page Subtitle',
+        'loading_text'           => 'Loading Text',
+        'loading_subtext'        => 'Loading Sub-text',
+        'submit_btn_text'        => 'Submit Button Text',
+        'privacy_label'          => 'Privacy Checkbox Label',
+        'privacy_url'            => 'Privacy Policy URL',
+        'new_quote_btn_text'     => 'New Quote Button Text',
+        'print_btn_text'         => 'Print / PDF Button Text',
+        'section_personal_title' => 'Section: Personal Info Title',
+        'section_company_title'  => 'Section: Company Info Title',
+        'section_event_title'    => 'Section: Event Info Title',
+        'section_location_title' => 'Section: Location Title',
+        'section_coverage_title' => 'Section: Coverage Title',
+        'coverage_note'          => 'Coverage Intro Note',
+    ];
+
+    foreach ( $text_fields as $key => $label ) {
+        add_settings_field(
+            $key,
+            $label,
+            'norisk_render_text_field',
+            'norisk-settings',
+            'norisk_texts',
+            [ 'key' => $key ]
+        );
+    }
+
+    // ----- Section B: Coverage Visibility -----
+    add_settings_section( 'norisk_coverage_visibility', 'Coverage Sections', '__return_false', 'norisk-settings' );
+
+    $coverage_fields = [
+        'show_coverage_cancellation' => 'Show Cancellation Costs',
+        'show_coverage_liability'    => 'Show Liability',
+        'show_coverage_equipment'    => 'Show Equipment',
+        'show_coverage_money'        => 'Show Money',
+        'show_coverage_accidents'    => 'Show Accidents',
+    ];
+
+    foreach ( $coverage_fields as $key => $label ) {
+        add_settings_field(
+            $key,
+            $label,
+            'norisk_render_checkbox_field',
+            'norisk-settings',
+            'norisk_coverage_visibility',
+            [ 'key' => $key ]
+        );
+    }
+
+    // ----- Section C: Business Rules -----
+    add_settings_section( 'norisk_business_rules', 'Business Rules', '__return_false', 'norisk-settings' );
+
+    $number_fields = [
+        'min_days_advance'               => 'Min Days Advance Notice',
+        'liability_amount_1'             => 'Liability Amount Option 1 (€)',
+        'liability_amount_2'             => 'Liability Amount Option 2 (€)',
+        'accidents_permanent_disability' => 'Accidents: Permanent Disability Sum (€)',
+        'accidents_death'                => 'Accidents: Death Sum (€)',
+        'liability_deductible'           => 'Liability Deductible (€)',
+    ];
+
+    foreach ( $number_fields as $key => $label ) {
+        add_settings_field(
+            $key,
+            $label,
+            'norisk_render_number_field',
+            'norisk-settings',
+            'norisk_business_rules',
+            [ 'key' => $key ]
+        );
+    }
+
+    // ----- Section D: API Configuration -----
+    add_settings_section( 'norisk_api', 'API Configuration', '__return_false', 'norisk-settings' );
+
+    add_settings_field( 'api_base_url',   'API Base URL',          'norisk_render_text_field',   'norisk-settings', 'norisk_api', [ 'key' => 'api_base_url' ] );
+    add_settings_field( 'api_timeout',    'API Timeout (seconds)', 'norisk_render_number_field', 'norisk-settings', 'norisk_api', [ 'key' => 'api_timeout' ] );
+    add_settings_field( 'api_timeout_ms', 'API Timeout (ms)',      'norisk_render_number_field', 'norisk-settings', 'norisk_api', [ 'key' => 'api_timeout_ms' ] );
+}
+
+/**
+ * Render a plain text / URL input field.
+ */
+function norisk_render_text_field( array $args ): void {
+    $opts  = norisk_get_options();
+    $key   = $args['key'];
+    $value = $opts[ $key ] ?? '';
+    printf(
+        '<input type="text" name="norisk_options[%s]" value="%s" class="regular-text" />',
+        esc_attr( $key ),
+        esc_attr( $value )
+    );
+}
+
+/**
+ * Render a number input field.
+ */
+function norisk_render_number_field( array $args ): void {
+    $opts  = norisk_get_options();
+    $key   = $args['key'];
+    $value = $opts[ $key ] ?? 0;
+    printf(
+        '<input type="number" name="norisk_options[%s]" value="%s" class="small-text" min="0" />',
+        esc_attr( $key ),
+        esc_attr( (string) $value )
+    );
+}
+
+/**
+ * Render a checkbox field.
+ */
+function norisk_render_checkbox_field( array $args ): void {
+    $opts    = norisk_get_options();
+    $key     = $args['key'];
+    $checked = ! empty( $opts[ $key ] ) ? 'checked' : '';
+    printf(
+        '<input type="checkbox" name="norisk_options[%s]" value="1" %s />',
+        esc_attr( $key ),
+        $checked
+    );
+}
+
+/**
+ * Sanitize all incoming settings before saving.
+ */
+function norisk_sanitize_options( $input ): array {
+    if ( ! is_array( $input ) ) {
+        return [];
+    }
+
+    $sanitized = [];
+
+    // Plain text fields
+    $text_fields = [
+        'page_title', 'page_subtitle', 'loading_text', 'loading_subtext',
+        'submit_btn_text', 'privacy_label', 'new_quote_btn_text', 'print_btn_text',
+        'section_personal_title', 'section_company_title', 'section_event_title',
+        'section_location_title', 'section_coverage_title', 'coverage_note',
+    ];
+    foreach ( $text_fields as $key ) {
+        $sanitized[ $key ] = sanitize_text_field( $input[ $key ] ?? '' );
+    }
+
+    // URL fields
+    $sanitized['privacy_url']  = esc_url_raw( $input['privacy_url']  ?? '/privacy-policy' );
+    $sanitized['api_base_url'] = esc_url_raw( $input['api_base_url'] ?? '' );
+
+    // Integer fields
+    $int_fields = [
+        'min_days_advance', 'api_timeout', 'api_timeout_ms',
+        'liability_amount_1', 'liability_amount_2',
+        'accidents_permanent_disability', 'accidents_death', 'liability_deductible',
+    ];
+    foreach ( $int_fields as $key ) {
+        $sanitized[ $key ] = absint( $input[ $key ] ?? 0 );
+    }
+
+    // Checkbox fields — present = 1, absent = 0
+    $checkbox_fields = [
+        'show_coverage_cancellation', 'show_coverage_liability',
+        'show_coverage_equipment', 'show_coverage_money', 'show_coverage_accidents',
+    ];
+    foreach ( $checkbox_fields as $key ) {
+        $sanitized[ $key ] = isset( $input[ $key ] ) ? 1 : 0;
+    }
+
+    return $sanitized;
+}
+
+/**
+ * Render the admin settings page.
+ */
+function norisk_render_settings_page(): void {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        return;
+    }
+    ?>
+    <div class="wrap">
+        <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields( 'norisk_group' );
+            do_settings_sections( 'norisk-settings' );
+            submit_button( 'Save Settings' );
+            ?>
+        </form>
+    </div>
+    <?php
 }

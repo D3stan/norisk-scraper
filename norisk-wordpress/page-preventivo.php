@@ -4,8 +4,8 @@
  * Description: Form for requesting event insurance quotes
  */
 
-// CONFIGURATION
-const API_TIMEOUT_MS = 120000;
+// Load all configurable options (with defaults)
+$norisk = norisk_get_options();
 
 // get_header();
 ?>
@@ -15,16 +15,16 @@ const API_TIMEOUT_MS = 120000;
 </style>
 
 <div class="norisk-form-container">
-    <h1 id="formTitle">Richiedi Preventivo per il Tuo Evento</h1>
-    <p id="formSubtitle">Compila il modulo sottostante per ricevere un preventivo personalizzato per l'assicurazione del tuo evento.</p>
+    <h1 id="formTitle"><?php echo esc_html( $norisk['page_title'] ); ?></h1>
+    <p id="formSubtitle"><?php echo esc_html( $norisk['page_subtitle'] ); ?></p>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="norisk-loading-overlay">
         <div class="norisk-loading-bar-container">
             <div id="loadingBar" class="norisk-loading-bar"></div>
         </div>
-        <p class="norisk-loading-text">Stiamo elaborando il tuo preventivo...</p>
-        <p class="norisk-loading-subtext">Questo potrebbe richiedere fino a 30 secondi</p>
+        <p class="norisk-loading-text"><?php echo esc_html( $norisk['loading_text'] ); ?></p>
+        <p class="norisk-loading-subtext"><?php echo esc_html( $norisk['loading_subtext'] ); ?></p>
     </div>
 
     <!-- Quote Form -->
@@ -32,7 +32,7 @@ const API_TIMEOUT_MS = 120000;
 
         <!-- Personal Information -->
         <div class="norisk-form-section">
-            <h3>Informazioni Personali</h3>
+            <h3><?php echo esc_html( $norisk['section_personal_title'] ); ?></h3>
             <div class="norisk-form-row">
                 <div class="norisk-form-group">
                     <label for="initials">Titolo *</label>
@@ -59,7 +59,7 @@ const API_TIMEOUT_MS = 120000;
             </div>
 
             <!-- Dati Aziendali -->
-            <h4 class="norisk-subsection-title">Dati Aziendali</h4>
+            <h4 class="norisk-subsection-title"><?php echo esc_html( $norisk['section_company_title'] ); ?></h4>
             <div class="norisk-form-row">
                 <div class="norisk-form-group">
                     <label for="company_name">Ragione Sociale *</label>
@@ -127,7 +127,7 @@ const API_TIMEOUT_MS = 120000;
 
         <!-- Event Information -->
         <div class="norisk-form-section">
-            <h3>Informazioni sull'Evento</h3>
+            <h3><?php echo esc_html( $norisk['section_event_title'] ); ?></h3>
             <div class="norisk-form-row">
                 <div class="norisk-form-group full-width">
                     <label for="eventName">Nome Evento *</label>
@@ -178,7 +178,7 @@ const API_TIMEOUT_MS = 120000;
 
         <!-- Location -->
         <div class="norisk-form-section">
-            <h3>Location</h3>
+            <h3><?php echo esc_html( $norisk['section_location_title'] ); ?></h3>
             <div class="norisk-form-row">
                 <div class="norisk-form-group full-width">
                     <label for="venueDescription">Descrizione Location</label>
@@ -242,9 +242,10 @@ const API_TIMEOUT_MS = 120000;
 
         <!-- Coverage Options -->
         <div class="norisk-form-section">
-            <h3>Coperture Richieste</h3>
-            <p class="norisk-coverage-note">Seleziona le coperture desiderate e configura le opzioni.</p>
+            <h3><?php echo esc_html( $norisk['section_coverage_title'] ); ?></h3>
+            <p class="norisk-coverage-note"><?php echo esc_html( $norisk['coverage_note'] ); ?></p>
 
+            <?php if ( $norisk['show_coverage_cancellation'] ): ?>
             <!-- Cancellation Costs -->
             <div class="norisk-coverage-item">
                 <label class="norisk-coverage-toggle">
@@ -288,7 +289,9 @@ const API_TIMEOUT_MS = 120000;
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
+            <?php if ( $norisk['show_coverage_liability'] ): ?>
             <!-- Liability -->
             <div class="norisk-coverage-item">
                 <label class="norisk-coverage-toggle">
@@ -300,18 +303,20 @@ const API_TIMEOUT_MS = 120000;
                         <label>Per quale importo vuoi assicurare la tua responsabilità?</label>
                         <div class="norisk-radio-group">
                             <label>
-                                <input type="radio" name="liability_amount" value="2500000">
-                                € 2.500.000
+                                <input type="radio" name="liability_amount" value="<?php echo (int) $norisk['liability_amount_1']; ?>">
+                                € <?php echo number_format( (int) $norisk['liability_amount_1'], 0, ',', '.' ); ?>
                             </label>
                             <label>
-                                <input type="radio" name="liability_amount" value="5000000">
-                                € 5.000.000
+                                <input type="radio" name="liability_amount" value="<?php echo (int) $norisk['liability_amount_2']; ?>">
+                                € <?php echo number_format( (int) $norisk['liability_amount_2'], 0, ',', '.' ); ?>
                             </label>
                         </div>
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
+            <?php if ( $norisk['show_coverage_equipment'] ): ?>
             <!-- Equipment -->
             <div class="norisk-coverage-item">
                 <label class="norisk-coverage-toggle">
@@ -325,9 +330,11 @@ const API_TIMEOUT_MS = 120000;
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
+            <?php if ( $norisk['show_coverage_money'] ): ?>
             <!-- Money -->
-            <div class="norisk-coverage-item" style="display: none;">
+            <div class="norisk-coverage-item">
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_money" name="coverage_money" value="1">
                     <span class="norisk-coverage-title">Denaro</span>
@@ -339,7 +346,9 @@ const API_TIMEOUT_MS = 120000;
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
+            <?php if ( $norisk['show_coverage_accidents'] ): ?>
             <!-- Accidents -->
             <div class="norisk-coverage-item">
                 <label class="norisk-coverage-toggle">
@@ -396,16 +405,17 @@ const API_TIMEOUT_MS = 120000;
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <!-- Privacy -->
         <div class="norisk-privacy-row">
             <input type="checkbox" id="privacyAccept" name="privacyAccept" required>
-            <label for="privacyAccept">Ho letto e accetto l'<a href="/privacy-policy" target="_blank">informativa sulla privacy</a> <span style="color: var(--brand-primary);">*</span></label>
+            <label for="privacyAccept"><?php echo esc_html( $norisk['privacy_label'] ); ?> <a href="<?php echo esc_url( $norisk['privacy_url'] ); ?>" target="_blank">informativa sulla privacy</a> <span style="color: var(--brand-primary);">*</span></label>
         </div>
 
         <!-- Submit -->
-        <button type="submit" class="norisk-submit-btn">Richiedi Preventivo</button>
+        <button type="submit" class="norisk-submit-btn"><?php echo esc_html( $norisk['submit_btn_text'] ); ?></button>
     </form>
 
     <!-- Results Section -->
@@ -418,8 +428,16 @@ const API_TIMEOUT_MS = 120000;
 <script>
 // CONFIGURATION
 const CONFIG = {
-    AJAX_URL: '/wp-admin/admin-ajax.php',
-    API_TIMEOUT_MS: <?php echo API_TIMEOUT_MS; ?>
+    AJAX_URL: '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>',
+    API_TIMEOUT_MS: <?php echo (int) $norisk['api_timeout_ms']; ?>,
+    MIN_DAYS_ADVANCE: <?php echo (int) $norisk['min_days_advance']; ?>,
+    NEW_QUOTE_BTN_TEXT: '<?php echo esc_js( $norisk['new_quote_btn_text'] ); ?>',
+    PRINT_BTN_TEXT: '<?php echo esc_js( $norisk['print_btn_text'] ); ?>',
+    LIABILITY_AMOUNT_1: <?php echo (int) $norisk['liability_amount_1']; ?>,
+    LIABILITY_AMOUNT_2: <?php echo (int) $norisk['liability_amount_2']; ?>,
+    ACCIDENTS_PERMANENT_DISABILITY: <?php echo (int) $norisk['accidents_permanent_disability']; ?>,
+    ACCIDENTS_DEATH: <?php echo (int) $norisk['accidents_death']; ?>,
+    LIABILITY_DEDUCTIBLE: <?php echo (int) $norisk['liability_deductible']; ?>,
 };
 
 // DOM Elements
@@ -642,24 +660,28 @@ function restoreFormData(data) {
         // Money
         if (c.money) {
             const cb = document.getElementById('coverage_money');
-            cb.checked = true;
-            cb.dispatchEvent(new Event('change'));
-            if (c.money_value) {
-                const el = document.getElementById('money_amount');
-                el.value = parseInt(c.money_value).toLocaleString('it-IT');
-                el.dataset.rawValue = c.money_value;
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+                if (c.money_value) {
+                    const el = document.getElementById('money_amount');
+                    el.value = parseInt(c.money_value).toLocaleString('it-IT');
+                    el.dataset.rawValue = c.money_value;
+                }
             }
         }
 
         // Accidents
         if (c.accident) {
             const cb = document.getElementById('coverage_accidents');
-            cb.checked = true;
-            cb.dispatchEvent(new Event('change'));
-            if (c.accident_man_days) document.getElementById('accidents_employees').value = c.accident_man_days;
-            if (c.accident_man_days_participants) document.getElementById('accidents_participants').value = c.accident_man_days_participants;
-            if (c.accident_man_days_participants_sport) {
-                document.querySelector('input[name="accidents_sport"]').checked = true;
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+                if (c.accident_man_days) document.getElementById('accidents_employees').value = c.accident_man_days;
+                if (c.accident_man_days_participants) document.getElementById('accidents_participants').value = c.accident_man_days_participants;
+                if (c.accident_man_days_participants_sport) {
+                    document.querySelector('input[name="accidents_sport"]').checked = true;
+                }
             }
         }
     }
@@ -689,10 +711,10 @@ function checkForSavedFormData() {
     }
 }
 
-// Set minimum date to 15 days from today
+// Set minimum date based on configured advance notice
 (function() {
     const minDate = new Date();
-    minDate.setDate(minDate.getDate() + 15);
+    minDate.setDate(minDate.getDate() + CONFIG.MIN_DAYS_ADVANCE);
     document.getElementById('startDate').min = minDate.toISOString().split('T')[0];
 
     // Check for saved form data on page load
@@ -703,12 +725,12 @@ function checkForSavedFormData() {
 function validateStartDate(input) {
     const selected = new Date(input.value);
     const minDate = new Date();
-    minDate.setDate(minDate.getDate() + 15);
+    minDate.setDate(minDate.getDate() + CONFIG.MIN_DAYS_ADVANCE);
     minDate.setHours(0, 0, 0, 0);
     selected.setHours(0, 0, 0, 0);
     const errorEl = document.getElementById('startDateError');
     if (selected < minDate) {
-        errorEl.textContent = 'La data dell\'evento deve essere almeno 15 giorni dalla data odierna.';
+        errorEl.textContent = `La data dell'evento deve essere almeno ${CONFIG.MIN_DAYS_ADVANCE} giorni dalla data odierna.`;
         errorEl.style.display = 'block';
         input.setCustomValidity('La data deve essere almeno 15 giorni in anticipo.');
     } else {
@@ -721,26 +743,41 @@ document.getElementById('startDate').addEventListener('change', function() {
     validateStartDate(this);
 });
 
-// Coverage toggle handlers
-document.getElementById('coverage_cancellation').addEventListener('change', function() {
-    document.getElementById('options_cancellation').classList.toggle('active', this.checked);
-});
+// Coverage toggle handlers (guarded: sections may be disabled in admin settings)
+const coverageCancellationEl = document.getElementById('coverage_cancellation');
+if (coverageCancellationEl) {
+    coverageCancellationEl.addEventListener('change', function() {
+        document.getElementById('options_cancellation').classList.toggle('active', this.checked);
+    });
+}
 
-document.getElementById('coverage_liability').addEventListener('change', function() {
-    document.getElementById('options_liability').classList.toggle('active', this.checked);
-});
+const coverageLiabilityEl = document.getElementById('coverage_liability');
+if (coverageLiabilityEl) {
+    coverageLiabilityEl.addEventListener('change', function() {
+        document.getElementById('options_liability').classList.toggle('active', this.checked);
+    });
+}
 
-document.getElementById('coverage_equipment').addEventListener('change', function() {
-    document.getElementById('options_equipment').classList.toggle('active', this.checked);
-});
+const coverageEquipmentEl = document.getElementById('coverage_equipment');
+if (coverageEquipmentEl) {
+    coverageEquipmentEl.addEventListener('change', function() {
+        document.getElementById('options_equipment').classList.toggle('active', this.checked);
+    });
+}
 
-document.getElementById('coverage_money').addEventListener('change', function() {
-    document.getElementById('options_money').classList.toggle('active', this.checked);
-});
+const coverageMoneyEl = document.getElementById('coverage_money');
+if (coverageMoneyEl) {
+    coverageMoneyEl.addEventListener('change', function() {
+        document.getElementById('options_money').classList.toggle('active', this.checked);
+    });
+}
 
-document.getElementById('coverage_accidents').addEventListener('change', function() {
-    document.getElementById('options_accidents').classList.toggle('active', this.checked);
-});
+const coverageAccidentsEl = document.getElementById('coverage_accidents');
+if (coverageAccidentsEl) {
+    coverageAccidentsEl.addEventListener('change', function() {
+        document.getElementById('options_accidents').classList.toggle('active', this.checked);
+    });
+}
 
 // Non-appearance guests toggle
 document.querySelectorAll('input[name="cancellation_reasons"]').forEach(cb => {
@@ -752,9 +789,12 @@ document.querySelectorAll('input[name="cancellation_reasons"]').forEach(cb => {
 });
 
 // Perdita Profitto toggle — show/hide stima guadagno
-document.getElementById('cb_profit_max_50').addEventListener('change', function() {
-    document.getElementById('profit_max_50_container').style.display = this.checked ? 'block' : 'none';
-});
+const profitToggleEl = document.getElementById('cb_profit_max_50');
+if (profitToggleEl) {
+    profitToggleEl.addEventListener('change', function() {
+        document.getElementById('profit_max_50_container').style.display = this.checked ? 'block' : 'none';
+    });
+}
 
 // Thousands separator for number inputs with class norisk-number-formatted
 function formatThousands(input) {
@@ -865,7 +905,7 @@ function collectFormData() {
     const coverages = {};
 
     // Cancellation Costs
-    if (document.getElementById('coverage_cancellation').checked) {
+    if (document.getElementById('coverage_cancellation')?.checked) {
         coverages.cancellation_costs = true;
         const totalCost = document.getElementById('cancellation_total_cost').dataset.rawValue ||
                           document.getElementById('cancellation_total_cost').value.replace(/[^0-9]/g, '');
@@ -890,13 +930,13 @@ function collectFormData() {
     }
 
     // Liability
-    if (document.getElementById('coverage_liability').checked) {
+    if (document.getElementById('coverage_liability')?.checked) {
         coverages.liability = true;
-        coverages.higher_liability = document.querySelector('input[name="liability_amount"]:checked')?.value || '2500000';
+        coverages.higher_liability = document.querySelector('input[name="liability_amount"]:checked')?.value || String(CONFIG.LIABILITY_AMOUNT_1);
     }
 
     // Equipment
-    if (document.getElementById('coverage_equipment').checked) {
+    if (document.getElementById('coverage_equipment')?.checked) {
         coverages.equipment = true;
         const equipmentValue = document.getElementById('equipment_value').dataset.rawValue ||
                                document.getElementById('equipment_value').value.replace(/[^0-9]/g, '');
@@ -904,7 +944,7 @@ function collectFormData() {
     }
 
     // Money
-    if (document.getElementById('coverage_money').checked) {
+    if (document.getElementById('coverage_money')?.checked) {
         coverages.money = true;
         const moneyAmount = document.getElementById('money_amount').dataset.rawValue ||
                             document.getElementById('money_amount').value.replace(/[^0-9]/g, '');
@@ -912,7 +952,7 @@ function collectFormData() {
     }
 
     // Accidents
-    if (document.getElementById('coverage_accidents').checked) {
+    if (document.getElementById('coverage_accidents')?.checked) {
         coverages.accident = true;
         coverages.accident_man_days = document.getElementById('accidents_employees').value;
         coverages.accident_man_days_participants = document.getElementById('accidents_participants').value;
@@ -1068,7 +1108,7 @@ function showSummary(result, formData) {
             <div class="norisk-coverage-block">
                 <h4>Responsabilità Civile</h4>
                 <div class="norisk-coverage-detail"><span class="label">Massimale per sinistro</span><span class="value">€ ${liabilityAmount},00</span></div>
-                <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ 500,00 per sinistro</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ ${CONFIG.LIABILITY_DEDUCTIBLE.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} per sinistro</span></div>
                 <div class="norisk-coverage-detail"><span class="label">Numero di visitatori</span><span class="value">${formData.visitors}</span></div>
             </div>
         `;
@@ -1080,7 +1120,7 @@ function showSummary(result, formData) {
             <div class="norisk-coverage-block">
                 <h4>Danni ad Attrezzatura</h4>
                 <div class="norisk-coverage-detail"><span class="label">Importo assicurato</span><span class="value">${equipmentValue}</span></div>
-                <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ 500,00 per sinistro</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ ${CONFIG.LIABILITY_DEDUCTIBLE.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} per sinistro</span></div>
             </div>
         `;
     }
@@ -1094,8 +1134,8 @@ function showSummary(result, formData) {
             <div class="norisk-coverage-block">
                 <h4>Infortuni</h4>
                 <div class="norisk-coverage-detail"><span class="label">Numero assicurati (staff/partecipanti)</span><span class="value">${employees} / ${participants}</span></div>
-                <div class="norisk-coverage-detail"><span class="label">Somma assicurata Invalidità Permanente</span><span class="value">€ 75.000</span></div>
-                <div class="norisk-coverage-detail"><span class="label">Somma assicurata Morte</span><span class="value">€ 25.000</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Somma assicurata Invalidità Permanente</span><span class="value">€ ${CONFIG.ACCIDENTS_PERMANENT_DISABILITY.toLocaleString('it-IT')}</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Somma assicurata Morte</span><span class="value">€ ${CONFIG.ACCIDENTS_DEATH.toLocaleString('it-IT')}</span></div>
                 <div class="norisk-coverage-detail"><span class="label">Sport incluso</span><span class="value">${sport}</span></div>
                 <div class="norisk-coverage-detail" style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">La copertura include i giorni di allestimento e di interruzione.</div>
             </div>
@@ -1199,10 +1239,10 @@ function showSummary(result, formData) {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
-                Stampa PDF
+                ${CONFIG.PRINT_BTN_TEXT}
             </button>
             <button type="button" class="norisk-new-quote-btn" onclick="resetForm()">
-                Nuovo Preventivo
+                ${CONFIG.NEW_QUOTE_BTN_TEXT}
             </button>
         </div>
     `;
@@ -1357,29 +1397,35 @@ function resetForm() {
     clearFormStorage();
 
     const minDate = new Date();
-    minDate.setDate(minDate.getDate() + 15);
+    minDate.setDate(minDate.getDate() + CONFIG.MIN_DAYS_ADVANCE);
     document.getElementById('startDate').min = minDate.toISOString().split('T')[0];
     document.getElementById('startDateError').style.display = 'none';
-    document.getElementById('profit_max_50_container').style.display = 'none';
+    const profitContainer = document.getElementById('profit_max_50_container');
+    if (profitContainer) profitContainer.style.display = 'none';
 
     // Reset coverage options visibility
     document.querySelectorAll('.norisk-coverage-options').forEach(el => el.classList.remove('active'));
 
     // Reset guests list
-    document.getElementById('guests_list').innerHTML = `
+    const guestsList = document.getElementById('guests_list');
+    if (guestsList) {
+        guestsList.innerHTML = `
         <div class="norisk-guest-entry">
             <input type="text" name="guest_name[]" placeholder="Nome ospite" class="norisk-guest-name">
             <input type="date" name="guest_birthdate[]" class="norisk-guest-date">
             <label><input type="checkbox" name="guest_artist[]" value="1"> Artista</label>
         </div>
     `;
-    document.getElementById('non_appearance_guests_container').style.display = 'none';
+    }
+    const nonAppearanceContainer = document.getElementById('non_appearance_guests_container');
+    if (nonAppearanceContainer) nonAppearanceContainer.style.display = 'none';
 
     // Scroll to top of form
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 
+<?php if ( current_user_can( 'administrator' ) ): ?>
 <!-- TEMPORARY DEBUG TOOLS -->
 <script>
 (function() {
@@ -1562,6 +1608,7 @@ function resetForm() {
     console.info('NoRisk Debug Tools Loaded');
 })();
 </script>
+<?php endif; ?>
 
 <?php
     // get_footer();
