@@ -21,6 +21,18 @@ export function normalizeCountryCode(code) {
 }
 
 /**
+ * Maps frontend accident man-days range string (e.g. "1-50", "none") to the
+ * numeric value expected by the NoRisk select (e.g. "50", "0").
+ * The NoRisk option value is always the upper bound of the range.
+ */
+function mapAccidentManDays(value) {
+    if (!value || value === 'none') return '0';
+    // value is like "1-50", "51-100", "4001-5000" – take the part after the last hyphen
+    const parts = value.split('-');
+    return parts[parts.length - 1];
+}
+
+/**
  * Maps Italian form data to Dutch backend field structure
  */
 export function mapFormData(italianData) {
@@ -69,8 +81,15 @@ export function mapFormData(italianData) {
         
         // Coverages (if provided)
         coverages: {
-          // Pass through coverages as-is (using exact field names from form)
-          ...(italianData.coverages || {})
+            // Pass through coverages, converting accident man-days range strings to
+            // the numeric upper-bound values the NoRisk form expects.
+            ...(italianData.coverages || {}),
+            ...(italianData.coverages?.accident_man_days !== undefined && {
+                accident_man_days: mapAccidentManDays(italianData.coverages.accident_man_days)
+            }),
+            ...(italianData.coverages?.accident_man_days_participants !== undefined && {
+                accident_man_days_participants: mapAccidentManDays(italianData.coverages.accident_man_days_participants)
+            })
         }
     };
     

@@ -414,16 +414,20 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 break;
               
             case 'accident':
-                // Multiple accident-related fields appear
+                // Multiple accident-related fields appear inside an Alpine.js x-show div.
+                // We must wait for each select to be visible before interacting,
+                // because Alpine.js processes the checkbox change asynchronously.
                 if (coverages.accident_man_days) {
-                    await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_MAN_DAYS)
-                        .selectOption(coverages.accident_man_days);
+                    const manDaysSelect = context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_MAN_DAYS).first();
+                    await manDaysSelect.waitFor({ state: 'visible', timeout: 10000 });
+                    await manDaysSelect.selectOption(String(coverages.accident_man_days), { timeout: 5000 });
                     logger.debug(`Selected accident man days: ${coverages.accident_man_days}`);
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 if (coverages.accident_man_days_participants) {
-                    await context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_PARTICIPANTS)
-                        .selectOption(coverages.accident_man_days_participants);
+                    const participantsSelect = context.locator(CONFIG.SELECTORS.CONDITIONAL_FIELDS.ACCIDENT_PARTICIPANTS).first();
+                    await participantsSelect.waitFor({ state: 'visible', timeout: 10000 });
+                    await participantsSelect.selectOption(String(coverages.accident_man_days_participants), { timeout: 5000 });
                     logger.debug(`Selected accident participants: ${coverages.accident_man_days_participants}`);
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
