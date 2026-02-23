@@ -265,7 +265,7 @@ async function checkQuoteStatus(quoteKey) {
 
     try {
         const response = await fetch(
-            window.noriskConfig.AJAX_URL + '?action=norisk_check_quote_status&quoteKey=' + encodeURIComponent(quoteKey),
+            window.noriskConfig.AJAX_URL + '?action=norisk_check_quote_status&quoteKey=' + encodeURIComponent(quoteKey) + '&nonce=' + encodeURIComponent(window.noriskConfig.NONCE),
             { method: 'GET' }
         );
 
@@ -323,7 +323,7 @@ async function sendQuoteToUser(quoteKey) {
         const response = await fetch(window.noriskConfig.AJAX_URL + '?action=norisk_send_quote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quoteKey: quoteKey })
+            body: JSON.stringify({ quoteKey: quoteKey, nonce: window.noriskConfig.NONCE })
         });
 
         const json = await response.json().catch(() => ({}));

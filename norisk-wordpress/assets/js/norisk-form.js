@@ -441,7 +441,7 @@ async function submitQuote(data) {
     const timeoutId = setTimeout(() => controller.abort(), window.noriskConfig.API_TIMEOUT_MS);
 
     try {
-        const response = await fetch(window.noriskConfig.AJAX_URL + '?action=norisk_submit_quote', {
+        const response = await fetch(window.noriskConfig.AJAX_URL + '?action=norisk_submit_quote&nonce=' + encodeURIComponent(window.noriskConfig.NONCE), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
