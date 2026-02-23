@@ -7,6 +7,8 @@ import { waitForQuoteEmail } from '../utils/emailReceiver.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { getBrowser } from './browserManager.js';
+import { captureErrorScreenshot } from '../utils/screenshotManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -213,33 +215,20 @@ async function parsePricingData(context) {
  */
 export async function automateFormSubmission(mappedData) {
     logger.info('Starting NoRisk form automation');
-    
-    let browser;
-    let context;
+
     let page;
-    
+
     try {
-        // Launch browser
-        logger.debug('Launching browser', { 
-            headless: CONFIG.HEADLESS,
-            slowMo: CONFIG.SLOW_MO 
-        });
-        
-        browser = await chromium.launch({
-            headless: CONFIG.HEADLESS,
-            slowMo: CONFIG.SLOW_MO,
-            args: ['--disable-blink-features=AutomationControlled']
-        });
-        
-        context = await browser.newContext({
+        // Get shared browser and create new page (tab)
+        const browser = await getBrowser();
+        page = await browser.newPage({
             viewport: { width: 1920, height: 1080 },
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             extraHTTPHeaders: {
-              'Accept-Language': 'en-US,en;q=0.9'
+                'Accept-Language': 'en-US,en;q=0.9'
             }
         });
-        
-        page = await context.newPage();
+
+        logger.debug('Created new page for request');
         
         // Set default timeout
         page.setDefaultTimeout(CONFIG.DEFAULT_TIMEOUT);
@@ -654,15 +643,15 @@ export async function automateFormSubmission(mappedData) {
         }
         
     } catch (error) {
-        logger.error('Automation failed', { 
+        logger.error('Automation failed', {
             error: error.message,
-            stack: error.stack 
+            stack: error.stack
         });
-        
+
         // Take error screenshot if page exists
         if (page) {
-            await takeScreenshot(page, 'error-state');
-            
+            await captureErrorScreenshot(page, 'automateFormSubmission');
+
             // Log current URL for debugging
             try {
                 const currentUrl = page.url();
@@ -678,9 +667,9 @@ export async function automateFormSubmission(mappedData) {
 
     } finally {
         // Cleanup
-        if (browser) {
-            logger.debug('Closing browser');
-            await browser.close();
+        if (page) {
+            logger.debug('Closing page');
+            await page.close();
         }
     }
 }
