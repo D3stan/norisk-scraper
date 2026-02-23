@@ -7,6 +7,7 @@ import { sendQuoteToUser } from './utils/emailSender.js';
 import { getQuoteRecord } from './utils/storage.js';
 import { CONFIG } from './config/constants.js';
 import { startEmailPolling } from './utils/emailReceiver.js';
+import { initBrowser } from './automation/browserManager.js';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -242,7 +243,16 @@ app.use((err, req, res, next) => {
 /**
  * Start server
  */
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+    // Initialize browser on startup
+    try {
+        await initBrowser();
+        logger.info('Browser initialized and ready');
+    } catch (error) {
+        logger.error('Failed to initialize browser', { error: error.message });
+        process.exit(1);
+    }
+
     logger.info(`NoRisk Proxy Server started`, {
         port: PORT,
         environment: process.env.NODE_ENV || 'development',
@@ -257,6 +267,7 @@ app.listen(PORT, () => {
     console.log(`🎯 Quote endpoint: POST http://localhost:${PORT}/api/quote`);
     console.log(`📧 Send quote: POST http://localhost:${PORT}/api/quote/send`);
     console.log(`📊 Quote status: GET http://localhost:${PORT}/api/quote/:quoteKey/status`);
+    console.log(`🎭 Browser: Shared instance (tab-per-request)`);
 
     if (CONFIG.COMPLETED) {
         console.log(`\n✅ COMPLETED mode: Auto-submit enabled`);
@@ -266,7 +277,6 @@ app.listen(PORT, () => {
 
     if (CONFIG.IMAP.HOST) {
         console.log(`📥 Email reception: Enabled (${CONFIG.IMAP.HOST})`);
-        // Start background email polling
         startEmailPolling();
     } else {
         console.log(`📥 Email reception: Disabled (IMAP not configured)`);
