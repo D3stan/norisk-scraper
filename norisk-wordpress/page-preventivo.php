@@ -142,6 +142,18 @@ $norisk = norisk_get_options();
     .norisk-info-btn {
         display: none !important;
     }
+    .norisk-summary-header img {
+        display: block !important;
+        max-width: 100%;
+        height: auto;
+    }
+    .norisk-logo-img {
+        max-height: 80px;
+    }
+    .norisk-event-img {
+        max-height: 120px;
+        margin-top: 10px;
+    }
 }
 </style>
 
