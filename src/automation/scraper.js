@@ -682,33 +682,20 @@ export async function automateFormSubmission(mappedData) {
 export async function submitEmailQuote(quoteKey) {
     logger.info('Starting email quote submission', { quoteKey });
 
-    let browser;
-    let context;
     let page;
 
     try {
-        // Launch browser
-        logger.debug('Launching browser for email submission', {
-            headless: CONFIG.HEADLESS,
-            slowMo: CONFIG.SLOW_MO
-        });
-
-        browser = await chromium.launch({
-            headless: CONFIG.HEADLESS,
-            slowMo: CONFIG.SLOW_MO,
-            args: ['--disable-blink-features=AutomationControlled']
-        });
-
-        context = await browser.newContext({
+        // Get shared browser and create new page (tab)
+        const browser = await getBrowser();
+        page = await browser.newPage({
             viewport: { width: 1920, height: 1080 },
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             extraHTTPHeaders: {
                 'Accept-Language': 'en-US,en;q=0.9'
             }
         });
-
-        page = await context.newPage();
         page.setDefaultTimeout(CONFIG.DEFAULT_TIMEOUT);
+
+        logger.debug('Created new page for email submission');
 
         // ========================================
         // STEP 1: Perform Login
@@ -835,7 +822,7 @@ export async function submitEmailQuote(quoteKey) {
         });
 
         if (page) {
-            await takeScreenshot(page, 'email-submission-error');
+            await captureErrorScreenshot(page, 'submitEmailQuote');
         }
 
         return {
@@ -845,9 +832,9 @@ export async function submitEmailQuote(quoteKey) {
 
     } finally {
         // Cleanup
-        if (browser) {
-            logger.debug('Closing browser');
-            await browser.close();
+        if (page) {
+            logger.debug('Closing page');
+            await page.close();
         }
     }
 }
