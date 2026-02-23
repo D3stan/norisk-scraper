@@ -4,15 +4,27 @@
  */
 
 // DOM Elements
-const form = document.getElementById('quoteForm');
-const loadingOverlay = document.getElementById('loadingOverlay');
-const loadingBar = document.getElementById('loadingBar');
-const resultsSection = document.getElementById('resultsSection');
-const resultsTitle = document.getElementById('resultsTitle');
-const resultsContent = document.getElementById('resultsContent');
+let form;
+let loadingOverlay;
+let loadingBar;
+let resultsSection;
+let resultsTitle;
+let resultsContent;
 
 // Store form data for summary display
 let lastFormData = null;
+
+/**
+ * Initialize DOM element references
+ */
+function initDomElements() {
+    form = document.getElementById('quoteForm');
+    loadingOverlay = document.getElementById('loadingOverlay');
+    loadingBar = document.getElementById('loadingBar');
+    resultsSection = document.getElementById('resultsSection');
+    resultsTitle = document.getElementById('resultsTitle');
+    resultsContent = document.getElementById('resultsContent');
+}
 
 // LocalStorage key for form data
 const FORM_STORAGE_KEY = 'norisk_form_data';
@@ -538,6 +550,9 @@ function resetForm() {
 // =========================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DOM element references
+    initDomElements();
+
     // Set minimum date based on configured advance notice
     const minDate = new Date();
     minDate.setDate(minDate.getDate() + window.noriskConfig.MIN_DAYS_ADVANCE);
@@ -679,12 +694,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await new Promise(resolve => setTimeout(resolve, 300));
 
             // Call showSummary from norisk-summary.js
-            if (typeof showSummary === 'function') {
-                showSummary(result, lastFormData);
-            } else {
-                console.error('showSummary function not found. Make sure norisk-summary.js is loaded.');
-                showError('Errore durante la visualizzazione dei risultati.');
-            }
+            showSummary(result, lastFormData);
 
             // Clear saved form data on successful submission
             clearFormStorage();
