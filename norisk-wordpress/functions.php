@@ -131,6 +131,8 @@ function norisk_proxy_get( string $endpoint ): array {
 add_action( 'wp_ajax_norisk_submit_quote',        'norisk_ajax_submit_quote' );
 add_action( 'wp_ajax_nopriv_norisk_submit_quote', 'norisk_ajax_submit_quote' );
 function norisk_ajax_submit_quote(): void {
+    check_ajax_referer( 'norisk_ajax_nonce', 'nonce' );
+
     // Read raw JSON body sent by the browser
     $raw  = file_get_contents( 'php://input' );
     $data = json_decode( $raw, true );
@@ -156,6 +158,8 @@ function norisk_ajax_submit_quote(): void {
 add_action( 'wp_ajax_norisk_check_quote_status',        'norisk_ajax_check_quote_status' );
 add_action( 'wp_ajax_nopriv_norisk_check_quote_status', 'norisk_ajax_check_quote_status' );
 function norisk_ajax_check_quote_status(): void {
+    check_ajax_referer( 'norisk_ajax_nonce', 'nonce' );
+
     $quote_key = isset( $_GET['quoteKey'] ) ? sanitize_text_field( $_GET['quoteKey'] ) : '';
 
     if ( empty( $quote_key ) ) {
@@ -179,6 +183,8 @@ function norisk_ajax_check_quote_status(): void {
 add_action( 'wp_ajax_norisk_send_quote',        'norisk_ajax_send_quote' );
 add_action( 'wp_ajax_nopriv_norisk_send_quote', 'norisk_ajax_send_quote' );
 function norisk_ajax_send_quote(): void {
+    check_ajax_referer( 'norisk_ajax_nonce', 'nonce' );
+
     $raw  = file_get_contents( 'php://input' );
     $data = json_decode( $raw, true );
 
@@ -507,6 +513,7 @@ function norisk_enqueue_assets(): void {
     // Localized configuration (replaces inline CONFIG)
     wp_localize_script( 'norisk-form', 'noriskConfig', [
         'AJAX_URL'                     => admin_url( 'admin-ajax.php' ),
+        'NONCE'                        => wp_create_nonce( 'norisk_ajax_nonce' ),
         'API_TIMEOUT_MS'               => (int) $opts['api_timeout'] * 1000,
         'MIN_DAYS_ADVANCE'             => (int) $opts['min_days_advance'],
         'NEW_QUOTE_BTN_TEXT'           => $opts['new_quote_btn_text'],
