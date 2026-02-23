@@ -66,6 +66,26 @@ function norisk_get_options(): array {
         'contact_email'       => 'eventi@golinucci.it',
         'contact_phone'       => '',
         'contact_show_in_pdf' => 1,
+        // Modal Coperture - Costi di Annullamento
+        'cancellation_modal_title'   => 'Costi di Annullamento',
+        'cancellation_modal_include' => '',
+        'cancellation_modal_exclude' => '',
+        // Modal Coperture - Responsabilità Civile
+        'liability_modal_title'      => 'Responsabilità Civile',
+        'liability_modal_include'    => '',
+        'liability_modal_exclude'    => '',
+        // Modal Coperture - Attrezzature
+        'equipment_modal_title'      => 'Attrezzature',
+        'equipment_modal_include'    => '',
+        'equipment_modal_exclude'    => '',
+        // Modal Coperture - Denaro
+        'money_modal_title'          => 'Denaro',
+        'money_modal_include'        => '',
+        'money_modal_exclude'        => '',
+        // Modal Coperture - Infortuni
+        'accidents_modal_title'      => 'Infortuni',
+        'accidents_modal_include'    => '',
+        'accidents_modal_exclude'    => '',
         // API
         'api_base_url'     => 'http://api.wordpress.home/api',
         'api_timeout'      => 120,
@@ -341,6 +361,23 @@ function norisk_register_settings(): void {
     add_settings_field( 'contact_email',       'Email contatti',       'norisk_render_text_field',   'norisk-settings', 'norisk_contacts', [ 'key' => 'contact_email' ] );
     add_settings_field( 'contact_phone',       'Telefono contatti',    'norisk_render_text_field',   'norisk-settings', 'norisk_contacts', [ 'key' => 'contact_phone' ] );
     add_settings_field( 'contact_show_in_pdf', 'Mostra contatti nel PDF', 'norisk_render_checkbox_field', 'norisk-settings', 'norisk_contacts', [ 'key' => 'contact_show_in_pdf' ] );
+
+    // ----- Sezione G: Modal Informazioni Coperture -----
+    $coverage_types = [
+        'cancellation' => 'Costi di Annullamento',
+        'liability'    => 'Responsabilità Civile',
+        'equipment'    => 'Attrezzature',
+        'money'        => 'Denaro',
+        'accidents'    => 'Infortuni',
+    ];
+
+    foreach ( $coverage_types as $key => $label ) {
+        add_settings_section( "norisk_modal_{$key}", "Modal: {$label}", '__return_false', 'norisk-settings' );
+
+        add_settings_field( "{$key}_modal_title",   'Titolo modale',   'norisk_render_text_field',   'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_title" ] );
+        add_settings_field( "{$key}_modal_include", 'Cosa include',    'norisk_render_textarea_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_include" ] );
+        add_settings_field( "{$key}_modal_exclude", 'Cosa esclude',    'norisk_render_textarea_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_exclude" ] );
+    }
 }
 
 /**
@@ -382,6 +419,20 @@ function norisk_render_checkbox_field( array $args ): void {
         '<input type="checkbox" name="norisk_options[%s]" value="1" %s />',
         esc_attr( $key ),
         $checked
+    );
+}
+
+/**
+ * Render a textarea field.
+ */
+function norisk_render_textarea_field( array $args ): void {
+    $opts  = norisk_get_options();
+    $key   = $args['key'];
+    $value = $opts[ $key ] ?? '';
+    printf(
+        '<textarea name="norisk_options[%s]" rows="5" class="large-text">%s</textarea>',
+        esc_attr( $key ),
+        esc_textarea( $value )
     );
 }
 
@@ -435,6 +486,18 @@ function norisk_sanitize_options( $input ): array {
     // Contact fields
     $sanitized['contact_email'] = sanitize_email( $input['contact_email'] ?? 'eventi@golinucci.it' );
     $sanitized['contact_phone'] = sanitize_text_field( $input['contact_phone'] ?? '' );
+
+    // Modal fields
+    $modal_fields = [
+        'cancellation_modal_title', 'cancellation_modal_include', 'cancellation_modal_exclude',
+        'liability_modal_title',    'liability_modal_include',    'liability_modal_exclude',
+        'equipment_modal_title',    'equipment_modal_include',    'equipment_modal_exclude',
+        'money_modal_title',        'money_modal_include',        'money_modal_exclude',
+        'accidents_modal_title',    'accidents_modal_include',    'accidents_modal_exclude',
+    ];
+    foreach ( $modal_fields as $key ) {
+        $sanitized[ $key ] = wp_kses_post( $input[ $key ] ?? '' );
+    }
 
     return $sanitized;
 }

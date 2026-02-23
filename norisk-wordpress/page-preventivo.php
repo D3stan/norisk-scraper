@@ -31,6 +31,118 @@ $norisk = norisk_get_options();
         text-decoration: none !important;
     }
 }
+
+/* Pulsante info copertura */
+.norisk-coverage-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.norisk-info-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--brand-primary, #6B1C23);
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+.norisk-info-btn:hover {
+    opacity: 1;
+}
+
+/* Modale */
+.norisk-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+.norisk-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.norisk-modal {
+    background: white;
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    padding: 24px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    overflow-y: auto;
+    position: relative;
+}
+.norisk-modal-overlay.active .norisk-modal {
+    transform: translateY(0);
+}
+.norisk-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+    padding: 4px;
+}
+.norisk-modal-close:hover {
+    color: #333;
+}
+.norisk-modal-title {
+    margin: 0 0 20px 0;
+    padding-right: 40px;
+    font-size: 1.25rem;
+    color: var(--text-main, #2C2C2C);
+}
+.norisk-modal-section {
+    margin-bottom: 20px;
+}
+.norisk-modal-section h4 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: var(--brand-primary, #6B1C23);
+}
+.norisk-modal-section div {
+    color: var(--text-body, #333);
+    line-height: 1.6;
+}
+
+/* Desktop: modale centrato */
+@media (min-width: 768px) {
+    .norisk-modal-overlay {
+        align-items: center;
+    }
+    .norisk-modal {
+        width: 90%;
+        max-width: 600px;
+        border-radius: 8px;
+        max-height: 80vh;
+        transform: scale(0.9);
+    }
+    .norisk-modal-overlay.active .norisk-modal {
+        transform: scale(1);
+    }
+}
+
+/* Nascondi modale nella stampa */
+@media print {
+    .norisk-modal-overlay,
+    .norisk-info-btn {
+        display: none !important;
+    }
+}
 </style>
 
 <div class="norisk-form-container">
@@ -271,6 +383,9 @@ $norisk = norisk_get_options();
                     <input type="checkbox" id="coverage_cancellation" name="coverage_cancellation" value="1">
                     <span class="norisk-coverage-title">Costi di Annullamento</span>
                 </label>
+                <button type="button" class="norisk-info-btn" data-coverage="cancellation" aria-label="Maggiori informazioni">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </button>
                 <div class="norisk-coverage-options" id="options_cancellation">
                     <div class="norisk-form-group">
                         <label for="cancellation_total_cost">Qual è il costo totale per organizzare questo evento?</label>
@@ -323,6 +438,9 @@ $norisk = norisk_get_options();
                     <input type="checkbox" id="coverage_liability" name="coverage_liability" value="1">
                     <span class="norisk-coverage-title">Responsabilità Civile</span>
                 </label>
+                <button type="button" class="norisk-info-btn" data-coverage="liability" aria-label="Maggiori informazioni">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </button>
                 <div class="norisk-coverage-options" id="options_liability">
                     <div class="norisk-form-group">
                         <label>Per quale importo vuoi assicurare la tua responsabilità?</label>
@@ -348,6 +466,9 @@ $norisk = norisk_get_options();
                     <input type="checkbox" id="coverage_equipment" name="coverage_equipment" value="1">
                     <span class="norisk-coverage-title">Attrezzature</span>
                 </label>
+                <button type="button" class="norisk-info-btn" data-coverage="equipment" aria-label="Maggiori informazioni">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </button>
                 <div class="norisk-coverage-options" id="options_equipment">
                     <div class="norisk-form-group">
                         <label for="equipment_value">Valore del materiale da assicurare</label>
@@ -364,6 +485,9 @@ $norisk = norisk_get_options();
                     <input type="checkbox" id="coverage_money" name="coverage_money" value="1">
                     <span class="norisk-coverage-title">Denaro</span>
                 </label>
+                <button type="button" class="norisk-info-btn" data-coverage="money" aria-label="Maggiori informazioni">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </button>
                 <div class="norisk-coverage-options" id="options_money">
                     <div class="norisk-form-group">
                         <label for="money_amount">Quanto denaro vuoi assicurare ogni giorno?</label>
@@ -380,6 +504,9 @@ $norisk = norisk_get_options();
                     <input type="checkbox" id="coverage_accidents" name="coverage_accidents" value="1">
                     <span class="norisk-coverage-title">Infortuni</span>
                 </label>
+                <button type="button" class="norisk-info-btn" data-coverage="accidents" aria-label="Maggiori informazioni">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </button>
                 <div class="norisk-coverage-options" id="options_accidents">
                     <div class="norisk-form-group">
                         <label for="accidents_employees">Numero di dipendenti (in giorni-uomo)</label>
@@ -441,6 +568,24 @@ $norisk = norisk_get_options();
 
         <!-- Submit -->
         <button type="submit" class="norisk-submit-btn"><?php echo esc_html( $norisk['submit_btn_text'] ); ?></button>
+
+    <!-- Modal Informazioni Coperture -->
+    <div id="norisk-modal-overlay" class="norisk-modal-overlay">
+        <div class="norisk-modal" role="dialog" aria-modal="true">
+            <button type="button" class="norisk-modal-close" aria-label="Chiudi">&times;</button>
+            <h3 class="norisk-modal-title"></h3>
+            <div class="norisk-modal-content">
+                <div class="norisk-modal-section">
+                    <h4>Cosa include</h4>
+                    <div class="norisk-modal-include"></div>
+                </div>
+                <div class="norisk-modal-section">
+                    <h4>Cosa esclude</h4>
+                    <div class="norisk-modal-exclude"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     </form>
 
     <!-- Results Section -->
@@ -466,6 +611,22 @@ const CONFIG = {
     SERVICE_FEE: <?php echo (int) ( $norisk['service_fee'] ?? 15 ); ?>,
     TERMS_URL: '<?php echo esc_js( $norisk['terms_url'] ?? '' ); ?>',
     CONTACT_EMAIL: '<?php echo esc_js( $norisk['contact_email'] ?? 'eventi@golinucci.it' ); ?>',
+    // Modal content
+    CANCELLATION_MODAL_TITLE: '<?php echo esc_js( $norisk['cancellation_modal_title'] ); ?>',
+    CANCELLATION_MODAL_INCLUDE: '<?php echo wp_kses_post( $norisk['cancellation_modal_include'] ); ?>',
+    CANCELLATION_MODAL_EXCLUDE: '<?php echo wp_kses_post( $norisk['cancellation_modal_exclude'] ); ?>',
+    LIABILITY_MODAL_TITLE: '<?php echo esc_js( $norisk['liability_modal_title'] ); ?>',
+    LIABILITY_MODAL_INCLUDE: '<?php echo wp_kses_post( $norisk['liability_modal_include'] ); ?>',
+    LIABILITY_MODAL_EXCLUDE: '<?php echo wp_kses_post( $norisk['liability_modal_exclude'] ); ?>',
+    EQUIPMENT_MODAL_TITLE: '<?php echo esc_js( $norisk['equipment_modal_title'] ); ?>',
+    EQUIPMENT_MODAL_INCLUDE: '<?php echo wp_kses_post( $norisk['equipment_modal_include'] ); ?>',
+    EQUIPMENT_MODAL_EXCLUDE: '<?php echo wp_kses_post( $norisk['equipment_modal_exclude'] ); ?>',
+    MONEY_MODAL_TITLE: '<?php echo esc_js( $norisk['money_modal_title'] ); ?>',
+    MONEY_MODAL_INCLUDE: '<?php echo wp_kses_post( $norisk['money_modal_include'] ); ?>',
+    MONEY_MODAL_EXCLUDE: '<?php echo wp_kses_post( $norisk['money_modal_exclude'] ); ?>',
+    ACCIDENTS_MODAL_TITLE: '<?php echo esc_js( $norisk['accidents_modal_title'] ); ?>',
+    ACCIDENTS_MODAL_INCLUDE: '<?php echo wp_kses_post( $norisk['accidents_modal_include'] ); ?>',
+    ACCIDENTS_MODAL_EXCLUDE: '<?php echo wp_kses_post( $norisk['accidents_modal_exclude'] ); ?>',
 };
 
 // DOM Elements
@@ -806,6 +967,43 @@ if (coverageAccidentsEl) {
         document.getElementById('options_accidents').classList.toggle('active', this.checked);
     });
 }
+
+// Modal handlers
+document.querySelectorAll('.norisk-info-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const coverage = this.dataset.coverage;
+        const title = CONFIG[coverage.toUpperCase() + '_MODAL_TITLE'];
+        const include = CONFIG[coverage.toUpperCase() + '_MODAL_INCLUDE'];
+        const exclude = CONFIG[coverage.toUpperCase() + '_MODAL_EXCLUDE'];
+
+        const modal = document.getElementById('norisk-modal-overlay');
+        modal.querySelector('.norisk-modal-title').textContent = title;
+        modal.querySelector('.norisk-modal-include').innerHTML = include;
+        modal.querySelector('.norisk-modal-exclude').innerHTML = exclude;
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+});
+
+// Close modal handlers
+document.getElementById('norisk-modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this || e.target.closest('.norisk-modal-close')) {
+        this.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('norisk-modal-overlay');
+        if (modal.classList.contains('active')) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+});
 
 // Non-appearance guests toggle
 document.querySelectorAll('input[name="cancellation_reasons"]').forEach(cb => {
