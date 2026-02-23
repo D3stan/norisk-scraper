@@ -55,12 +55,17 @@ function writeStorage(data) {
 
 /**
  * Creates a new quote record
+ * @param {string} quoteKey  - NR code (e.g. NR000053118) used as the primary storage key
+ * @param {string} userEmail
+ * @param {Object} formData
+ * @param {string} [urlKey]  - Internal UUID used by NoRisk for page navigation
  */
-export function createQuoteRecord(quoteKey, userEmail, formData) {
+export function createQuoteRecord(quoteKey, userEmail, formData, urlKey) {
     const storage = readStorage();
 
     storage[quoteKey] = {
         quoteKey,
+        urlKey: urlKey || quoteKey, // UUID for NoRisk navigation (may equal quoteKey if NR code unavailable)
         userEmail,
         formData: {
             initials: formData.initials,

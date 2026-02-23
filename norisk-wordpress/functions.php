@@ -34,6 +34,7 @@ function norisk_get_options(): array {
         'submit_btn_text'        => 'Richiedi Preventivo',
         'privacy_label'          => 'Ho letto e accetto l\'informativa sulla privacy',
         'privacy_url'            => '/privacy-policy',
+        'terms_url'              => 'https://golinucci.it/wp-content/uploads/2026/02/Terms-conditions-event-insurance-ITA.pdf',
         'new_quote_btn_text'     => 'Richiedi Nuovo Preventivo',
         'print_btn_text'         => 'Stampa / Salva PDF',
         'section_personal_title' => 'Informazioni Personali',
@@ -55,10 +56,11 @@ function norisk_get_options(): array {
         'accidents_permanent_disability' => 75000,
         'accidents_death'                => 25000,
         'liability_deductible'           => 500,
+        // Business
+        'service_fee'                    => 15,
         // API
-        'api_base_url'   => 'http://api.wordpress.home/api',
-        'api_timeout'    => 120,
-        'api_timeout_ms' => 120000,
+        'api_base_url' => 'http://api.wordpress.home/api',
+        'api_timeout'  => 120,
     ] );
 }
 
@@ -214,25 +216,26 @@ function norisk_register_settings(): void {
         'sanitize_callback' => 'norisk_sanitize_options',
     ] );
 
-    // ----- Section A: Texts & Labels -----
-    add_settings_section( 'norisk_texts', 'Texts &amp; Labels', '__return_false', 'norisk-settings' );
+    // ----- Sezione A: Testi ed Etichette -----
+    add_settings_section( 'norisk_texts', 'Testi ed Etichette', '__return_false', 'norisk-settings' );
 
     $text_fields = [
-        'page_title'             => 'Page Title',
-        'page_subtitle'          => 'Page Subtitle',
-        'loading_text'           => 'Loading Text',
-        'loading_subtext'        => 'Loading Sub-text',
-        'submit_btn_text'        => 'Submit Button Text',
-        'privacy_label'          => 'Privacy Checkbox Label',
-        'privacy_url'            => 'Privacy Policy URL',
-        'new_quote_btn_text'     => 'New Quote Button Text',
-        'print_btn_text'         => 'Print / PDF Button Text',
-        'section_personal_title' => 'Section: Personal Info Title',
-        'section_company_title'  => 'Section: Company Info Title',
-        'section_event_title'    => 'Section: Event Info Title',
-        'section_location_title' => 'Section: Location Title',
-        'section_coverage_title' => 'Section: Coverage Title',
-        'coverage_note'          => 'Coverage Intro Note',
+        'page_title'             => 'Titolo Pagina',
+        'page_subtitle'          => 'Sottotitolo Pagina',
+        'loading_text'           => 'Testo Caricamento',
+        'loading_subtext'        => 'Testo Secondario Caricamento',
+        'submit_btn_text'        => 'Testo Pulsante Invia',
+        'privacy_label'          => 'Etichetta Casella Privacy',
+        'privacy_url'            => 'URL Privacy Policy',
+        'terms_url'              => 'URL Condizioni Contrattuali',
+        'new_quote_btn_text'     => 'Testo Pulsante Nuovo Preventivo',
+        'print_btn_text'         => 'Testo Pulsante Stampa/PDF',
+        'section_personal_title' => 'Titolo Sezione Dati Personali',
+        'section_company_title'  => 'Titolo Sezione Dati Aziendali',
+        'section_event_title'    => 'Titolo Sezione Evento',
+        'section_location_title' => 'Titolo Sezione Location',
+        'section_coverage_title' => 'Titolo Sezione Coperture',
+        'coverage_note'          => 'Nota Introduttiva Coperture',
     ];
 
     foreach ( $text_fields as $key => $label ) {
@@ -246,15 +249,15 @@ function norisk_register_settings(): void {
         );
     }
 
-    // ----- Section B: Coverage Visibility -----
-    add_settings_section( 'norisk_coverage_visibility', 'Coverage Sections', '__return_false', 'norisk-settings' );
+    // ----- Sezione B: Visibilità Coperture -----
+    add_settings_section( 'norisk_coverage_visibility', 'Sezioni Copertura', '__return_false', 'norisk-settings' );
 
     $coverage_fields = [
-        'show_coverage_cancellation' => 'Show Cancellation Costs',
-        'show_coverage_liability'    => 'Show Liability',
-        'show_coverage_equipment'    => 'Show Equipment',
-        'show_coverage_money'        => 'Show Money',
-        'show_coverage_accidents'    => 'Show Accidents',
+        'show_coverage_cancellation' => 'Mostra Costi di Annullamento',
+        'show_coverage_liability'    => 'Mostra Responsabilità Civile',
+        'show_coverage_equipment'    => 'Mostra Attrezzatura',
+        'show_coverage_money'        => 'Mostra Denaro',
+        'show_coverage_accidents'    => 'Mostra Infortuni',
     ];
 
     foreach ( $coverage_fields as $key => $label ) {
@@ -268,16 +271,17 @@ function norisk_register_settings(): void {
         );
     }
 
-    // ----- Section C: Business Rules -----
-    add_settings_section( 'norisk_business_rules', 'Business Rules', '__return_false', 'norisk-settings' );
+    // ----- Sezione C: Regole di Business -----
+    add_settings_section( 'norisk_business_rules', 'Regole di Business', '__return_false', 'norisk-settings' );
 
     $number_fields = [
-        'min_days_advance'               => 'Min Days Advance Notice',
-        'liability_amount_1'             => 'Liability Amount Option 1 (€)',
-        'liability_amount_2'             => 'Liability Amount Option 2 (€)',
-        'accidents_permanent_disability' => 'Accidents: Permanent Disability Sum (€)',
-        'accidents_death'                => 'Accidents: Death Sum (€)',
-        'liability_deductible'           => 'Liability Deductible (€)',
+        'min_days_advance'               => 'Giorni Minimi Anticipo',
+        'liability_amount_1'             => 'Massimale RC Opzione 1 (€)',
+        'liability_amount_2'             => 'Massimale RC Opzione 2 (€)',
+        'accidents_permanent_disability' => 'Infortuni: Somma Invalidità Permanente (€)',
+        'accidents_death'                => 'Infortuni: Somma Decesso (€)',
+        'liability_deductible'           => 'Franchigia RC (€)',
+        'service_fee'                    => 'Commissione di Servizio (€)',
     ];
 
     foreach ( $number_fields as $key => $label ) {
@@ -291,12 +295,11 @@ function norisk_register_settings(): void {
         );
     }
 
-    // ----- Section D: API Configuration -----
-    add_settings_section( 'norisk_api', 'API Configuration', '__return_false', 'norisk-settings' );
+    // ----- Sezione D: Configurazione API -----
+    add_settings_section( 'norisk_api', 'Configurazione API', '__return_false', 'norisk-settings' );
 
-    add_settings_field( 'api_base_url',   'API Base URL',          'norisk_render_text_field',   'norisk-settings', 'norisk_api', [ 'key' => 'api_base_url' ] );
-    add_settings_field( 'api_timeout',    'API Timeout (seconds)', 'norisk_render_number_field', 'norisk-settings', 'norisk_api', [ 'key' => 'api_timeout' ] );
-    add_settings_field( 'api_timeout_ms', 'API Timeout (ms)',      'norisk_render_number_field', 'norisk-settings', 'norisk_api', [ 'key' => 'api_timeout_ms' ] );
+    add_settings_field( 'api_base_url', 'URL Base API',         'norisk_render_text_field',   'norisk-settings', 'norisk_api', [ 'key' => 'api_base_url' ] );
+    add_settings_field( 'api_timeout',  'Timeout API (secondi)', 'norisk_render_number_field', 'norisk-settings', 'norisk_api', [ 'key' => 'api_timeout' ] );
 }
 
 /**
@@ -364,11 +367,12 @@ function norisk_sanitize_options( $input ): array {
 
     // URL fields
     $sanitized['privacy_url']  = esc_url_raw( $input['privacy_url']  ?? '/privacy-policy' );
+    $sanitized['terms_url']    = esc_url_raw( $input['terms_url']    ?? '' );
     $sanitized['api_base_url'] = esc_url_raw( $input['api_base_url'] ?? '' );
 
     // Integer fields
     $int_fields = [
-        'min_days_advance', 'api_timeout', 'api_timeout_ms',
+        'min_days_advance', 'api_timeout', 'service_fee',
         'liability_amount_1', 'liability_amount_2',
         'accidents_permanent_disability', 'accidents_death', 'liability_deductible',
     ];
@@ -402,7 +406,7 @@ function norisk_render_settings_page(): void {
             <?php
             settings_fields( 'norisk_group' );
             do_settings_sections( 'norisk-settings' );
-            submit_button( 'Save Settings' );
+            submit_button( 'Salva Impostazioni' );
             ?>
         </form>
     </div>

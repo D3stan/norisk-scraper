@@ -429,7 +429,7 @@ $norisk = norisk_get_options();
 // CONFIGURATION
 const CONFIG = {
     AJAX_URL: '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>',
-    API_TIMEOUT_MS: <?php echo (int) $norisk['api_timeout_ms']; ?>,
+    API_TIMEOUT_MS: <?php echo (int) $norisk['api_timeout'] * 1000; ?>,
     MIN_DAYS_ADVANCE: <?php echo (int) $norisk['min_days_advance']; ?>,
     NEW_QUOTE_BTN_TEXT: '<?php echo esc_js( $norisk['new_quote_btn_text'] ); ?>',
     PRINT_BTN_TEXT: '<?php echo esc_js( $norisk['print_btn_text'] ); ?>',
@@ -438,6 +438,8 @@ const CONFIG = {
     ACCIDENTS_PERMANENT_DISABILITY: <?php echo (int) $norisk['accidents_permanent_disability']; ?>,
     ACCIDENTS_DEATH: <?php echo (int) $norisk['accidents_death']; ?>,
     LIABILITY_DEDUCTIBLE: <?php echo (int) $norisk['liability_deductible']; ?>,
+    SERVICE_FEE: <?php echo (int) ( $norisk['service_fee'] ?? 15 ); ?>,
+    TERMS_URL: '<?php echo esc_js( $norisk['terms_url'] ?? '' ); ?>',
 };
 
 // DOM Elements
@@ -1054,7 +1056,14 @@ function showSummary(result, formData) {
 
     const quoteKey = result.quoteKey || 'N/A';
     const pricing = result.pricing || {};
-    const finalPrice = pricing.toPay || pricing.sumIncl || pricing.total || 'N/A';
+    // Parse Italian-format price (e.g. "1.530,65"): dots=thousands, comma=decimal
+    const rawPriceStr = pricing.toPay || pricing.sumIncl || pricing.total;
+    const rawPriceNum = rawPriceStr
+        ? parseFloat(rawPriceStr.replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, ''))
+        : NaN;
+    const finalPrice = !isNaN(rawPriceNum)
+        ? (rawPriceNum + CONFIG.SERVICE_FEE).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : (rawPriceStr || 'N/A');
 
     // Get event type label
     const eventTypeSelect = document.getElementById('eventType');
@@ -1088,7 +1097,11 @@ function showSummary(result, formData) {
             cancellationDetails.push('<div class="norisk-coverage-detail"><span class="label">Mancata partecipazione artisti/ospiti</span><span class="value">Sì</span></div>');
         }
         if (formData.coverages.cancellation_income) {
-            cancellationDetails.push('<div class="norisk-coverage-detail"><span class="label">Perdita profitto</span><span class="value">fino al 50%</span></div>');
+            const profitEstVal = formData.coverages.cancellation_income_estimate;
+            const profitDisplay = profitEstVal
+                ? '\u20ac ' + parseInt(profitEstVal).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : 'fino al 50%';
+            cancellationDetails.push(`<div class="norisk-coverage-detail"><span class="label">Perdita profitto</span><span class="value">${profitDisplay}</span></div>`);
         }
 
         const budgetFormatted = formData.coverages.budget ? '€ ' + parseInt(formData.coverages.budget).toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A';
@@ -1159,6 +1172,8 @@ function showSummary(result, formData) {
     resultsSection.className = 'norisk-summary-container';
     resultsSection.innerHTML = `
         <div class="norisk-summary-header">
+            <img src="https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg" alt="Golinucci Broker Assicurativo" class="norisk-logo-img" />
+            <img src="https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38.jpeg" alt="Assicurazione Evento" class="norisk-event-img" />
             <h2>Preventivo Assicurazione Evento</h2>
             <div class="norisk-quote-ref">Riferimento: ${quoteKey}</div>
         </div>
@@ -1230,7 +1245,7 @@ function showSummary(result, formData) {
         </div>
 
         <div class="norisk-summary-footer" style="text-align: center; margin: 24px 0; font-size: 14px; color: var(--text-muted); line-height: 1.8;">
-            <div>Per leggere condizioni polizza : <a href="#" style="color: var(--brand-primary); text-decoration: underline;">clicca qui</a></div>
+            <div>Per leggere condizioni polizza : <a href="${CONFIG.TERMS_URL || '#'}" target="_blank" rel="noopener" style="color: var(--brand-primary); text-decoration: underline;">clicca qui</a></div>
             <div>Per acquistare la polizza o ricevere ulteriori informazioni : <a href="mailto:eventi@golinucci.it" style="color: var(--brand-primary); text-decoration: underline;">eventi@golinucci.it</a></div>
         </div>
 

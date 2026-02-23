@@ -714,6 +714,23 @@ input[type="checkbox"], input[type="radio"] {
     border: none;
 }
 
+.norisk-logo-img {
+    display: block;
+    max-height: 70px;
+    width: auto;
+    margin: 0 auto 16px;
+    object-fit: contain;
+}
+
+.norisk-event-img {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+}
+
 .norisk-summary-section {
     margin-bottom: 32px;
 }

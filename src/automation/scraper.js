@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import logger from '../utils/logger.js';
 import { CONFIG } from '../config/constants.js';
 import { fillFormFields, selectCoverages, fillGuestInfoPage, fillProposalForm } from './formFiller.js';
-import { createQuoteRecord, updateQuoteStatus, storePdfPath } from '../utils/storage.js';
+import { createQuoteRecord, updateQuoteStatus, storePdfPath, getQuoteRecord } from '../utils/storage.js';
 import { waitForQuoteEmail } from '../utils/emailReceiver.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -500,16 +500,49 @@ export async function automateFormSubmission(mappedData) {
         const detailsUrl = await page.evaluate(() => window.location.href);
         logger.info('Navigated to "Your Details" page', { url: detailsUrl });
         
-        // Extract quote key from URL
+        // Extract internal UUID from URL (needed only for NoRisk site navigation)
         const urlParams = new URL(detailsUrl).searchParams;
-        const quoteKey = urlParams.get('key');
-        logger.info('Quote key extracted', { quoteKey });
+        const urlKey = urlParams.get('key');
+        logger.info('URL key extracted', { urlKey });
 
-        // Create quote record in storage
-        createQuoteRecord(quoteKey, mappedData.email, mappedData);
-        logger.info('Quote record created', { quoteKey, userEmail: mappedData.email });
+        // Navigate to agents listing to extract the official NR quote code (e.g. NR000053118)
+        let noriskCode = urlKey; // fallback: use UUID if NR code cannot be found
+        try {
+            logger.info('Navigating to agents page to extract NR quote code');
+            await page.goto('https://verzekeren.norisk.eu/agents', {
+                waitUntil: 'load',
+                timeout: CONFIG.NAVIGATION_TIMEOUT
+            });
+            await page.waitForLoadState('domcontentloaded');
+            await page.waitForTimeout(2000);
 
-        await takeScreenshot(page, 'your-details-page');
+            // The NR code is the text of the <a> that points to this quote's proposal URL
+            const proposalLink = page.locator(`a[href*="/proposal/${urlKey}"]`).first();
+            if (await proposalLink.count() > 0) {
+                noriskCode = (await proposalLink.textContent()).trim();
+                logger.info('NR quote code extracted', { noriskCode });
+            } else {
+                logger.warn('NR quote link not found on agents page, falling back to URL key');
+            }
+        } catch (extractError) {
+            logger.warn('Failed to extract NR quote code, falling back to URL key', { error: extractError.message });
+        }
+
+        // Navigate back to Your Details page
+        logger.info('Navigating back to Your Details page', { url: detailsUrl });
+        await page.goto(detailsUrl, {
+            waitUntil: 'load',
+            timeout: CONFIG.NAVIGATION_TIMEOUT
+        });
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(1000);
+
+        // Use NR code as the canonical key throughout; UUID kept internally for navigation
+        const quoteKey = noriskCode;
+        logger.info('Using NR code as quote key', { quoteKey, urlKey });
+
+        // Create quote record in storage; store urlKey so submitEmailQuote can navigate later
+        createQuoteRecord(quoteKey, mappedData.email, mappedData, urlKey);
 
         // Re-establish main context after navigation
         const mainContextDetails = page.locator('main');
@@ -696,8 +729,12 @@ export async function submitEmailQuote(quoteKey) {
         // ========================================
         // STEP 2: Navigate directly to Your Details page using quote key
         // ========================================
-        const detailsUrl = `${CONFIG.FORM_URL.replace(/\?.*$/, '').replace(/\/event$/, '')}/your-details?key=${quoteKey}`;
-        logger.info('Navigating to Your Details page', { url: detailsUrl });
+        // quoteKey is now the NR code (e.g. NR000053118).
+        // Look up the internal UUID needed to construct the NoRisk URL.
+        const quoteRecord = getQuoteRecord(quoteKey);
+        const urlKey = quoteRecord?.urlKey || quoteKey;
+        const detailsUrl = `${CONFIG.FORM_URL.replace(/\?.*$/, '').replace(/\/event$/, '')}/your-details?key=${urlKey}`;
+        logger.info('Navigating to Your Details page', { url: detailsUrl, urlKey });
 
         await page.goto(detailsUrl, {
             waitUntil: 'load',
