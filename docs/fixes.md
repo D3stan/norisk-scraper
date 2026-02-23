@@ -254,3 +254,70 @@ this must be retrieved in the following way: when the scraper reads the final pr
 Fix #9 — iCloud Notes integration is very vague. What should it actually do?
 Skip it — not a real requirement yet
 ```
+
+```
+Implementation Plan
+Fix 1 — Quote Document Visual Enhancements
+File: page-preventivo.php
+
+Add the broker logo (WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg) to the quote result header
+Add the event photo (WhatsApp-Image-2026-02-21-at-14.56.38.jpeg) below the header in the result section
+Ensure images are not suppressed by @media print CSS, so they appear in the PDF/print output
+Both image URLs are already known from fixes.md
+Fix 2 — €15 Service Fee (silently added to total)
+File: page-preventivo.php
+
+In the JavaScript quote-result handler (around line 1057), when computing finalPrice from pricing.toPay, add 15 before formatting and display
+Add a service_fee setting in functions.php (default 15) so it can be changed from admin without a code deploy — even though it isn't shown as a line item
+Fix 3 — Loss of Profit: show user-entered profit_estimate
+Files: page-preventivo.php
+
+The profit_estimate field is already in the form (line 287) but it is not passed through in the coverage object that gets serialised with the request
+Ensure profit_estimate is included in the coverage data that is sent to the API and stored in formData
+In the quote result block (line 1091), replace the hardcoded "fino al 50%" with the formatted value of formData.coverages.profit_estimate (falling back to "fino al 50%" if not provided)
+Fix 4 + Fix 8 — Extract Official NoRisk Quote Code (NR000053118 format)
+File: scraper.js
+
+After the scraper reaches the Your Details page and extracts quoteKey from the URL:
+Save detailsUrl
+Navigate to https://verzekeren.norisk.eu/agents
+Wait for the page to load
+Find a[href*="proposal/{quoteKey UUID}"] — the text content is the NR code (e.g. NR000053118)
+Navigate back to detailsUrl
+Return noriskQuoteCode in the result object
+File: index.js — include noriskQuoteCode in the API JSON response
+File: page-preventivo.php — display the NR code instead of (or alongside) the internal quoteKey in the result section
+Fix 5 — Terms & Conditions URL in WordPress Settings
+Files: functions.php, page-preventivo.php
+
+Add terms_url key in norisk_get_options() defaults, pointing to the known PDF URL
+Register the field in Section A (alongside privacy_url)
+Add it to norisk_sanitize_options() with esc_url_raw
+Reference it in page-preventivo.php wherever the T&C link is shown to the user
+Fix 6 — Remove Duplicate API Timeout Field
+File: functions.php
+
+Remove api_timeout_ms from norisk_get_options() defaults, the settings registration, and norisk_sanitize_options()
+Keep api_timeout (seconds) as the single source; any PHP code that needs milliseconds will compute $opts['api_timeout'] * 1000
+Confirm nothing in page-preventivo.php or the proxy helpers references api_timeout_ms directly
+Fix 7 — WordPress Admin Italian Localization
+File: functions.php
+
+Translate all field labels in $text_fields, $coverage_fields, $number_fields, and the API section from English → Italian
+Translate section headings ('Texts & Labels' → 'Testi ed Etichette', 'Coverage Sections' → 'Sezioni Copertura', etc.)
+Translate the submit_button label ('Save Settings' → 'Salva Impostazioni')
+Wrap strings in __( '...', 'norisk' ) for proper i18n support
+Fixes 9 & 10 — Skipped
+iCloud Notes: deferred (no requirement yet)
+claudeusus: not a code change
+Suggested execution order:
+
+Fix 6 (remove duplicate setting — no-risk, isolated change)
+Fix 5 (T&C URL — additive, isolated)
+Fix 7 (Italian labels — no logic changes)
+Fix 3 (Loss of Profit display — clear, self-contained)
+Fix 2 (€15 fee — single calculation change)
+Fix 4/8 (NR quote code — most complex, touches scraper + API + frontend)
+Fix 1 (images/branding — visual only, goes last)
+Shall I proceed with implementation starting from Fix 6, or do you want to adjust priorities first?
+```
