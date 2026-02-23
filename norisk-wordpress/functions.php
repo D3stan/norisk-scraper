@@ -62,6 +62,10 @@ function norisk_get_options(): array {
         'liability_deductible'           => 500,
         // Business
         'service_fee'                    => 15,
+        // Contatti
+        'contact_email'       => 'eventi@golinucci.it',
+        'contact_phone'       => '',
+        'contact_show_in_pdf' => 1,
         // API
         'api_base_url'     => 'http://api.wordpress.home/api',
         'api_timeout'      => 120,
@@ -330,6 +334,13 @@ function norisk_register_settings(): void {
     // ----- Sezione E: Debug -----
     add_settings_section( 'norisk_debug', 'Debug', '__return_false', 'norisk-settings' );
     add_settings_field( 'show_debug_panel', 'Mostra pannello debug', 'norisk_render_checkbox_field', 'norisk-settings', 'norisk_debug', [ 'key' => 'show_debug_panel' ] );
+
+    // ----- Sezione F: Contatti -----
+    add_settings_section( 'norisk_contacts', 'Contatti', '__return_false', 'norisk-settings' );
+
+    add_settings_field( 'contact_email',       'Email contatti',       'norisk_render_text_field',   'norisk-settings', 'norisk_contacts', [ 'key' => 'contact_email' ] );
+    add_settings_field( 'contact_phone',       'Telefono contatti',    'norisk_render_text_field',   'norisk-settings', 'norisk_contacts', [ 'key' => 'contact_phone' ] );
+    add_settings_field( 'contact_show_in_pdf', 'Mostra contatti nel PDF', 'norisk_render_checkbox_field', 'norisk-settings', 'norisk_contacts', [ 'key' => 'contact_show_in_pdf' ] );
 }
 
 /**
@@ -415,11 +426,15 @@ function norisk_sanitize_options( $input ): array {
         'show_coverage_cancellation', 'show_coverage_liability',
         'show_coverage_equipment', 'show_coverage_money', 'show_coverage_accidents',
         'show_cancellation_profit', 'show_cancellation_non_appearance', 'show_cancellation_weather',
-        'show_debug_panel',
+        'show_debug_panel', 'contact_show_in_pdf',
     ];
     foreach ( $checkbox_fields as $key ) {
         $sanitized[ $key ] = isset( $input[ $key ] ) ? 1 : 0;
     }
+
+    // Contact fields
+    $sanitized['contact_email'] = sanitize_email( $input['contact_email'] ?? 'eventi@golinucci.it' );
+    $sanitized['contact_phone'] = sanitize_text_field( $input['contact_phone'] ?? '' );
 
     return $sanitized;
 }

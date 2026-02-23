@@ -12,6 +12,25 @@ $norisk = norisk_get_options();
 
 <style>
 <?php include 'style.css'; ?>
+/* Contatti PDF */
+.norisk-pdf-contacts {
+    display: none;
+}
+@media print {
+    .norisk-pdf-contacts {
+        display: block !important;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        page-break-inside: avoid;
+        text-align: center;
+        font-size: 14px;
+    }
+    .norisk-pdf-contacts a {
+        color: #000 !important;
+        text-decoration: none !important;
+    }
+}
 </style>
 
 <div class="norisk-form-container">
@@ -446,6 +465,7 @@ const CONFIG = {
     LIABILITY_DEDUCTIBLE: <?php echo (int) $norisk['liability_deductible']; ?>,
     SERVICE_FEE: <?php echo (int) ( $norisk['service_fee'] ?? 15 ); ?>,
     TERMS_URL: '<?php echo esc_js( $norisk['terms_url'] ?? '' ); ?>',
+    CONTACT_EMAIL: '<?php echo esc_js( $norisk['contact_email'] ?? 'eventi@golinucci.it' ); ?>',
 };
 
 // DOM Elements
@@ -1252,8 +1272,22 @@ function showSummary(result, formData) {
 
         <div class="norisk-summary-footer" style="text-align: center; margin: 24px 0; font-size: 14px; color: var(--text-muted); line-height: 1.8;">
             <div>Per leggere condizioni polizza : <a href="${CONFIG.TERMS_URL || '#'}" target="_blank" rel="noopener" style="color: var(--brand-primary); text-decoration: underline;">clicca qui</a></div>
-            <div>Per acquistare la polizza o ricevere ulteriori informazioni : <a href="mailto:eventi@golinucci.it" style="color: var(--brand-primary); text-decoration: underline;">eventi@golinucci.it</a></div>
+            <div>Per acquistare la polizza o ricevere ulteriori informazioni : <a href="mailto:${CONFIG.CONTACT_EMAIL}" style="color: var(--brand-primary); text-decoration: underline;">${CONFIG.CONTACT_EMAIL}</a></div>
         </div>
+
+        <?php if ( $norisk['contact_show_in_pdf'] ) : ?>
+        <div class="norisk-pdf-contacts">
+            <div class="norisk-pdf-contact-block">
+                <strong>Per informazioni e acquisto:</strong><br>
+                <?php if ( $norisk['contact_email'] ) : ?>
+                Email: <a href="mailto:<?php echo esc_attr( $norisk['contact_email'] ); ?>"><?php echo esc_html( $norisk['contact_email'] ); ?></a><br>
+                <?php endif; ?>
+                <?php if ( $norisk['contact_phone'] ) : ?>
+                Tel: <?php echo esc_html( $norisk['contact_phone'] ); ?>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="norisk-summary-actions">
             <button type="button" class="norisk-print-btn" onclick="window.print()">
