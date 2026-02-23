@@ -241,3 +241,16 @@ To better prioritize and implement these fixes, please clarify the following:
 
 *Last Updated: February 22, 2026*
 *Document Version: 2.0*
+
+
+
+```
+Fix #2 — €15 service fee: how should it appear in the quote shown to the customer?
+Silently added into the total (not itemised)
+Fix #3 — Loss of Profit specific amount (e.g. €3,000): do you know where it appears in the NoRisk HTML? Or should I look it up from the saved files in norisk/private/?
+it is given in input by the user at the beginning, when compiling the form, but you can also investigate in the index.js of the scraper
+Fix #4 — short quote number (e.g. '53094'): where does NoRisk expose it? In the page HTML, in the URL, or only in the email they send?
+this must be retrieved in the following way: when the scraper reads the final prices and navigates to the "your details" page (last page), if the .env var "COMPLETED" is set to false, it will navigate back to the main page where all the saved quotes are listed (https://verzekeren.norisk.eu/agents) and look for an element like this one <div><a href="https://verzekeren.norisk.eu/agents/proposal/3fa9231d-b2e1-4e53-a375-78da4944ed8c" class="hover:underline">NR000053118</a></div> which will contain the code (NR000053118). Note that if you can find a selector for this, you can just save the link of the page before navigating back to the main list of quotes and search for it in the HTML since as you can see the quote code is an a element that redirects to that same link
+Fix #9 — iCloud Notes integration is very vague. What should it actually do?
+Skip it — not a real requirement yet
+```
