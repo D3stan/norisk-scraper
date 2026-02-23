@@ -450,3 +450,86 @@ function norisk_render_settings_page(): void {
     </div>
     <?php
 }
+
+// =========================================
+// Asset Enqueuing
+// =========================================
+
+/**
+ * Enqueue NoRisk form assets on preventivo page
+ */
+add_action( 'wp_enqueue_scripts', 'norisk_enqueue_assets' );
+function norisk_enqueue_assets(): void {
+    // Only enqueue on preventivo page template
+    if ( ! is_page_template( 'page-preventivo.php' ) ) {
+        return;
+    }
+
+    $opts    = norisk_get_options();
+    $base_js = get_stylesheet_directory_uri() . '/assets/js/';
+    $base_css = get_stylesheet_directory_uri() . '/assets/css/';
+
+    // CSS
+    wp_enqueue_style(
+        'norisk-form',
+        $base_css . 'norisk-form.css',
+        [],
+        null
+    );
+
+    // JS: Core form functionality (loaded first)
+    wp_enqueue_script(
+        'norisk-form',
+        $base_js . 'norisk-form.js',
+        [],
+        null,
+        true // Load in footer
+    );
+
+    // JS: Coverage handlers
+    wp_enqueue_script(
+        'norisk-coverage',
+        $base_js . 'norisk-coverage.js',
+        [ 'norisk-form' ],
+        null,
+        true
+    );
+
+    // JS: Summary display
+    wp_enqueue_script(
+        'norisk-summary',
+        $base_js . 'norisk-summary.js',
+        [ 'norisk-coverage' ],
+        null,
+        true
+    );
+
+    // Localized configuration (replaces inline CONFIG)
+    wp_localize_script( 'norisk-form', 'noriskConfig', [
+        'AJAX_URL'                     => admin_url( 'admin-ajax.php' ),
+        'API_TIMEOUT_MS'               => (int) $opts['api_timeout'] * 1000,
+        'MIN_DAYS_ADVANCE'             => (int) $opts['min_days_advance'],
+        'NEW_QUOTE_BTN_TEXT'           => $opts['new_quote_btn_text'],
+        'PRINT_BTN_TEXT'               => $opts['print_btn_text'],
+        'LIABILITY_AMOUNT_1'           => (int) $opts['liability_amount_1'],
+        'LIABILITY_AMOUNT_2'           => (int) $opts['liability_amount_2'],
+        'ACCIDENTS_PERMANENT_DISABILITY' => (int) $opts['accidents_permanent_disability'],
+        'ACCIDENTS_DEATH'              => (int) $opts['accidents_death'],
+        'LIABILITY_DEDUCTIBLE'         => (int) $opts['liability_deductible'],
+        'SERVICE_FEE'                  => (int) ( $opts['service_fee'] ?? 15 ),
+        'TERMS_URL'                    => $opts['terms_url'] ?? '',
+        'LOGO_URL'                     => $opts['logo_url'] ?? '',
+        'EVENT_IMAGE_URL'              => $opts['event_image_url'] ?? '',
+    ] );
+
+    // Debug tools (conditionally loaded)
+    if ( ! empty( $opts['show_debug_panel'] ) ) {
+        wp_enqueue_script(
+            'norisk-debug',
+            $base_js . 'norisk-debug.js',
+            [ 'norisk-summary' ],
+            null,
+            true
+        );
+    }
+}
