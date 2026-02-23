@@ -24,7 +24,7 @@
         "imap": "^0.8.17",
         "mailparser": "^3.6.5",
         "nodemailer": "^8.0.1",
-        "playwright": "^1.40.0",
+        "playwright": "1.58.2",
         "winston": "^3.11.0"
     }
 }
