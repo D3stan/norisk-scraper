@@ -258,6 +258,7 @@ $norisk = norisk_get_options();
                         <input type="number" id="cancellation_total_cost" name="cancellation_total_cost" min="0" placeholder="€">
                     </div>
                     <div class="norisk-checkbox-group">
+                        <?php if ( $norisk['show_cancellation_non_appearance'] ): ?>
                         <label>
                             <input type="checkbox" name="cancellation_reasons" value="non_appearance">
                             Annullamento per mancata partecipazione (artista/ospite)
@@ -272,10 +273,14 @@ $norisk = norisk_get_options();
                             </div>
                             <button type="button" onclick="addGuest()" class="norisk-add-btn">+ Aggiungi ospite</button>
                         </div>
+                        <?php endif; ?>
+                        <?php if ( $norisk['show_cancellation_weather'] ): ?>
                         <label>
                             <input type="checkbox" name="cancellation_reasons" value="extreme_weather">
                             Annullamento per condizioni meteorologiche estreme
                         </label>
+                        <?php endif; ?>
+                        <?php if ( $norisk['show_cancellation_profit'] ): ?>
                         <label>
                             <input type="checkbox" name="cancellation_reasons" value="profit_max_50" id="cb_profit_max_50">
                             Perdita Profitto (fino a massimo 50% dei costi di annullamento)
@@ -286,6 +291,7 @@ $norisk = norisk_get_options();
                                 <input type="text" id="profit_estimate" name="profit_estimate" placeholder="€" class="norisk-number-formatted">
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -1440,7 +1446,7 @@ function resetForm() {
 }
 </script>
 
-<?php if ( current_user_can( 'administrator' ) && ! empty( $norisk['show_debug_panel'] ) ): ?>
+<?php if ( ! empty( $norisk['show_debug_panel'] ) ): ?>
 <!-- TEMPORARY DEBUG TOOLS -->
 <script>
 (function() {

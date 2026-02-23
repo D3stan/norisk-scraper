@@ -49,6 +49,10 @@ function norisk_get_options(): array {
         'show_coverage_equipment'    => 1,
         'show_coverage_money'        => 0,
         'show_coverage_accidents'    => 1,
+        // Cancellation sub-options
+        'show_cancellation_profit'          => 1,
+        'show_cancellation_non_appearance'  => 1,
+        'show_cancellation_weather'         => 1,
         // Business rules
         'min_days_advance'               => 15,
         'liability_amount_1'             => 2500000,
@@ -273,6 +277,26 @@ function norisk_register_settings(): void {
         );
     }
 
+    // ----- Sezione B2: Opzioni Costi di Annullamento -----
+    add_settings_section( 'norisk_cancellation_options', 'Opzioni Costi di Annullamento', '__return_false', 'norisk-settings' );
+
+    $cancellation_sub_fields = [
+        'show_cancellation_profit'         => 'Mostra Perdita Profitto',
+        'show_cancellation_non_appearance' => 'Mostra Annullamento per mancata partecipazione (artista/ospite)',
+        'show_cancellation_weather'        => 'Mostra Annullamento per condizioni meteorologiche estreme',
+    ];
+
+    foreach ( $cancellation_sub_fields as $key => $label ) {
+        add_settings_field(
+            $key,
+            $label,
+            'norisk_render_checkbox_field',
+            'norisk-settings',
+            'norisk_cancellation_options',
+            [ 'key' => $key ]
+        );
+    }
+
     // ----- Sezione C: Regole di Business -----
     add_settings_section( 'norisk_business_rules', 'Regole di Business', '__return_false', 'norisk-settings' );
 
@@ -305,7 +329,7 @@ function norisk_register_settings(): void {
 
     // ----- Sezione E: Debug -----
     add_settings_section( 'norisk_debug', 'Debug', '__return_false', 'norisk-settings' );
-    add_settings_field( 'show_debug_panel', 'Mostra pannello debug (solo amministratori)', 'norisk_render_checkbox_field', 'norisk-settings', 'norisk_debug', [ 'key' => 'show_debug_panel' ] );
+    add_settings_field( 'show_debug_panel', 'Mostra pannello debug', 'norisk_render_checkbox_field', 'norisk-settings', 'norisk_debug', [ 'key' => 'show_debug_panel' ] );
 }
 
 /**
@@ -390,6 +414,7 @@ function norisk_sanitize_options( $input ): array {
     $checkbox_fields = [
         'show_coverage_cancellation', 'show_coverage_liability',
         'show_coverage_equipment', 'show_coverage_money', 'show_coverage_accidents',
+        'show_cancellation_profit', 'show_cancellation_non_appearance', 'show_cancellation_weather',
         'show_debug_panel',
     ];
     foreach ( $checkbox_fields as $key ) {
