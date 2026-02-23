@@ -11,40 +11,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================
 
     // Coverage toggle handlers (guarded: sections may be disabled in admin settings)
-    const coverageCancellationEl = document.getElementById('coverage_cancellation');
-    if (coverageCancellationEl) {
-        coverageCancellationEl.addEventListener('change', function() {
-            document.getElementById('options_cancellation').classList.toggle('active', this.checked);
-        });
-    }
+    document.getElementById('coverage_cancellation')?.addEventListener('change', function() {
+        document.getElementById('options_cancellation').classList.toggle('active', this.checked);
+    });
 
-    const coverageLiabilityEl = document.getElementById('coverage_liability');
-    if (coverageLiabilityEl) {
-        coverageLiabilityEl.addEventListener('change', function() {
-            document.getElementById('options_liability').classList.toggle('active', this.checked);
-        });
-    }
+    document.getElementById('coverage_liability')?.addEventListener('change', function() {
+        document.getElementById('options_liability').classList.toggle('active', this.checked);
+    });
 
-    const coverageEquipmentEl = document.getElementById('coverage_equipment');
-    if (coverageEquipmentEl) {
-        coverageEquipmentEl.addEventListener('change', function() {
-            document.getElementById('options_equipment').classList.toggle('active', this.checked);
-        });
-    }
+    document.getElementById('coverage_equipment')?.addEventListener('change', function() {
+        document.getElementById('options_equipment').classList.toggle('active', this.checked);
+    });
 
-    const coverageMoneyEl = document.getElementById('coverage_money');
-    if (coverageMoneyEl) {
-        coverageMoneyEl.addEventListener('change', function() {
-            document.getElementById('options_money').classList.toggle('active', this.checked);
-        });
-    }
+    document.getElementById('coverage_money')?.addEventListener('change', function() {
+        document.getElementById('options_money').classList.toggle('active', this.checked);
+    });
 
-    const coverageAccidentsEl = document.getElementById('coverage_accidents');
-    if (coverageAccidentsEl) {
-        coverageAccidentsEl.addEventListener('change', function() {
-            document.getElementById('options_accidents').classList.toggle('active', this.checked);
-        });
-    }
+    document.getElementById('coverage_accidents')?.addEventListener('change', function() {
+        document.getElementById('options_accidents').classList.toggle('active', this.checked);
+    });
 
     // =========================================
     // Non-appearance Guests Toggle
@@ -62,12 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Perdita Profitto (Profit) Toggle
     // =========================================
 
-    const profitToggleEl = document.getElementById('cb_profit_max_50');
-    if (profitToggleEl) {
-        profitToggleEl.addEventListener('change', function() {
-            document.getElementById('profit_max_50_container').style.display = this.checked ? 'block' : 'none';
-        });
-    }
+    document.getElementById('cb_profit_max_50')?.addEventListener('change', function() {
+        document.getElementById('profit_max_50_container').style.display = this.checked ? 'block' : 'none';
+    });
 
     // =========================================
     // Number Formatting
