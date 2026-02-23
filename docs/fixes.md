@@ -1,323 +1,336 @@
-# NoRisk Insurance Automation - Fixes & Improvements Tracking
+# NoRisk Insurance Automation - Fixes & Improvements
 
-## Overview
-
-This document tracks ongoing improvements, bug fixes, and feature enhancements for the NoRisk Insurance Form Automation system. The project bridges Italian event organizers with NoRisk's Dutch/English-only insurance platform through automated browser automation and a native Italian WordPress frontend.
+Ultimo aggiornamento: 23 Febbraio 2026
 
 ---
 
-## High Priority Fixes
+## Fix 1 - Immagini nel Preventivo (PDF)
 
-### 1. Quote Document Visual Enhancements
+**Obiettivo:** Aggiungere logo e immagini al documento preventivo stampabile/PDF.
 
-**Current Issue:** The generated quote documents lack visual elements that would make them more professional and easier to understand for clients.
-
-**Required Changes:**
-- **Add images to the printed quote document** - Include relevant event-type imagery or insurance graphics to enhance visual appeal
-- Determine whether images should appear only in the printed/PDF version or also in the digital preview
-- Consider adding broker logo to the quote header for branding consistency
-
-**Open Questions:**
-- What specific images should be included? (event type icons, insurance shield graphics, company logos)
-- Should images be conditional based on event type (sports, concerts, conferences)?
-- What are the file size constraints for email delivery?
+**Implementazione:**
+- Logo Golinucci: `https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg`
+- Immagine evento: `https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38.jpeg`
+- CSS `@media print` deve includere le immagini (non `display: none`)
 
 ---
 
-### 2. Pricing Structure Modification
+## Fix 2 - Fee Servizio €15
 
-**Current Issue:** The final pricing calculation needs to include a fixed service fee that is currently missing from the quote total.
+**Obiettivo:** Aggiungere €15 di fee servizio al prezzo finale (non itemizzato).
 
-**Required Changes:**
-- **Add a fixed €15 service fee** to the final cost calculation displayed to the user
-- Determine if this fee should be displayed as a line item or incorporated into the total
-- Update both the WordPress frontend display and any PDF/email communications
-
-**Open Questions:**
-- Should the €15 fee be configurable via WordPress admin settings?
-- Is this fee taxable under Italian VAT regulations?
-- Should the fee be displayed differently for B2B vs B2C customers?
+**Implementazione:**
+- Setting `service_fee` in Settings API (default: 15)
+- Nel calcolo JS: `finalPrice = apiPrice + CONFIG.SERVICE_FEE`
+- Mostrare solo il totale finale all'utente
 
 ---
 
-### 3. Loss of Profit Field - Specific Amount Display
+## Fix 3 - Perdita Profitto: Importo Specifico
 
-**Current Issue:** The "Loss of Profit" (Perdita di Profitto) coverage field currently displays a generic percentage range ("fino al 50%" - up to 50%) instead of the specific monetary amount that NoRisk actually calculates.
+**Obiettivo:** Mostrare l'importo specifico di perdita profitto invece del testo generico "fino al 50%".
 
-**Required Changes:**
-- **Replace percentage text with specific monetary value** - In the example case, this should display "€3,000" instead of "fino al 50%"
-- Extract the actual valued amount from the NoRisk response data
-- Update the field mapping in `utils/dataMapper.js` to capture this value
-- Ensure the specific amount is displayed consistently across all user-facing interfaces
-
-**Technical Notes:**
-- This requires inspecting the NoRisk API response or HTML to locate where the specific amount is returned
-- May need to update the `extractProposalData()` function in the scraper
+**Implementazione:**
+- Il campo `profit_estimate` è già nel form (input utente)
+- Inviarlo nell'oggetto coverages all'API
+- Nel riepilogo: mostrare "€ X.XXX,00" invece di "fino al 50%"
 
 ---
 
-### 4. Quote Number Reference Format
+## Fix 4 - Codice Preventivo NoRisk (NR0000XXXXX)
 
-**Current Issue:** The current quote number displays an internal long reference number that is confusing for customers and doesn't match NoRisk's actual quote numbering system.
+**Obiettivo:** Estrarre e mostrare il codice preventivo ufficiale NoRisk al posto dell'UUID interno.
 
-**Required Changes:**
-- **Replace internal long reference with actual NoRisk quote number** - Use "53094" format instead of the lengthy internal reference
-- This makes it easier for customers to reference their quote when contacting NoRisk directly
-- Improves traceability between our system and NoRisk's internal systems
-
-**Technical Notes:**
-- Need to identify where NoRisk exposes the actual quote number in their response
-- Update database schema to store this official quote number separately from internal tracking ID
-
----
-
-## Resource Links & Assets
-
-### Terms and Conditions Document
-- **URL:** https://golinucci.it/wp-content/uploads/2026/02/Terms-conditions-event-insurance-ITA.pdf
-- **Purpose:** Official terms and conditions for event insurance policies
-- **Action Required:** Update WordPress settings to reference this document
-
-### Image Assets
-- **Event Photo:** https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38.jpeg
-- **Logo Asset:** https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg
-- **Purpose:** Visual assets for quote documents and branding
+**Implementazione:**
+1. Scraper salva l'URL della pagina "Your Details"
+2. Naviga a `https://verzekeren.norisk.eu/agents`
+3. Cerca `<a href=".../proposal/{UUID}">NR0000XXXXX</a>`
+4. Estrae il testo NR0000XXXXX
+5. Torna alla pagina Your Details
+6. Restituisce `noriskQuoteCode` nella risposta API
+7. Frontend mostra il codice NR nel riepilogo
 
 ---
 
-## WordPress Integration Improvements
+## Fix 5 - Link Termini e Condizioni (Settings API)
 
-### 1. Terms & Conditions Link Configuration
+**Obiettivo:** Aggiungere campo URL Termini e Condizioni configurabile da admin.
 
-**Current Issue:** The terms and conditions link needs to be properly integrated into the WordPress admin settings for easy configuration by site administrators.
-
-**Required Changes:**
-- **Add dedicated Terms & Conditions URL field** to the WordPress settings page
-- Ensure this is separate from the Privacy Policy field (currently may be conflated)
-- Default to the provided URL: https://golinucci.it/wp-content/uploads/2026/02/Terms-conditions-event-insurance-ITA.pdf
-- Make the link easily accessible from the quote form for user review
-
-**Implementation Details:**
-- Add new setting in `functions.php`
-- Update `page-preventivo.php` to reference this dynamic setting
-- Add validation to ensure the link is a valid PDF or page URL
+**Implementazione:**
+- Nuovo campo `terms_url` in Settings API
+- Default: `https://golinucci.it/wp-content/uploads/2026/02/Terms-conditions-event-insurance-ITA.pdf`
+- Validazione: `esc_url_raw()`
+- Mostrare il link nel footer del preventivo
 
 ---
 
-### 2. Remove Duplicate API Timeout Setting
+## Fix 6 - Rimuovi Duplicato API Timeout
 
-**Current Issue:** There is a duplicate "API Timeout" field in the WordPress settings that causes confusion for administrators.
+**Obiettivo:** Eliminare il campo duplicato "API Timeout" dalle impostazioni.
 
-**Required Changes:**
-- **Identify and remove the duplicate API timeout field** from the WordPress admin settings
-- Ensure only one authoritative timeout setting remains
-- Verify that the remaining setting properly syncs with the Node.js backend expectations
-
-**Testing Required:**
-- Confirm that removing the duplicate doesn't break existing configurations
-- Ensure the timeout value properly passes to the backend API calls
+**Implementazione:**
+- Rimuovere `api_timeout_ms` da Settings API
+- Mantenere solo `api_timeout` (in secondi)
+- PHP calcola millisecondi: `$timeout * 1000`
 
 ---
 
-### 3. WordPress Admin Localization
+## Fix 7 - Localizzazione Italiana Admin
 
-**Current Issue:** The WordPress plugin settings page is currently in English, but the primary users are Italian administrators.
+**Obiettivo:** Tradurre tutte le etichette del pannello admin in italiano.
 
-**Required Changes:**
-- **Translate all WordPress admin settings to Italian**
-- Include field labels, descriptions, help text, and error messages
-- Maintain English fallback for international users
-- Use WordPress internationalization (i18n) functions for proper localization support
-
-**Translation Scope:**
-- Settings page titles and sections
-- Field labels and descriptions
-- Success/error messages
-- Help tooltips and documentation links
+**Implementazione:**
+- Tradurre `$text_fields`, `$coverage_fields`, `$number_fields`
+- Tradurre titoli sezioni: "Texts & Labels" → "Testi ed Etichette"
+- Usare funzioni i18n WordPress: `__( 'Testo', 'norisk' )`
 
 ---
 
-## Backend Automation Enhancements
+## Fix 8 - Modale Informazioni Coperture (NUOVO)
 
-### 1. Extract Official NoRisk Quote Code
+**Obiettivo:** Aggiungere punto di domanda accanto a ogni copertura che apre un modale mobile-friendly con "Cosa include" e "Cosa esclude".
 
-**Current Issue:** The system doesn't currently capture or display the official NoRisk quote code that their system generates, which would be valuable for customer service and tracking.
+### Settings API - Campi da aggiungere:
 
-**Required Changes:**
-- **Implement extraction of the actual NoRisk-generated quote code**
-- Display this code to the client in their quote summary
-- Store it in the database for future reference and support inquiries
-- Use this code when communicating with NoRisk support
+Per ogni copertura (cancellation, liability, equipment, money, accidents):
+- `{coverage}_modal_title` - Titolo del modale
+- `{coverage}_modal_include` - Cosa include (textarea)
+- `{coverage}_modal_exclude` - Cosa esclude (textarea)
 
-**Technical Approach:**
-- Inspect the NoRisk proposal page HTML for the quote code element
-- Add extraction logic to `automation/scraper.js`
-- Update the database schema and API response to include this field
+### Frontend - Comportamento:
 
-**Open Questions:**
-- Where exactly does NoRisk display the official quote code in their interface?
-- Is this code available immediately or only after email confirmation?
-- Should this replace or supplement our internal quote reference?
-
----
-
-### 2. iCloud Notes Integration
-
-**Current Issue:** There appears to be a need to integrate with iCloud Notes for some aspect of the workflow (possibly for manual tracking or client notes).
-
-**Required Changes:**
-- **Clarify and implement iCloud Notes integration**
-- Determine if this is for internal tracking, client communication, or audit purposes
-- Investigate Apple iCloud API capabilities for programmatic access
-
-**Open Questions:**
-- What specific data needs to be synced to iCloud Notes?
-- Is this for automated logging or manual user notes?
-- Are there authentication requirements for iCloud API access?
-- Could this be replaced with a simpler internal notes system?
-
----
-
-## Communication & Support Tasks
-
-### 1. Respond to claudeusus Inquiry
-
-**Current Issue:** There is a pending response needed to a user or entity referred to as "claudeusus".
-
-**Required Changes:**
-- **Respond to the claudeusus inquiry**
-- Review previous communications to understand the context
-- Provide appropriate technical or administrative response
-
-**Action Items:**
-- Locate the original message or request from claudeusus
-- Determine the appropriate response channel (email, GitHub, internal system)
-- Draft and send response with relevant information
-
----
-
-## Questions for Further Expansion
-
-To better prioritize and implement these fixes, please clarify the following:
-
-### Priority & Business Logic
-1. **What is the current priority ranking** of these fixes? Are any blocking production use?
-2. **Should the €15 fee be visible as a separate line item** on the quote, or incorporated into the total price?
-3. **Is the Loss of Profit amount always in euros**, or does it need currency conversion for international events?
-
-### Technical Specifications
-4. **Where in the NoRisk response can we find** the official quote number (53094 format)?
-5. **What is the intended use case for iCloud Notes integration** - internal tracking or client-facing feature?
-6. **Are there specific branding guidelines** for which images/logos should appear on quotes?
-
-### User Experience
-7. **Should the Terms & Conditions link open in a new tab** or download the PDF directly?
-8. **Is there a need for quote expiration notifications** or follow-up automation?
-9. **Should customers receive a copy** of the official NoRisk quote PDF, or only our formatted version?
-
-### Administrative
-10. **Who is "claudeusus" and what is the nature** of the pending inquiry?
-11. **Are there compliance requirements** for how we display insurance pricing and terms in Italy?
-12. **Should the WordPress settings include a "test mode"** flag for sandbox vs production API calls?
-
----
-
-## Implementation Status Tracking
-
-| Fix # | Description | Status | Assigned | Target Date |
-|-------|-------------|--------|----------|-------------|
-| 1 | Quote Document Images | Pending | TBD | TBD |
-| 2 | €15 Service Fee | Pending | TBD | TBD |
-| 3 | Loss of Profit Amount | Pending | TBD | TBD |
-| 4 | Quote Number Format | Pending | TBD | TBD |
-| 5 | Terms & Conditions Link | Pending | TBD | TBD |
-| 6 | Remove Duplicate Timeout | Pending | TBD | TBD |
-| 7 | WordPress Italian Translation | Pending | TBD | TBD |
-| 8 | Extract NoRisk Quote Code | Pending | TBD | TBD |
-| 9 | iCloud Notes Integration | Pending | TBD | TBD |
-| 10 | Respond to claudeusus | Pending | TBD | TBD |
-
----
-
-*Last Updated: February 22, 2026*
-*Document Version: 2.0*
-
-
-
-```
-Fix #2 — €15 service fee: how should it appear in the quote shown to the customer?
-Silently added into the total (not itemised)
-Fix #3 — Loss of Profit specific amount (e.g. €3,000): do you know where it appears in the NoRisk HTML? Or should I look it up from the saved files in norisk/private/?
-it is given in input by the user at the beginning, when compiling the form, but you can also investigate in the index.js of the scraper
-Fix #4 — short quote number (e.g. '53094'): where does NoRisk expose it? In the page HTML, in the URL, or only in the email they send?
-this must be retrieved in the following way: when the scraper reads the final prices and navigates to the "your details" page (last page), if the .env var "COMPLETED" is set to false, it will navigate back to the main page where all the saved quotes are listed (https://verzekeren.norisk.eu/agents) and look for an element like this one <div><a href="https://verzekeren.norisk.eu/agents/proposal/3fa9231d-b2e1-4e53-a375-78da4944ed8c" class="hover:underline">NR000053118</a></div> which will contain the code (NR000053118). Note that if you can find a selector for this, you can just save the link of the page before navigating back to the main list of quotes and search for it in the HTML since as you can see the quote code is an a element that redirects to that same link
-Fix #9 — iCloud Notes integration is very vague. What should it actually do?
-Skip it — not a real requirement yet
+```html
+<!-- Esempio struttura HTML per ogni coverage item -->
+<div class="norisk-coverage-item">
+    <label class="norisk-coverage-toggle">
+        <input type="checkbox" id="coverage_cancellation">
+        <span class="norisk-coverage-title">Costi di Annullamento</span>
+    </label>
+    <!-- Pulsante modale -->
+    <button type="button" class="norisk-info-btn" data-coverage="cancellation" aria-label="Maggiori informazioni">
+        <svg><!-- icona punto di domanda --></svg>
+    </button>
+</div>
 ```
 
+### Modale - Struttura HTML:
+
+```html
+<div id="norisk-modal-overlay" class="norisk-modal-overlay">
+    <div class="norisk-modal" role="dialog" aria-modal="true">
+        <button class="norisk-modal-close" aria-label="Chiudi">&times;</button>
+        <h3 class="norisk-modal-title"></h3>
+        <div class="norisk-modal-content">
+            <div class="norisk-modal-section">
+                <h4>Cosa include</h4>
+                <div class="norisk-modal-include"></div>
+            </div>
+            <div class="norisk-modal-section">
+                <h4>Cosa esclude</h4>
+                <div class="norisk-modal-exclude"></div>
+            </div>
+        </div>
+    </div>
+</div>
 ```
-Implementation Plan
-Fix 1 — Quote Document Visual Enhancements
-File: page-preventivo.php
 
-Add the broker logo (WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg) to the quote result header
-Add the event photo (WhatsApp-Image-2026-02-21-at-14.56.38.jpeg) below the header in the result section
-Ensure images are not suppressed by @media print CSS, so they appear in the PDF/print output
-Both image URLs are already known from fixes.md
-Fix 2 — €15 Service Fee (silently added to total)
-File: page-preventivo.php
+### Modale - CSS (Mobile First):
 
-In the JavaScript quote-result handler (around line 1057), when computing finalPrice from pricing.toPay, add 15 before formatting and display
-Add a service_fee setting in functions.php (default 15) so it can be changed from admin without a code deploy — even though it isn't shown as a line item
-Fix 3 — Loss of Profit: show user-entered profit_estimate
-Files: page-preventivo.php
+```css
+.norisk-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: flex-end; /* Mobile: modale dal basso */
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+.norisk-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.norisk-modal {
+    background: white;
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    padding: 24px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    overflow-y: auto;
+}
+.norisk-modal-overlay.active .norisk-modal {
+    transform: translateY(0);
+}
 
-The profit_estimate field is already in the form (line 287) but it is not passed through in the coverage object that gets serialised with the request
-Ensure profit_estimate is included in the coverage data that is sent to the API and stored in formData
-In the quote result block (line 1091), replace the hardcoded "fino al 50%" with the formatted value of formData.coverages.profit_estimate (falling back to "fino al 50%" if not provided)
-Fix 4 + Fix 8 — Extract Official NoRisk Quote Code (NR000053118 format)
-File: scraper.js
-
-After the scraper reaches the Your Details page and extracts quoteKey from the URL:
-Save detailsUrl
-Navigate to https://verzekeren.norisk.eu/agents
-Wait for the page to load
-Find a[href*="proposal/{quoteKey UUID}"] — the text content is the NR code (e.g. NR000053118)
-Navigate back to detailsUrl
-Return noriskQuoteCode in the result object
-File: index.js — include noriskQuoteCode in the API JSON response
-File: page-preventivo.php — display the NR code instead of (or alongside) the internal quoteKey in the result section
-Fix 5 — Terms & Conditions URL in WordPress Settings
-Files: functions.php, page-preventivo.php
-
-Add terms_url key in norisk_get_options() defaults, pointing to the known PDF URL
-Register the field in Section A (alongside privacy_url)
-Add it to norisk_sanitize_options() with esc_url_raw
-Reference it in page-preventivo.php wherever the T&C link is shown to the user
-Fix 6 — Remove Duplicate API Timeout Field
-File: functions.php
-
-Remove api_timeout_ms from norisk_get_options() defaults, the settings registration, and norisk_sanitize_options()
-Keep api_timeout (seconds) as the single source; any PHP code that needs milliseconds will compute $opts['api_timeout'] * 1000
-Confirm nothing in page-preventivo.php or the proxy helpers references api_timeout_ms directly
-Fix 7 — WordPress Admin Italian Localization
-File: functions.php
-
-Translate all field labels in $text_fields, $coverage_fields, $number_fields, and the API section from English → Italian
-Translate section headings ('Texts & Labels' → 'Testi ed Etichette', 'Coverage Sections' → 'Sezioni Copertura', etc.)
-Translate the submit_button label ('Save Settings' → 'Salva Impostazioni')
-Wrap strings in __( '...', 'norisk' ) for proper i18n support
-Fixes 9 & 10 — Skipped
-iCloud Notes: deferred (no requirement yet)
-claudeusus: not a code change
-Suggested execution order:
-
-Fix 6 (remove duplicate setting — no-risk, isolated change)
-Fix 5 (T&C URL — additive, isolated)
-Fix 7 (Italian labels — no logic changes)
-Fix 3 (Loss of Profit display — clear, self-contained)
-Fix 2 (€15 fee — single calculation change)
-Fix 4/8 (NR quote code — most complex, touches scraper + API + frontend)
-Fix 1 (images/branding — visual only, goes last)
-Shall I proceed with implementation starting from Fix 6, or do you want to adjust priorities first?
+/* Desktop: modale centrato */
+@media (min-width: 768px) {
+    .norisk-modal-overlay {
+        align-items: center;
+    }
+    .norisk-modal {
+        width: 90%;
+        max-width: 600px;
+        border-radius: 8px;
+        max-height: 80vh;
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    .norisk-modal-overlay.active .norisk-modal {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
 ```
+
+### Modale - JavaScript:
+
+```javascript
+// Apertura modale
+document.querySelectorAll('.norisk-info-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const coverage = this.dataset.coverage;
+        const title = CONFIG[`${coverage.toUpperCase()}_MODAL_TITLE`];
+        const include = CONFIG[`${coverage.toUpperCase()}_MODAL_INCLUDE`];
+        const exclude = CONFIG[`${coverage.toUpperCase()}_MODAL_EXCLUDE`];
+
+        document.querySelector('.norisk-modal-title').textContent = title;
+        document.querySelector('.norisk-modal-include').innerHTML = include;
+        document.querySelector('.norisk-modal-exclude').innerHTML = exclude;
+
+        document.getElementById('norisk-modal-overlay').classList.add('active');
+        document.body.style.overflow = 'hidden'; // Blocca scroll
+    });
+});
+
+// Chiusura modale (click su overlay o pulsante X)
+document.getElementById('norisk-modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this || e.target.closest('.norisk-modal-close')) {
+        this.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+});
+
+// Chiusura con tasto ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.getElementById('norisk-modal-overlay').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+});
+```
+
+### Configurazione JS (passata da PHP):
+
+```php
+// In page-preventivo.php, aggiungere a CONFIG:
+const CONFIG = {
+    // ... esistente ...
+    CANCELLATION_MODAL_TITLE: '<?php echo esc_js($norisk['cancellation_modal_title']); ?>',
+    CANCELLATION_MODAL_INCLUDE: '<?php echo esc_js($norisk['cancellation_modal_include']); ?>',
+    CANCELLATION_MODAL_EXCLUDE: '<?php echo esc_js($norisk['cancellation_modal_exclude']); ?>',
+    // ... ripetere per ogni copertura ...
+};
+```
+
+---
+
+## Fix 9 - Contatti Golinucci Configurabili (NUOVO)
+
+**Obiettivo:** Aggiungere contatti Golinucci configurabili da Settings API e mostrarli nel PDF.
+
+### Settings API - Campi da aggiungere:
+
+```php
+$contact_fields = [
+    'contact_email' => [
+        'label' => 'Email contatti',
+        'default' => 'eventi@golinucci.it'
+    ],
+    'contact_phone' => [
+        'label' => 'Telefono contatti',
+        'default' => ''
+    ],
+    'contact_show_in_pdf' => [
+        'label' => 'Mostra contatti nel PDF',
+        'default' => true
+    ]
+];
+```
+
+### Visualizzazione nel PDF (sezione footer):
+
+```html
+<div class="norisk-pdf-contacts">
+    <div class="norisk-pdf-contact-item">
+        <strong>Per informazioni e acquisto:</strong><br>
+        Email: <a href="mailto:<?php echo esc_attr($norisk['contact_email']); ?>">
+            <?php echo esc_html($norisk['contact_email']); ?></a><br>
+        <?php if ($norisk['contact_phone']): ?>
+        Tel: <?php echo esc_html($norisk['contact_phone']); ?>
+        <?php endif; ?>
+    </div>
+</div>
+```
+
+### CSS per stampa:
+
+```css
+@media print {
+    .norisk-pdf-contacts {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+    .norisk-pdf-contacts a {
+        color: #000;
+        text-decoration: none;
+    }
+}
+```
+
+---
+
+## Riepilogo Campi Settings API da Aggiungere
+
+| Campo | Tipo | Default |
+|-------|------|---------|
+| `service_fee` | number | 15 |
+| `terms_url` | url | https://golinucci.it/wp-content/uploads/2026/02/Terms-conditions-event-insurance-ITA.pdf |
+| `contact_email` | email | eventi@golinucci.it |
+| `contact_phone` | text | '' |
+| `contact_show_in_pdf` | checkbox | true |
+| `cancellation_modal_title` | text | 'Costi di Annullamento' |
+| `cancellation_modal_include` | textarea | '' |
+| `cancellation_modal_exclude` | textarea | '' |
+| `liability_modal_title` | text | 'Responsabilità Civile' |
+| `liability_modal_include` | textarea | '' |
+| `liability_modal_exclude` | textarea | '' |
+| `equipment_modal_title` | text | 'Attrezzature' |
+| `equipment_modal_include` | textarea | '' |
+| `equipment_modal_exclude` | textarea | '' |
+| `money_modal_title` | text | 'Denaro' |
+| `money_modal_include` | textarea | '' |
+| `money_modal_exclude` | textarea | '' |
+| `accidents_modal_title` | text | 'Infortuni' |
+| `accidents_modal_include` | textarea | '' |
+| `accidents_modal_exclude` | textarea | '' |
+
+---
+
+## Ordine di Implementazione Suggerito
+
+1. **Fix 6** - Rimuovi duplicato API timeout (isolated, no-risk)
+2. **Fix 5** - T&C URL Settings API (isolated)
+3. **Fix 9** - Contatti configurabili (isolated)
+4. **Fix 7** - Traduzioni italiane (no logic changes)
+5. **Fix 8** - Modale coperture (nuova feature)
+6. **Fix 3** - Perdita profitto importo (data flow)
+7. **Fix 2** - Fee €15 (single calc change)
+8. **Fix 4** - Codice NR (scraper + API + frontend)
+9. **Fix 1** - Immagini PDF (visual only)
