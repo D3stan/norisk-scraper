@@ -434,7 +434,7 @@ $norisk = norisk_get_options();
 <script>
 // CONFIGURATION
 const CONFIG = {
-    AJAX_URL: '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>',
+    AJAX_URL: '/wp-admin/admin-ajax.php',
     API_TIMEOUT_MS: <?php echo (int) $norisk['api_timeout'] * 1000; ?>,
     MIN_DAYS_ADVANCE: <?php echo (int) $norisk['min_days_advance']; ?>,
     NEW_QUOTE_BTN_TEXT: '<?php echo esc_js( $norisk['new_quote_btn_text'] ); ?>',
