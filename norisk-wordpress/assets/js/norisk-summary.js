@@ -7,6 +7,18 @@
  * - norisk-coverage.js
  */
 
+/**
+ * Sanitize user input to prevent XSS
+ * @param {string} str - User input string
+ * @returns {string} - Sanitized string safe for HTML insertion
+ */
+function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // Show summary of quote with user information
 function showSummary(result, formData) {
     const form = document.getElementById('eventForm');
@@ -130,9 +142,9 @@ function showSummary(result, formData) {
         `;
     }
 
-    // Build full address strings
-    const companyAddress = `${formData.company_address} ${formData.company_house_number}, ${formData.company_zipcode} ${formData.company_city}`;
-    const eventAddress = `${formData.address} ${formData.houseNumber}, ${formData.zipcode} ${formData.city}`;
+    // Build full address strings (escape user input)
+    const companyAddress = `${escapeHtml(formData.company_address)} ${escapeHtml(formData.company_house_number)}, ${escapeHtml(formData.company_zipcode)} ${escapeHtml(formData.company_city)}`;
+    const eventAddress = `${escapeHtml(formData.address)} ${escapeHtml(formData.houseNumber)}, ${escapeHtml(formData.zipcode)} ${escapeHtml(formData.city)}`;
 
     // Use config for image URLs with fallbacks to hardcoded values
     const logoUrl = window.noriskConfig.LOGO_URL || 'https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg';
@@ -151,7 +163,7 @@ function showSummary(result, formData) {
             <h3>Chi si assicura</h3>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Contraente</span>
-                <span class="norisk-summary-value">${formData.company_name || 'N/A'}</span>
+                <span class="norisk-summary-value">${escapeHtml(formData.company_name) || 'N/A'}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Indirizzo</span>
@@ -163,7 +175,7 @@ function showSummary(result, formData) {
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Assicurato(i)</span>
-                <span class="norisk-summary-value">${formData.company_name || 'N/A'}</span>
+                <span class="norisk-summary-value">${escapeHtml(formData.company_name) || 'N/A'}</span>
             </div>
         </div>
 
@@ -171,7 +183,7 @@ function showSummary(result, formData) {
             <h3>Informazioni Evento</h3>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Titolo dell'evento</span>
-                <span class="norisk-summary-value">${formData.eventName}</span>
+                <span class="norisk-summary-value">${escapeHtml(formData.eventName)}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Tipo di evento</span>
@@ -179,7 +191,7 @@ function showSummary(result, formData) {
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Descrizione</span>
-                <span class="norisk-summary-value">${formData.description}</span>
+                <span class="norisk-summary-value">${escapeHtml(formData.description)}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Primo giorno dell&#39;evento</span>
@@ -191,7 +203,7 @@ function showSummary(result, formData) {
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Posizione</span>
-                <span class="norisk-summary-value">${formData.venueDescription || 'N/A'}</span>
+                <span class="norisk-summary-value">${escapeHtml(formData.venueDescription) || 'N/A'}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Indirizzo</span>
