@@ -35,6 +35,8 @@ function norisk_get_options(): array {
         'privacy_label'          => 'Ho letto e accetto l\'informativa sulla privacy',
         'privacy_url'            => '/privacy-policy',
         'terms_url'              => 'https://golinucci.it/wp-content/uploads/2026/02/Terms-conditions-event-insurance-ITA.pdf',
+        'logo_url'               => 'https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg',
+        'event_image_url'        => 'https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38.jpeg',
         'new_quote_btn_text'     => 'Richiedi Nuovo Preventivo',
         'print_btn_text'         => 'Stampa / Salva PDF',
         'section_personal_title' => 'Informazioni Personali',
@@ -242,6 +244,8 @@ function norisk_register_settings(): void {
         'section_location_title' => 'Titolo Sezione Location',
         'section_coverage_title' => 'Titolo Sezione Coperture',
         'coverage_note'          => 'Nota Introduttiva Coperture',
+        'logo_url'               => 'URL Logo (Preventivo)',
+        'event_image_url'        => 'URL Immagine Evento (Preventivo)',
     ];
 
     foreach ( $text_fields as $key => $label ) {
@@ -396,9 +400,11 @@ function norisk_sanitize_options( $input ): array {
     }
 
     // URL fields
-    $sanitized['privacy_url']  = esc_url_raw( $input['privacy_url']  ?? '/privacy-policy' );
-    $sanitized['terms_url']    = esc_url_raw( $input['terms_url']    ?? '' );
-    $sanitized['api_base_url'] = esc_url_raw( $input['api_base_url'] ?? '' );
+    $sanitized['privacy_url']     = esc_url_raw( $input['privacy_url']     ?? '/privacy-policy' );
+    $sanitized['terms_url']       = esc_url_raw( $input['terms_url']       ?? '' );
+    $sanitized['api_base_url']    = esc_url_raw( $input['api_base_url']    ?? '' );
+    $sanitized['logo_url']        = esc_url_raw( $input['logo_url']        ?? 'https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg' );
+    $sanitized['event_image_url'] = esc_url_raw( $input['event_image_url'] ?? 'https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38.jpeg' );
 
     // Integer fields
     $int_fields = [
