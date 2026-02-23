@@ -59,8 +59,10 @@ function norisk_get_options(): array {
         // Business
         'service_fee'                    => 15,
         // API
-        'api_base_url' => 'http://api.wordpress.home/api',
-        'api_timeout'  => 120,
+        'api_base_url'     => 'http://api.wordpress.home/api',
+        'api_timeout'      => 120,
+        // Debug
+        'show_debug_panel' => 0,
     ] );
 }
 
@@ -300,6 +302,10 @@ function norisk_register_settings(): void {
 
     add_settings_field( 'api_base_url', 'URL Base API',         'norisk_render_text_field',   'norisk-settings', 'norisk_api', [ 'key' => 'api_base_url' ] );
     add_settings_field( 'api_timeout',  'Timeout API (secondi)', 'norisk_render_number_field', 'norisk-settings', 'norisk_api', [ 'key' => 'api_timeout' ] );
+
+    // ----- Sezione E: Debug -----
+    add_settings_section( 'norisk_debug', 'Debug', '__return_false', 'norisk-settings' );
+    add_settings_field( 'show_debug_panel', 'Mostra pannello debug (solo amministratori)', 'norisk_render_checkbox_field', 'norisk-settings', 'norisk_debug', [ 'key' => 'show_debug_panel' ] );
 }
 
 /**
@@ -384,6 +390,7 @@ function norisk_sanitize_options( $input ): array {
     $checkbox_fields = [
         'show_coverage_cancellation', 'show_coverage_liability',
         'show_coverage_equipment', 'show_coverage_money', 'show_coverage_accidents',
+        'show_debug_panel',
     ];
     foreach ( $checkbox_fields as $key ) {
         $sanitized[ $key ] = isset( $input[ $key ] ) ? 1 : 0;

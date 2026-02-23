@@ -1440,7 +1440,7 @@ function resetForm() {
 }
 </script>
 
-<?php if ( current_user_can( 'administrator' ) ): ?>
+<?php if ( current_user_can( 'administrator' ) && ! empty( $norisk['show_debug_panel'] ) ): ?>
 <!-- TEMPORARY DEBUG TOOLS -->
 <script>
 (function() {
