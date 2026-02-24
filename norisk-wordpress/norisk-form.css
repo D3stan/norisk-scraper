@@ -335,6 +335,97 @@ input[type="checkbox"], input[type="radio"] {
     color: var(--text-muted);
 }
 
+/* =========================================
+   Coverage Info Modal
+   ========================================= */
+
+.norisk-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+}
+
+.norisk-modal-overlay.active {
+    display: flex;
+}
+
+.norisk-modal {
+    background: var(--bg-white);
+    border-radius: var(--radius-sm);
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.norisk-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+}
+
+.norisk-modal-close:hover {
+    color: var(--text-main);
+}
+
+.norisk-modal-title {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 24px 0;
+    padding-right: 32px;
+}
+
+.norisk-modal-content {
+    font-size: 15px;
+    color: var(--text-body);
+    line-height: 1.6;
+}
+
+.norisk-modal-section {
+    margin-bottom: 20px;
+}
+
+.norisk-modal-section:last-child {
+    margin-bottom: 0;
+}
+
+.norisk-modal-section h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--brand-primary);
+    margin: 0 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--brand-primary-faint);
+}
+
+.norisk-modal-include,
+.norisk-modal-exclude {
+    color: var(--text-body);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
 /* Results Section */
 .norisk-results {
     display: none;

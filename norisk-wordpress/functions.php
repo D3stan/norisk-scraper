@@ -25,7 +25,7 @@ add_action('wp_enqueue_scripts', 'norisk_enqueue_form_styles');
               'norisk-form-style',
               get_stylesheet_directory_uri() . '/norisk-form.css',
               array('parent-style'),
-              '1.0.0'
+              '1.0.1'
           );
       }
   }

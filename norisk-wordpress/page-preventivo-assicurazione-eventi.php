@@ -143,8 +143,6 @@ get_header();
                         <option value="4">Culturale</option>
                         <option value="5">Aziendale</option>
                         <option value="6">Privato / Festa</option>
-                        <option value="7">Matrimonio</option>
-                        <option value="8">Altro</option>
                     </select>
                 </div>
             </div>
@@ -436,7 +434,7 @@ get_header();
         <button type="submit" class="norisk-submit-btn"><?php echo esc_html( $norisk['submit_btn_text'] ); ?></button>
 
     <!-- Modal Informazioni Coperture -->
-    <div id="norisk-modal-overlay" class="norisk-modal-overlay">
+    <div id="norisk-modal-overlay" class="norisk-modal-overlay" style="display:none;">
         <div class="norisk-modal" role="dialog" aria-modal="true">
             <button type="button" class="norisk-modal-close" aria-label="Chiudi">&times;</button>
             <h3 class="norisk-modal-title"></h3>
@@ -849,7 +847,7 @@ document.querySelectorAll('.norisk-info-btn').forEach(btn => {
         modal.querySelector('.norisk-modal-include').innerHTML = include;
         modal.querySelector('.norisk-modal-exclude').innerHTML = exclude;
 
-        modal.classList.add('active');
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     });
 });
@@ -857,7 +855,7 @@ document.querySelectorAll('.norisk-info-btn').forEach(btn => {
 // Close modal handlers
 document.getElementById('norisk-modal-overlay').addEventListener('click', function(e) {
     if (e.target === this || e.target.closest('.norisk-modal-close')) {
-        this.classList.remove('active');
+        this.style.display = 'none';
         document.body.style.overflow = '';
     }
 });
@@ -865,8 +863,8 @@ document.getElementById('norisk-modal-overlay').addEventListener('click', functi
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         const modal = document.getElementById('norisk-modal-overlay');
-        if (modal.classList.contains('active')) {
-            modal.classList.remove('active');
+        if (modal.style.display === 'flex') {
+            modal.style.display = 'none';
             document.body.style.overflow = '';
         }
     }
