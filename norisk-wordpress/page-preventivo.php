@@ -35,10 +35,6 @@ $norisk = norisk_get_options();
 /* Pulsante info copertura */
 .norisk-coverage-item {
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
 }
 .norisk-info-btn {
     background: none;
@@ -49,6 +45,7 @@ $norisk = norisk_get_options();
     opacity: 0.7;
     transition: opacity 0.2s;
     flex-shrink: 0;
+    margin-left: auto;
 }
 .norisk-info-btn:hover {
     opacity: 1;
@@ -394,10 +391,10 @@ $norisk = norisk_get_options();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_cancellation" name="coverage_cancellation" value="1">
                     <span class="norisk-coverage-title">Costi di Annullamento</span>
+                    <button type="button" class="norisk-info-btn" data-coverage="cancellation" aria-label="Maggiori informazioni">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </button>
                 </label>
-                <button type="button" class="norisk-info-btn" data-coverage="cancellation" aria-label="Maggiori informazioni">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                </button>
                 <div class="norisk-coverage-options" id="options_cancellation">
                     <div class="norisk-form-group">
                         <label for="cancellation_total_cost">Qual è il costo totale per organizzare questo evento?</label>
@@ -449,10 +446,10 @@ $norisk = norisk_get_options();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_liability" name="coverage_liability" value="1">
                     <span class="norisk-coverage-title">Responsabilità Civile</span>
+                    <button type="button" class="norisk-info-btn" data-coverage="liability" aria-label="Maggiori informazioni">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </button>
                 </label>
-                <button type="button" class="norisk-info-btn" data-coverage="liability" aria-label="Maggiori informazioni">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                </button>
                 <div class="norisk-coverage-options" id="options_liability">
                     <div class="norisk-form-group">
                         <label>Per quale importo vuoi assicurare la tua responsabilità?</label>
@@ -477,10 +474,10 @@ $norisk = norisk_get_options();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_equipment" name="coverage_equipment" value="1">
                     <span class="norisk-coverage-title">Attrezzature</span>
+                    <button type="button" class="norisk-info-btn" data-coverage="equipment" aria-label="Maggiori informazioni">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </button>
                 </label>
-                <button type="button" class="norisk-info-btn" data-coverage="equipment" aria-label="Maggiori informazioni">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                </button>
                 <div class="norisk-coverage-options" id="options_equipment">
                     <div class="norisk-form-group">
                         <label for="equipment_value">Valore del materiale da assicurare</label>
@@ -496,10 +493,10 @@ $norisk = norisk_get_options();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_money" name="coverage_money" value="1">
                     <span class="norisk-coverage-title">Denaro</span>
+                    <button type="button" class="norisk-info-btn" data-coverage="money" aria-label="Maggiori informazioni">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </button>
                 </label>
-                <button type="button" class="norisk-info-btn" data-coverage="money" aria-label="Maggiori informazioni">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                </button>
                 <div class="norisk-coverage-options" id="options_money">
                     <div class="norisk-form-group">
                         <label for="money_amount">Quanto denaro vuoi assicurare ogni giorno?</label>
@@ -515,10 +512,10 @@ $norisk = norisk_get_options();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_accidents" name="coverage_accidents" value="1">
                     <span class="norisk-coverage-title">Infortuni</span>
+                    <button type="button" class="norisk-info-btn" data-coverage="accidents" aria-label="Maggiori informazioni">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </button>
                 </label>
-                <button type="button" class="norisk-info-btn" data-coverage="accidents" aria-label="Maggiori informazioni">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                </button>
                 <div class="norisk-coverage-options" id="options_accidents">
                     <div class="norisk-form-group">
                         <label for="accidents_employees">Numero di dipendenti (in giorni-uomo)</label>

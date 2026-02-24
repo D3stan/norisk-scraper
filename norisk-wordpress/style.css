@@ -454,15 +454,39 @@ input[type="checkbox"], input[type="radio"] {
 .norisk-coverage-toggle {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     padding: 16px 20px;
     background: var(--bg-light);
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
+.norisk-coverage-toggle input[type="checkbox"] {
+    flex-shrink: 0;
+}
+
+.norisk-coverage-toggle .norisk-coverage-title {
+    flex: 0 1 auto;
+}
+
 .norisk-coverage-toggle:hover {
     background: #f0f0f0;
+}
+
+.norisk-info-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--brand-primary);
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.norisk-info-btn:hover {
+    opacity: 1;
 }
 
 .norisk-coverage-title {
