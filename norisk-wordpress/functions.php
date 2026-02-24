@@ -1,19 +1,34 @@
 <?php
 /**
- * Recommended way to include parent theme styles.
- * (Please see http://codex.wordpress.org/Child_Themes#How_to_Create_a_Child_Theme)
+ * NoRisk Child Theme Functions
  *
- */  
-
-add_action( 'wp_enqueue_scripts', 'preventivo_style' );
-                                function preventivo_style() {
-                                        wp_enqueue_style( 'parent-style', get_template_directory_uri() . '/style.css' );
-                                        wp_enqueue_style( 'child-style', get_stylesheet_directory_uri() . '/style.css', array('parent-style') );
-                                }
-
-/**
- * Your code goes below.
+ * Child theme of royal-elementor-kit for NoRisk insurance quote form.
+ * CSS is loaded only on the quote page to avoid conflicts with other pages.
  */
+
+// =========================================
+// 1. Always load parent theme styles
+// =========================================
+add_action( 'wp_enqueue_scripts', 'norisk_enqueue_parent_styles' );
+function norisk_enqueue_parent_styles() {
+    wp_enqueue_style( 'parent-style', get_template_directory_uri() . '/style.css' );
+}
+
+// =========================================
+// 2. Conditionally load NoRisk form styles
+//    Only on the page using our custom template
+// =========================================
+add_action('wp_enqueue_scripts', 'norisk_enqueue_form_styles');
+  function norisk_enqueue_form_styles() {
+      if (is_page('preventivo-assicurazione-eventi')) {
+          wp_enqueue_style(
+              'norisk-form-style',
+              get_stylesheet_directory_uri() . '/norisk-form.css',
+              array('parent-style'),
+              '1.0.0'
+          );
+      }
+  }
 
 // =========================================
 // NoRisk Options Helper
