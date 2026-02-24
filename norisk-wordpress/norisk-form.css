@@ -337,10 +337,13 @@ input[type="checkbox"], input[type="radio"] {
 
 /* =========================================
    Coverage Info Modal
+   All rules anchored to #norisk-modal-overlay (ID specificity)
+   to beat theme class-based overrides without !important.
    ========================================= */
 
-.norisk-modal-overlay {
-    display: none;
+/* The overlay itself — display controlled via inline style by JS,
+   but we keep the layout props here so JS only needs to set display. */
+#norisk-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -350,14 +353,11 @@ input[type="checkbox"], input[type="radio"] {
     z-index: 10000;
     justify-content: center;
     align-items: center;
+    /* display is managed via inline style in HTML + JS */
 }
 
-.norisk-modal-overlay.active {
-    display: flex;
-}
-
-.norisk-modal {
-    background: var(--bg-white);
+#norisk-modal-overlay .norisk-modal {
+    background: #ffffff;
     border-radius: var(--radius-sm);
     padding: 32px;
     max-width: 500px;
@@ -366,61 +366,89 @@ input[type="checkbox"], input[type="radio"] {
     overflow-y: auto;
     position: relative;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    /* reset any theme styles that leak in */
+    box-sizing: border-box;
+    text-align: left;
+    color: var(--text-body);
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
 }
 
-.norisk-modal-close {
+#norisk-modal-overlay .norisk-modal-close {
     position: absolute;
     top: 16px;
     right: 16px;
     background: none;
+    background-color: transparent;
     border: none;
+    box-shadow: none;
     font-size: 24px;
     line-height: 1;
     cursor: pointer;
     color: var(--text-muted);
     padding: 4px;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    display: inline;
+    text-transform: none;
+    letter-spacing: 0;
+    border-radius: 0;
 }
 
-.norisk-modal-close:hover {
+#norisk-modal-overlay .norisk-modal-close:hover {
+    background: none;
+    background-color: transparent;
+    box-shadow: none;
     color: var(--text-main);
 }
 
-.norisk-modal-title {
+#norisk-modal-overlay .norisk-modal-title {
     font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-main);
     margin: 0 0 24px 0;
     padding-right: 32px;
+    padding-bottom: 0;
+    border: none;
+    border-bottom: none;
+    text-transform: none;
+    letter-spacing: normal;
 }
 
-.norisk-modal-content {
+#norisk-modal-overlay .norisk-modal-content {
     font-size: 15px;
     color: var(--text-body);
     line-height: 1.6;
 }
 
-.norisk-modal-section {
+#norisk-modal-overlay .norisk-modal-section {
     margin-bottom: 20px;
 }
 
-.norisk-modal-section:last-child {
+#norisk-modal-overlay .norisk-modal-section:last-child {
     margin-bottom: 0;
 }
 
-.norisk-modal-section h4 {
+/* ID + two classes beats almost every theme rule */
+#norisk-modal-overlay .norisk-modal-section h4 {
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--brand-primary);
     margin: 0 0 8px 0;
-    padding-bottom: 6px;
+    padding: 0 0 6px 0;
+    border: none;
     border-bottom: 1px solid var(--brand-primary-faint);
+    background: none;
+    line-height: 1.4;
 }
 
-.norisk-modal-include,
-.norisk-modal-exclude {
+#norisk-modal-overlay .norisk-modal-include,
+#norisk-modal-overlay .norisk-modal-exclude {
     color: var(--text-body);
     font-size: 14px;
     line-height: 1.7;
@@ -561,9 +589,12 @@ input[type="checkbox"], input[type="radio"] {
     background: #f0f0f0;
 }
 
-.norisk-info-btn {
+/* Anchored to parent class so specificity beats theme button rules */
+.norisk-coverage-toggle .norisk-info-btn {
     background: none;
+    background-color: transparent;
     border: none;
+    box-shadow: none;
     cursor: pointer;
     padding: 4px;
     color: var(--brand-primary);
@@ -571,9 +602,20 @@ input[type="checkbox"], input[type="radio"] {
     transition: opacity 0.2s;
     flex-shrink: 0;
     margin-left: auto;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    text-transform: none;
 }
 
-.norisk-info-btn:hover {
+.norisk-coverage-toggle .norisk-info-btn:hover {
+    background: none;
+    background-color: transparent;
+    box-shadow: none;
     opacity: 1;
 }
 
