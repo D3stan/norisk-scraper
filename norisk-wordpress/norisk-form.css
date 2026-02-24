@@ -1141,16 +1141,20 @@
     .norisk-summary-container .norisk-summary-price {
         break-inside: avoid;
         page-break-inside: avoid;
-        /* Ensure high contrast for price */
-        background: var(--brand-primary) !important;
-        color: white !important;
+        background: #6B1C23 !important;
+        color: #ffffff !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
+    .norisk-summary-container .norisk-summary-price .price-label {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
     .norisk-summary-container .norisk-summary-price .price-value {
+        color: #ffffff !important;
         font-weight: 800 !important;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
     .norisk-summary-container .norisk-summary-header {
@@ -1187,7 +1191,7 @@
     }
 
     .norisk-summary-container .norisk-pdf-contacts a {
-        color: #000 !important;
+        color: #6B1C23 !important;
         text-decoration: none;
     }
 
