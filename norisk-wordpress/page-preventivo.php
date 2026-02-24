@@ -36,6 +36,17 @@ $norisk = norisk_get_options();
 .norisk-coverage-item {
     position: relative;
 }
+
+/* Logo visibile solo in stampa PDF */
+.norisk-pdf-logo {
+    display: none;
+}
+
+@media print {
+    .norisk-pdf-logo {
+        display: block !important;
+    }
+}
 .norisk-info-btn {
     background: none;
     border: none;
@@ -138,18 +149,6 @@ $norisk = norisk_get_options();
     .norisk-modal-overlay,
     .norisk-info-btn {
         display: none !important;
-    }
-    .norisk-summary-header img {
-        display: block !important;
-        max-width: 100%;
-        height: auto;
-    }
-    .norisk-logo-img {
-        max-height: 80px;
-    }
-    .norisk-event-img {
-        max-height: 120px;
-        margin-top: 10px;
     }
 }
 </style>
@@ -618,6 +617,7 @@ const CONFIG = {
     ACCIDENTS_DEATH: <?php echo (int) $norisk['accidents_death']; ?>,
     LIABILITY_DEDUCTIBLE: <?php echo (int) $norisk['liability_deductible']; ?>,
     SERVICE_FEE: <?php echo (int) ( $norisk['service_fee'] ?? 15 ); ?>,
+    LOADING_BAR_DURATION_S: <?php echo (int) ( $norisk['loading_bar_duration'] ?? 30 ); ?>,
     TERMS_URL: '<?php echo esc_js( $norisk['terms_url'] ?? '' ); ?>',
     CONTACT_EMAIL: '<?php echo esc_js( $norisk['contact_email'] ?? 'eventi@golinucci.it' ); ?>',
     // Modal content
@@ -1101,6 +1101,8 @@ form.addEventListener('submit', async function(e) {
 
     // Show loading with progress bar
     loadingOverlay.classList.add('active');
+    // Set animation duration from CONFIG
+    loadingBar.style.setProperty('--loading-duration', CONFIG.LOADING_BAR_DURATION_S + 's');
     loadingBar.classList.add('animating');
     loadingBar.classList.remove('complete');
     loadingBar.style.width = '0%';
@@ -1405,8 +1407,10 @@ function showSummary(result, formData) {
     resultsSection.className = 'norisk-summary-container';
     resultsSection.innerHTML = `
         <div class="norisk-summary-header">
-            <img src="https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg" alt="Golinucci Broker Assicurativo" class="norisk-logo-img" />
-            <img src="https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38.jpeg" alt="Assicurazione Evento" class="norisk-event-img" />
+            <!-- Logo only visible in PDF print -->
+            <div class="norisk-pdf-logo">
+                <img src="https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg" alt="Golinucci Broker Assicurativo" class="norisk-logo-img" />
+            </div>
             <h2>Preventivo Assicurazione Evento</h2>
             <div class="norisk-quote-ref">Riferimento: ${quoteKey}</div>
         </div>
@@ -1477,20 +1481,20 @@ function showSummary(result, formData) {
             <div class="price-value">€ ${finalPrice}</div>
         </div>
 
-        <div class="norisk-summary-footer" style="text-align: center; margin: 24px 0; font-size: 14px; color: var(--text-muted); line-height: 1.8;">
-            <div>Per leggere condizioni polizza : <a href="${CONFIG.TERMS_URL || '#'}" target="_blank" rel="noopener" style="color: var(--brand-primary); text-decoration: underline;">clicca qui</a></div>
-            <div>Per acquistare la polizza o ricevere ulteriori informazioni : <a href="mailto:${CONFIG.CONTACT_EMAIL}" style="color: var(--brand-primary); text-decoration: underline;">${CONFIG.CONTACT_EMAIL}</a></div>
-        </div>
-
-        <?php if ( $norisk['contact_show_in_pdf'] ) : ?>
+        <?php if ( $norisk['contact_show_in_pdf'] || $norisk['terms_url'] ) : ?>
         <div class="norisk-pdf-contacts">
             <div class="norisk-pdf-contact-block">
+                <?php if ( $norisk['terms_url'] ) : ?>
+                <div style="margin-bottom: 8px;">Per leggere condizioni polizza: <a href="<?php echo esc_url( $norisk['terms_url'] ); ?>" target="_blank">clicca qui</a></div>
+                <?php endif; ?>
+                <?php if ( $norisk['contact_email'] || $norisk['contact_phone'] ) : ?>
                 <strong>Per informazioni e acquisto:</strong><br>
+                <?php endif; ?>
                 <?php if ( $norisk['contact_email'] ) : ?>
                 Email: <a href="mailto:<?php echo esc_attr( $norisk['contact_email'] ); ?>"><?php echo esc_html( $norisk['contact_email'] ); ?></a><br>
                 <?php endif; ?>
                 <?php if ( $norisk['contact_phone'] ) : ?>
-                Tel: <?php echo esc_html( $norisk['contact_phone'] ); ?>
+                Tel: <a href="tel:<?php echo esc_attr( preg_replace('/[^0-9+]/', '', $norisk['contact_phone'] ) ); ?>"><?php echo esc_html( $norisk['contact_phone'] ); ?></a>
                 <?php endif; ?>
             </div>
         </div>

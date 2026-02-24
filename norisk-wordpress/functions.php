@@ -62,6 +62,8 @@ function norisk_get_options(): array {
         'liability_deductible'           => 500,
         // Business
         'service_fee'                    => 15,
+        // Loading Bar
+        'loading_bar_duration'           => 30,
         // Contatti
         'contact_email'       => 'eventi@golinucci.it',
         'contact_phone'       => '',
@@ -268,6 +270,16 @@ function norisk_register_settings(): void {
         'coverage_note'          => 'Nota Introduttiva Coperture',
     ];
 
+    // Loading bar duration is a number field, added separately after text fields
+    add_settings_field(
+        'loading_bar_duration',
+        'Durata Barra Caricamento (secondi)',
+        'norisk_render_number_field',
+        'norisk-settings',
+        'norisk_texts',
+        [ 'key' => 'loading_bar_duration' ]
+    );
+
     foreach ( $text_fields as $key => $label ) {
         add_settings_field(
             $key,
@@ -464,7 +476,7 @@ function norisk_sanitize_options( $input ): array {
 
     // Integer fields
     $int_fields = [
-        'min_days_advance', 'api_timeout', 'service_fee',
+        'min_days_advance', 'api_timeout', 'service_fee', 'loading_bar_duration',
         'liability_amount_1', 'liability_amount_2',
         'accidents_permanent_disability', 'accidents_death', 'liability_deductible',
     ];
