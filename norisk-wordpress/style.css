@@ -5,3 +5,1172 @@
  * Text Domain:    preventivo-norisk
  * Description:    Child theme for NoRisk insurance quote form - loads CSS only on quote page
  */
+
+ /* NoRisk Quote Form Styles - Corporate Identity Aligned */
+
+:root {
+    /* Color Palette */
+    --brand-primary: #6B1C23;       /* Burgundy - Buttons, Active States */
+    --brand-primary-hover: #5A181E; /* Darker Burgundy - Hover */
+    --brand-primary-faint: rgba(107, 28, 35, 0.15); /* Tint for backgrounds/dividers */
+
+    --text-main: #2C2C2C;           /* Soft Black - Headings */
+    --text-body: #333333;           /* Standard Body Text */
+    --text-secondary: #555555;      /* Labels */
+    --text-muted: #666666;          /* Helper Text */
+    --text-placeholder: #999999;    /* Placeholders */
+
+    --border-default: #E0E0E0;      /* Inactive Borders */
+    --bg-white: #FFFFFF;
+    --bg-light: #F9F9F9;
+
+    --radius-sm: 3px;               /* Standard Border Radius */
+    --spacing-section: 40px;
+    --spacing-field: 24px;
+}
+
+/* Base Typography & Container */
+.norisk-form-container {
+    max-width: 800px;
+    margin: 0 auto; /* Centered */
+    padding: 40px 20px; /* Restored side padding */
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    color: var(--text-body);
+    line-height: 1.6;
+}
+
+/* Headings */
+.norisk-form-container h1 {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-weight: 800; /* ExtraBold */
+    font-size: 1.875rem; /* ~30px */
+    color: var(--text-main);
+    letter-spacing: 0.5px;
+    margin-bottom: 16px; /* Spacing to subtitle */
+    line-height: 1.3;
+    text-transform: none; /* Sentence case */
+}
+
+/* Subtitles / Lead Text */
+.norisk-form-container p {
+    font-weight: 300; /* Light */
+    font-size: 16px;
+    color: var(--text-body);
+    margin-bottom: var(--spacing-section);
+}
+
+.norisk-form-container .norisk-form-section {
+    margin-bottom: var(--spacing-section);
+    background: transparent;
+}
+
+.norisk-form-container .norisk-form-section h3 {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 1.25rem; /* 20px */
+    font-weight: 600; /* SemiBold */
+    color: var(--text-main);
+    margin-bottom: 24px;
+    padding-bottom: 10px;
+    position: relative;
+    border-bottom: none; /* Remove full width border */
+}
+
+/* Custom Burgundy Underline for Sections */
+.norisk-form-container .norisk-form-section h3::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 60px;
+    height: 2px;
+    background-color: var(--brand-primary);
+}
+
+/* Form Grid */
+.norisk-form-container .norisk-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: var(--spacing-field);
+}
+
+@media (max-width: 640px) {
+    .norisk-form-container .norisk-form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.norisk-form-container .norisk-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.norisk-form-container .norisk-form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Labels */
+.norisk-form-container .norisk-form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500; /* Medium */
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* Required Asterisk */
+.norisk-form-container .norisk-form-group label::after {
+    /* If you want to target the asterisk explicitly in HTML, use a span.
+       If the HTML has text content "Label *", we can't style just the * easily with CSS unless it's wrapped.
+       For this CSS, we assume the HTML structure provided might not have spans.
+       However, if we could, color: var(--brand-primary) would be applied to the asterisk.
+    */
+}
+
+/* Inputs & Selects */
+.norisk-form-container .norisk-form-group input[type="text"],
+.norisk-form-container .norisk-form-group input[type="email"],
+.norisk-form-container .norisk-form-group input[type="tel"],
+.norisk-form-container .norisk-form-group input[type="number"],
+.norisk-form-container .norisk-form-group input[type="date"],
+.norisk-form-container .norisk-form-group select,
+.norisk-form-container .norisk-form-group textarea {
+    display: block;
+    width: 100%;
+    height: 48px; /* Fixed height */
+    padding: 12px 16px;
+    font-size: 16px; /* Prevent iOS zoom */
+    font-family: inherit;
+    color: var(--text-body);
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    box-shadow: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+    appearance: none; /* Remove default styling */
+    -webkit-appearance: none;
+}
+
+.norisk-form-container .norisk-form-group textarea {
+    height: auto;
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Placeholders */
+.norisk-form-container .norisk-form-group input::placeholder,
+.norisk-form-container .norisk-form-group textarea::placeholder {
+    color: var(--text-placeholder);
+    font-style: italic;
+    opacity: 1;
+}
+
+/* Focus States */
+.norisk-form-container .norisk-form-group input:focus,
+.norisk-form-container .norisk-form-group select:focus,
+.norisk-form-container .norisk-form-group textarea:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px rgba(107, 28, 35, 0.1); /* Subtle burgundy glow */
+}
+
+/* Custom Select Arrow */
+.norisk-form-container .norisk-form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%236B1C23' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+/* Number Input Spinners Removal */
+.norisk-form-container .norisk-form-group input[type="number"]::-webkit-inner-spin-button,
+.norisk-form-container .norisk-form-group input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.norisk-form-container .norisk-form-group input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Radios & Checkboxes */
+.norisk-form-container .norisk-radio-group {
+    display: flex;
+    gap: 24px;
+    margin-top: 8px;
+}
+
+.norisk-form-container .norisk-radio-group label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 400; /* Regular */
+    color: var(--text-body);
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.norisk-form-container .norisk-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.norisk-form-container .norisk-checkbox-group label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 400;
+    color: var(--text-body);
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.norisk-form-container input[type="checkbox"],
+.norisk-form-container input[type="radio"] {
+    accent-color: var(--brand-primary);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+}
+
+/* Submit Button */
+.norisk-form-container .norisk-submit-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    min-width: 200px;
+    padding: 16px 32px;
+    background-color: var(--brand-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.norisk-form-container .norisk-submit-btn:hover {
+    background-color: var(--brand-primary-hover);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.norisk-form-container .norisk-submit-btn:disabled {
+    background-color: var(--text-placeholder);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .norisk-form-container .norisk-submit-btn {
+        width: 100%;
+    }
+}
+
+/* Loading Overlay */
+.norisk-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.norisk-loading-overlay.active {
+    display: flex;
+}
+
+/* Loading Bar Container */
+.norisk-loading-bar-container {
+    width: 300px;
+    max-width: 80%;
+    height: 8px;
+    background: var(--border-default);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.norisk-loading-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brand-primary) 0%, #8B2C33 100%);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease-out;
+}
+
+.norisk-loading-bar {
+    /* Default duration, overridden by JavaScript from CONFIG */
+    --loading-duration: 30s;
+}
+
+.norisk-loading-bar.animating {
+    animation: norisk-progress var(--loading-duration) linear forwards;
+}
+
+.norisk-loading-bar.complete {
+    width: 100% !important;
+    animation: none;
+    transition: width 0.3s ease-out;
+}
+
+@keyframes norisk-progress {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+.norisk-loading-text {
+    margin-top: 24px;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.norisk-loading-subtext {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* =========================================
+   Coverage Info Modal
+   All rules anchored to #norisk-modal-overlay (ID specificity)
+   to beat theme class-based overrides without !important.
+   ========================================= */
+
+/* The overlay itself — display controlled via inline style by JS,
+   but we keep the layout props here so JS only needs to set display. */
+#norisk-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    /* display is managed via inline style in HTML + JS */
+}
+
+#norisk-modal-overlay .norisk-modal {
+    background: #ffffff;
+    border-radius: var(--radius-sm);
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    /* reset any theme styles that leak in */
+    box-sizing: border-box;
+    text-align: left;
+    color: var(--text-body);
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+#norisk-modal-overlay .norisk-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    display: inline;
+    text-transform: none;
+    letter-spacing: 0;
+    border-radius: 0;
+}
+
+#norisk-modal-overlay .norisk-modal-close:hover {
+    background: none;
+    background-color: transparent;
+    box-shadow: none;
+    color: var(--text-main);
+}
+
+#norisk-modal-overlay .norisk-modal-title {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 24px 0;
+    padding-right: 32px;
+    padding-bottom: 0;
+    border: none;
+    border-bottom: none;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+#norisk-modal-overlay .norisk-modal-content {
+    font-size: 15px;
+    color: var(--text-body);
+    line-height: 1.6;
+}
+
+#norisk-modal-overlay .norisk-modal-section {
+    margin-bottom: 20px;
+}
+
+#norisk-modal-overlay .norisk-modal-section:last-child {
+    margin-bottom: 0;
+}
+
+/* ID + two classes beats almost every theme rule */
+#norisk-modal-overlay .norisk-modal-section h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--brand-primary);
+    margin: 0 0 8px 0;
+    padding: 0 0 6px 0;
+    border: none;
+    border-bottom: 1px solid var(--brand-primary-faint);
+    background: none;
+    line-height: 1.4;
+}
+
+#norisk-modal-overlay .norisk-modal-include,
+#norisk-modal-overlay .norisk-modal-exclude {
+    color: var(--text-body);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* Results Section */
+.norisk-form-container .norisk-results {
+    display: none;
+    padding: 40px;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-default);
+    text-align: center;
+    margin-top: 40px;
+}
+
+.norisk-form-container .norisk-results.active {
+    display: block;
+}
+
+.norisk-form-container .norisk-results h2 {
+    color: var(--text-main);
+    margin-bottom: 24px;
+}
+
+.norisk-form-container .norisk-results.success {
+    border-top: 4px solid var(--brand-primary);
+}
+
+.norisk-form-container .norisk-results.error {
+    border-top: 4px solid #dc2626;
+}
+
+/* Error state - single button styling */
+.norisk-form-container .norisk-results.error .norisk-new-quote-btn {
+    margin-top: 24px;
+}
+
+.norisk-form-container .norisk-quote-ref {
+    display: inline-block;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--brand-primary);
+    margin: 24px 0;
+    padding: 16px 24px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+}
+
+/* Form Visibility */
+#quoteForm {
+    transition: opacity 0.3s ease-in-out;
+}
+
+#quoteForm.hidden {
+    opacity: 0;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* Subsection Title (e.g. Dati Aziendali) */
+.norisk-form-container .norisk-subsection-title {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 28px 0 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 8px;
+}
+
+/* Privacy Row */
+.norisk-form-container .norisk-privacy-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 32px 0;
+}
+
+.norisk-form-container .norisk-privacy-row label {
+    font-size: 14px;
+    color: var(--text-body);
+    line-height: 1.5;
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.norisk-form-container .norisk-privacy-row a {
+    color: var(--brand-primary);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.norisk-form-container .norisk-privacy-row a:hover {
+    color: var(--brand-primary-hover);
+}
+
+/* Coverage Options */
+.norisk-form-container .norisk-coverage-note {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.norisk-form-container .norisk-coverage-item {
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.norisk-form-container .norisk-coverage-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--bg-light);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.norisk-form-container .norisk-coverage-toggle input[type="checkbox"] {
+    flex-shrink: 0;
+}
+
+.norisk-form-container .norisk-coverage-toggle .norisk-coverage-title {
+    flex: 0 1 auto;
+}
+
+.norisk-form-container .norisk-coverage-toggle:hover {
+    background: #f0f0f0;
+}
+
+/* Anchored to parent class so specificity beats theme button rules */
+.norisk-form-container .norisk-coverage-toggle .norisk-info-btn {
+    background: none;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--brand-primary);
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    margin-left: auto;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    text-transform: none;
+}
+
+.norisk-form-container .norisk-coverage-toggle .norisk-info-btn:hover {
+    background: none;
+    background-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+}
+
+.norisk-form-container .norisk-coverage-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-main);
+}
+
+.norisk-form-container .norisk-coverage-options {
+    display: none;
+    padding: 24px;
+    background: white;
+    border-top: 1px solid var(--border-default);
+}
+
+.norisk-form-container .norisk-coverage-options.active {
+    display: block;
+}
+
+/* Guest Entries */
+.norisk-form-container .norisk-guest-entry {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 16px;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-default);
+}
+
+.norisk-form-container .norisk-add-btn {
+    background: transparent;
+    color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 16px;
+    transition: all 0.2s;
+}
+
+.norisk-form-container .norisk-add-btn:hover {
+    background: var(--brand-primary-faint);
+}
+
+.norisk-form-container .norisk-remove-btn {
+    background: white;
+    color: #dc2626;
+    border: 1px solid #dc2626;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.norisk-form-container .norisk-remove-btn:hover {
+    background: #fef2f2;
+}
+
+/* Pricing Table */
+.norisk-form-container .norisk-pricing-table {
+    background: white;
+    border-radius: var(--radius-sm);
+    padding: 24px;
+    margin: 32px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-default);
+    text-align: left;
+}
+
+.norisk-form-container .norisk-pricing-table h4 {
+    margin: 0 0 20px 0;
+    color: var(--text-main);
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 12px;
+}
+
+.norisk-form-container .norisk-pricing-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border-default);
+    font-size: 16px;
+    color: var(--text-body);
+}
+
+.norisk-form-container .norisk-pricing-row:last-child {
+    border-bottom: none;
+}
+
+.norisk-form-container .norisk-pricing-total {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid var(--brand-primary);
+    font-size: 18px;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.norisk-form-container .norisk-quote-note {
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 24px 0;
+    font-size: 14px;
+}
+
+/* =========================================
+   Mobile / Responsive Styles
+   ========================================= */
+@media (max-width: 640px) {
+    /* Container */
+    .norisk-form-container {
+        padding: 24px 16px;
+    }
+
+    /* Headings */
+    .norisk-form-container h1 {
+        font-size: 1.5rem;
+    }
+
+    .norisk-form-container .norisk-form-section h3 {
+        font-size: 1.1rem;
+    }
+
+    .norisk-form-container .norisk-subsection-title {
+        font-size: 0.85rem;
+    }
+
+    /* All form rows stack to single column */
+    .norisk-form-container .norisk-form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .norisk-form-container .norisk-form-group.full-width {
+        grid-column: 1;
+    }
+
+    /* Inputs */
+    .norisk-form-container .norisk-form-group input[type="text"],
+    .norisk-form-container .norisk-form-group input[type="email"],
+    .norisk-form-container .norisk-form-group input[type="tel"],
+    .norisk-form-container .norisk-form-group input[type="number"],
+    .norisk-form-container .norisk-form-group input[type="date"],
+    .norisk-form-container .norisk-form-group select {
+        font-size: 16px; /* Prevent iOS zoom */
+        height: 44px;
+    }
+
+    /* Radio groups stack vertically */
+    .norisk-form-container .norisk-radio-group {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Coverage toggle */
+    .norisk-form-container .norisk-coverage-toggle {
+        padding: 14px 16px;
+    }
+
+    .norisk-form-container .norisk-coverage-title {
+        font-size: 15px;
+    }
+
+    .norisk-form-container .norisk-coverage-options {
+        padding: 16px;
+    }
+
+    /* Guest entries stack vertically */
+    .norisk-form-container .norisk-guest-entry {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    /* Privacy row */
+    .norisk-form-container .norisk-privacy-row {
+        margin: 24px 0;
+        align-items: flex-start;
+    }
+
+    /* Submit button full width */
+    .norisk-form-container .norisk-submit-btn {
+        width: 100%;
+        padding: 14px 24px;
+    }
+
+    /* Results section */
+    .norisk-form-container .norisk-results {
+        padding: 24px 16px;
+    }
+
+    .norisk-form-container .norisk-pricing-table {
+        padding: 16px;
+    }
+
+    .norisk-form-container .norisk-pricing-row {
+        font-size: 14px;
+    }
+
+    .norisk-form-container .norisk-pricing-total {
+        font-size: 16px;
+    }
+}
+
+/* =========================================
+   Quote Summary Page Styles
+   ========================================= */
+
+.norisk-summary-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    color: var(--text-body);
+    line-height: 1.6;
+}
+
+.norisk-summary-container .norisk-summary-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid var(--brand-primary);
+}
+
+.norisk-summary-container .norisk-summary-header h2 {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.norisk-summary-container .norisk-summary-header .norisk-quote-ref {
+    display: inline-block;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+}
+
+/* Logo hidden on web, visible only in PDF print (see @media print) */
+.norisk-summary-container .norisk-logo-img {
+    display: none;
+}
+
+/* Event image removed - kept for backward compatibility */
+.norisk-summary-container .norisk-event-img {
+    display: none !important;
+}
+
+.norisk-summary-container .norisk-summary-section {
+    margin-bottom: 32px;
+}
+
+.norisk-summary-container .norisk-summary-section h3 {
+    font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--brand-primary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--brand-primary-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.norisk-summary-container .norisk-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-default);
+}
+
+.norisk-summary-container .norisk-summary-row:last-child {
+    border-bottom: none;
+}
+
+.norisk-summary-container .norisk-summary-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex: 0 0 40%;
+}
+
+.norisk-summary-container .norisk-summary-value {
+    color: var(--text-body);
+    flex: 1;
+    text-align: right;
+}
+
+.norisk-summary-container .norisk-coverage-block {
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--brand-primary);
+}
+
+.norisk-summary-container .norisk-coverage-block h4 {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-main);
+    margin: 0 0 12px 0;
+}
+
+.norisk-summary-container .norisk-coverage-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+}
+
+.norisk-summary-container .norisk-coverage-detail .label {
+    color: var(--text-secondary);
+}
+
+.norisk-summary-container .norisk-coverage-detail .value {
+    color: var(--text-body);
+    font-weight: 500;
+}
+
+.norisk-summary-container .norisk-summary-price {
+    background: var(--brand-primary);
+    color: white;
+    border-radius: var(--radius-sm);
+    padding: 24px;
+    text-align: center;
+    margin: 32px 0;
+}
+
+.norisk-summary-container .norisk-summary-price .price-label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.norisk-summary-container .norisk-summary-price .price-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.norisk-summary-container .norisk-summary-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.norisk-summary-container .norisk-print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    background-color: var(--brand-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.norisk-summary-container .norisk-print-btn:hover {
+    background-color: var(--brand-primary-hover);
+}
+
+.norisk-summary-container .norisk-print-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.norisk-summary-container .norisk-new-quote-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 16px 32px;
+    background-color: transparent;
+    color: var(--brand-primary);
+    border: 2px solid var(--brand-primary);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.norisk-summary-container .norisk-new-quote-btn:hover {
+    background-color: var(--brand-primary-faint);
+}
+
+@media (max-width: 640px) {
+    .norisk-summary-container {
+        padding: 24px 16px;
+    }
+
+    .norisk-summary-container .norisk-summary-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .norisk-summary-container .norisk-summary-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .norisk-summary-container .norisk-summary-label {
+        flex: none;
+    }
+
+    .norisk-summary-container .norisk-summary-value {
+        text-align: left;
+        font-weight: 500;
+    }
+
+    .norisk-summary-container .norisk-coverage-block {
+        padding: 16px;
+    }
+
+    .norisk-summary-container .norisk-summary-price .price-value {
+        font-size: 1.5rem;
+    }
+
+    .norisk-summary-container .norisk-summary-actions {
+        flex-direction: column;
+    }
+
+    .norisk-summary-container .norisk-print-btn,
+    .norisk-summary-container .norisk-new-quote-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* =========================================
+   Print Styles for PDF Generation
+   ========================================= */
+
+@media print {
+    :root {
+        /* Configurable logo height for PDF - change this value to adjust logo size */
+        --pdf-logo-height: 200px;
+    }
+
+    @page {
+        margin: 15mm;
+        /* Page numbering format: 1/3 instead of "1 of 3" */
+        @bottom-right {
+            content: counter(page) "/" counter(pages);
+        }
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    .norisk-summary-container,
+    .norisk-summary-container * {
+        visibility: visible;
+    }
+
+    .norisk-summary-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .norisk-summary-container .norisk-summary-actions {
+        display: none !important;
+    }
+
+    .norisk-summary-container .norisk-summary-section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .norisk-summary-container .norisk-coverage-block {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .norisk-summary-container .norisk-summary-price {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        /* Ensure high contrast for price */
+        background: var(--brand-primary) !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .norisk-summary-container .norisk-summary-price .price-value {
+        font-weight: 800 !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .norisk-summary-container .norisk-summary-header {
+        border-bottom: 2px solid #6B1C23;
+    }
+
+    .norisk-summary-container .norisk-summary-section h3 {
+        border-bottom: 1px solid rgba(107, 28, 35, 0.15);
+    }
+
+    /* Logo wrapper visible in PDF */
+    .norisk-summary-container .norisk-pdf-logo {
+        display: block !important;
+    }
+
+    /* Logo sizing for PDF - use CSS variable for easy tweaking */
+    .norisk-summary-container .norisk-logo-img {
+        max-height: var(--pdf-logo-height) !important;
+        height: var(--pdf-logo-height) !important;
+        width: auto !important;
+        display: block !important;
+        margin: 0 auto 20px !important;
+    }
+
+    /* Hide event image in PDF */
+    .norisk-summary-container .norisk-event-img {
+        display: none !important;
+    }
+
+    /* Ensure text doesn't get cut off */
+    .norisk-summary-container .norisk-summary-row {
+        padding: 8px 0;
+    }
+
+    .norisk-summary-container .norisk-summary-label,
+    .norisk-summary-container .norisk-summary-value {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+}

@@ -18,17 +18,17 @@ function norisk_enqueue_parent_styles() {
 // 2. Conditionally load NoRisk form styles
 //    Only on the page using our custom template
 // =========================================
-add_action('wp_enqueue_scripts', 'norisk_enqueue_form_styles');
-  function norisk_enqueue_form_styles() {
-      if (is_page('preventivo-assicurazione-eventi')) {
-          wp_enqueue_style(
-              'norisk-form-style',
-              get_stylesheet_directory_uri() . '/norisk-form.css',
-              array('parent-style'),
-              '1.0.2'
-          );
-      }
-  }
+// add_action('wp_enqueue_scripts', 'norisk_enqueue_form_styles');
+// function norisk_enqueue_form_styles() {
+//     if (is_page('preventivo-assicurazione-eventi')) {
+//         wp_enqueue_style(
+//             'norisk-form-style',
+//             get_stylesheet_directory_uri() . '/norisk-form.css',
+//             array('parent-style'),
+//             '1.0.4'
+//         );
+//     }
+// }
 
 // =========================================
 // NoRisk Options Helper

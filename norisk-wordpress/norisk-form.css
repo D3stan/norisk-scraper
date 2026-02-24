@@ -32,7 +32,7 @@
 }
 
 /* Headings */
-h1, .norisk-form-container h1 {
+.norisk-form-container h1 {
     font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     font-weight: 800; /* ExtraBold */
     font-size: 1.875rem; /* ~30px */
@@ -51,12 +51,12 @@ h1, .norisk-form-container h1 {
     margin-bottom: var(--spacing-section);
 }
 
-.norisk-form-section {
+.norisk-form-container .norisk-form-section {
     margin-bottom: var(--spacing-section);
     background: transparent;
 }
 
-.norisk-form-section h3 {
+.norisk-form-container .norisk-form-section h3 {
     font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     font-size: 1.25rem; /* 20px */
     font-weight: 600; /* SemiBold */
@@ -68,7 +68,7 @@ h1, .norisk-form-container h1 {
 }
 
 /* Custom Burgundy Underline for Sections */
-.norisk-form-section h3::after {
+.norisk-form-container .norisk-form-section h3::after {
     content: '';
     position: absolute;
     left: 0;
@@ -79,7 +79,7 @@ h1, .norisk-form-container h1 {
 }
 
 /* Form Grid */
-.norisk-form-row {
+.norisk-form-container .norisk-form-row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
@@ -87,22 +87,22 @@ h1, .norisk-form-container h1 {
 }
 
 @media (max-width: 640px) {
-    .norisk-form-row {
+    .norisk-form-container .norisk-form-row {
         grid-template-columns: 1fr;
     }
 }
 
-.norisk-form-group {
+.norisk-form-container .norisk-form-group {
     display: flex;
     flex-direction: column;
 }
 
-.norisk-form-group.full-width {
+.norisk-form-container .norisk-form-group.full-width {
     grid-column: 1 / -1;
 }
 
 /* Labels */
-.norisk-form-group label {
+.norisk-form-container .norisk-form-group label {
     display: block;
     font-size: 14px;
     font-weight: 500; /* Medium */
@@ -111,7 +111,7 @@ h1, .norisk-form-container h1 {
 }
 
 /* Required Asterisk */
-.norisk-form-group label::after {
+.norisk-form-container .norisk-form-group label::after {
     /* If you want to target the asterisk explicitly in HTML, use a span.
        If the HTML has text content "Label *", we can't style just the * easily with CSS unless it's wrapped.
        For this CSS, we assume the HTML structure provided might not have spans.
@@ -120,13 +120,13 @@ h1, .norisk-form-container h1 {
 }
 
 /* Inputs & Selects */
-.norisk-form-group input[type="text"],
-.norisk-form-group input[type="email"],
-.norisk-form-group input[type="tel"],
-.norisk-form-group input[type="number"],
-.norisk-form-group input[type="date"],
-.norisk-form-group select,
-.norisk-form-group textarea {
+.norisk-form-container .norisk-form-group input[type="text"],
+.norisk-form-container .norisk-form-group input[type="email"],
+.norisk-form-container .norisk-form-group input[type="tel"],
+.norisk-form-container .norisk-form-group input[type="number"],
+.norisk-form-container .norisk-form-group input[type="date"],
+.norisk-form-container .norisk-form-group select,
+.norisk-form-container .norisk-form-group textarea {
     display: block;
     width: 100%;
     height: 48px; /* Fixed height */
@@ -144,31 +144,31 @@ h1, .norisk-form-container h1 {
     -webkit-appearance: none;
 }
 
-.norisk-form-group textarea {
+.norisk-form-container .norisk-form-group textarea {
     height: auto;
     min-height: 120px;
     resize: vertical;
 }
 
 /* Placeholders */
-.norisk-form-group input::placeholder,
-.norisk-form-group textarea::placeholder {
+.norisk-form-container .norisk-form-group input::placeholder,
+.norisk-form-container .norisk-form-group textarea::placeholder {
     color: var(--text-placeholder);
     font-style: italic;
     opacity: 1;
 }
 
 /* Focus States */
-.norisk-form-group input:focus,
-.norisk-form-group select:focus,
-.norisk-form-group textarea:focus {
+.norisk-form-container .norisk-form-group input:focus,
+.norisk-form-container .norisk-form-group select:focus,
+.norisk-form-container .norisk-form-group textarea:focus {
     outline: none;
     border-color: var(--brand-primary);
     box-shadow: 0 0 0 2px rgba(107, 28, 35, 0.1); /* Subtle burgundy glow */
 }
 
 /* Custom Select Arrow */
-.norisk-form-group select {
+.norisk-form-container .norisk-form-group select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%236B1C23' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 16px center;
@@ -176,23 +176,23 @@ h1, .norisk-form-container h1 {
 }
 
 /* Number Input Spinners Removal */
-.norisk-form-group input[type="number"]::-webkit-inner-spin-button,
-.norisk-form-group input[type="number"]::-webkit-outer-spin-button {
+.norisk-form-container .norisk-form-group input[type="number"]::-webkit-inner-spin-button,
+.norisk-form-container .norisk-form-group input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-.norisk-form-group input[type="number"] {
+.norisk-form-container .norisk-form-group input[type="number"] {
     -moz-appearance: textfield;
 }
 
 /* Radios & Checkboxes */
-.norisk-radio-group {
+.norisk-form-container .norisk-radio-group {
     display: flex;
     gap: 24px;
     margin-top: 8px;
 }
 
-.norisk-radio-group label {
+.norisk-form-container .norisk-radio-group label {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -202,14 +202,14 @@ h1, .norisk-form-container h1 {
     margin-bottom: 0;
 }
 
-.norisk-checkbox-group {
+.norisk-form-container .norisk-checkbox-group {
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-top: 8px;
 }
 
-.norisk-checkbox-group label {
+.norisk-form-container .norisk-checkbox-group label {
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -219,7 +219,8 @@ h1, .norisk-form-container h1 {
     margin-bottom: 0;
 }
 
-input[type="checkbox"], input[type="radio"] {
+.norisk-form-container input[type="checkbox"],
+.norisk-form-container input[type="radio"] {
     accent-color: var(--brand-primary);
     width: 18px;
     height: 18px;
@@ -229,11 +230,11 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 /* Submit Button */
-.norisk-submit-btn {
+.norisk-form-container .norisk-submit-btn {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: auto; /* Not full width by default unless mobile */
+    width: auto;
     min-width: 200px;
     padding: 16px 32px;
     background-color: var(--brand-primary);
@@ -241,25 +242,25 @@ input[type="checkbox"], input[type="radio"] {
     border: none;
     border-radius: var(--radius-sm);
     font-size: 16px;
-    font-weight: 500; /* Medium */
+    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.1s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.norisk-submit-btn:hover {
+.norisk-form-container .norisk-submit-btn:hover {
     background-color: var(--brand-primary-hover);
     box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
 
-.norisk-submit-btn:disabled {
+.norisk-form-container .norisk-submit-btn:disabled {
     background-color: var(--text-placeholder);
     cursor: not-allowed;
     box-shadow: none;
 }
 
 @media (max-width: 640px) {
-    .norisk-submit-btn {
+    .norisk-form-container .norisk-submit-btn {
         width: 100%;
     }
 }
@@ -455,7 +456,7 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 /* Results Section */
-.norisk-results {
+.norisk-form-container .norisk-results {
     display: none;
     padding: 40px;
     background: var(--bg-light);
@@ -465,29 +466,29 @@ input[type="checkbox"], input[type="radio"] {
     margin-top: 40px;
 }
 
-.norisk-results.active {
+.norisk-form-container .norisk-results.active {
     display: block;
 }
 
-.norisk-results h2 {
+.norisk-form-container .norisk-results h2 {
     color: var(--text-main);
     margin-bottom: 24px;
 }
 
-.norisk-results.success {
+.norisk-form-container .norisk-results.success {
     border-top: 4px solid var(--brand-primary);
 }
 
-.norisk-results.error {
-    border-top: 4px solid #dc2626; /* Keep standard red for errors if not burgundy */
+.norisk-form-container .norisk-results.error {
+    border-top: 4px solid #dc2626;
 }
 
 /* Error state - single button styling */
-.norisk-results.error .norisk-new-quote-btn {
+.norisk-form-container .norisk-results.error .norisk-new-quote-btn {
     margin-top: 24px;
 }
 
-.norisk-quote-ref {
+.norisk-form-container .norisk-quote-ref {
     display: inline-block;
     font-size: 20px;
     font-weight: 600;
@@ -514,7 +515,7 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 /* Subsection Title (e.g. Dati Aziendali) */
-.norisk-subsection-title {
+.norisk-form-container .norisk-subsection-title {
     font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     font-size: 1rem;
     font-weight: 600;
@@ -527,14 +528,14 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 /* Privacy Row */
-.norisk-privacy-row {
+.norisk-form-container .norisk-privacy-row {
     display: flex;
     align-items: center;
     gap: 12px;
     margin: 32px 0;
 }
 
-.norisk-privacy-row label {
+.norisk-form-container .norisk-privacy-row label {
     font-size: 14px;
     color: var(--text-body);
     line-height: 1.5;
@@ -542,24 +543,24 @@ input[type="checkbox"], input[type="radio"] {
     margin-bottom: 0;
 }
 
-.norisk-privacy-row a {
+.norisk-form-container .norisk-privacy-row a {
     color: var(--brand-primary);
     text-decoration: underline;
     font-weight: 500;
 }
 
-.norisk-privacy-row a:hover {
+.norisk-form-container .norisk-privacy-row a:hover {
     color: var(--brand-primary-hover);
 }
 
 /* Coverage Options */
-.norisk-coverage-note {
+.norisk-form-container .norisk-coverage-note {
     color: var(--text-muted);
     font-size: 14px;
     margin-bottom: 24px;
 }
 
-.norisk-coverage-item {
+.norisk-form-container .norisk-coverage-item {
     background: white;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-sm);
@@ -567,7 +568,7 @@ input[type="checkbox"], input[type="radio"] {
     overflow: hidden;
 }
 
-.norisk-coverage-toggle {
+.norisk-form-container .norisk-coverage-toggle {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -577,20 +578,20 @@ input[type="checkbox"], input[type="radio"] {
     transition: background-color 0.2s;
 }
 
-.norisk-coverage-toggle input[type="checkbox"] {
+.norisk-form-container .norisk-coverage-toggle input[type="checkbox"] {
     flex-shrink: 0;
 }
 
-.norisk-coverage-toggle .norisk-coverage-title {
+.norisk-form-container .norisk-coverage-toggle .norisk-coverage-title {
     flex: 0 1 auto;
 }
 
-.norisk-coverage-toggle:hover {
+.norisk-form-container .norisk-coverage-toggle:hover {
     background: #f0f0f0;
 }
 
 /* Anchored to parent class so specificity beats theme button rules */
-.norisk-coverage-toggle .norisk-info-btn {
+.norisk-form-container .norisk-coverage-toggle .norisk-info-btn {
     background: none;
     background-color: transparent;
     border: none;
@@ -612,32 +613,32 @@ input[type="checkbox"], input[type="radio"] {
     text-transform: none;
 }
 
-.norisk-coverage-toggle .norisk-info-btn:hover {
+.norisk-form-container .norisk-coverage-toggle .norisk-info-btn:hover {
     background: none;
     background-color: transparent;
     box-shadow: none;
     opacity: 1;
 }
 
-.norisk-coverage-title {
+.norisk-form-container .norisk-coverage-title {
     font-weight: 600;
     font-size: 16px;
     color: var(--text-main);
 }
 
-.norisk-coverage-options {
+.norisk-form-container .norisk-coverage-options {
     display: none;
     padding: 24px;
     background: white;
     border-top: 1px solid var(--border-default);
 }
 
-.norisk-coverage-options.active {
+.norisk-form-container .norisk-coverage-options.active {
     display: block;
 }
 
 /* Guest Entries */
-.norisk-guest-entry {
+.norisk-form-container .norisk-guest-entry {
     display: grid;
     grid-template-columns: 2fr 1fr auto;
     gap: 16px;
@@ -649,7 +650,7 @@ input[type="checkbox"], input[type="radio"] {
     border: 1px solid var(--border-default);
 }
 
-.norisk-add-btn {
+.norisk-form-container .norisk-add-btn {
     background: transparent;
     color: var(--brand-primary);
     border: 1px solid var(--brand-primary);
@@ -662,11 +663,11 @@ input[type="checkbox"], input[type="radio"] {
     transition: all 0.2s;
 }
 
-.norisk-add-btn:hover {
+.norisk-form-container .norisk-add-btn:hover {
     background: var(--brand-primary-faint);
 }
 
-.norisk-remove-btn {
+.norisk-form-container .norisk-remove-btn {
     background: white;
     color: #dc2626;
     border: 1px solid #dc2626;
@@ -677,12 +678,12 @@ input[type="checkbox"], input[type="radio"] {
     font-weight: 500;
 }
 
-.norisk-remove-btn:hover {
+.norisk-form-container .norisk-remove-btn:hover {
     background: #fef2f2;
 }
 
 /* Pricing Table */
-.norisk-pricing-table {
+.norisk-form-container .norisk-pricing-table {
     background: white;
     border-radius: var(--radius-sm);
     padding: 24px;
@@ -692,7 +693,7 @@ input[type="checkbox"], input[type="radio"] {
     text-align: left;
 }
 
-.norisk-pricing-table h4 {
+.norisk-form-container .norisk-pricing-table h4 {
     margin: 0 0 20px 0;
     color: var(--text-main);
     font-size: 18px;
@@ -701,7 +702,7 @@ input[type="checkbox"], input[type="radio"] {
     padding-bottom: 12px;
 }
 
-.norisk-pricing-row {
+.norisk-form-container .norisk-pricing-row {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
@@ -710,11 +711,11 @@ input[type="checkbox"], input[type="radio"] {
     color: var(--text-body);
 }
 
-.norisk-pricing-row:last-child {
+.norisk-form-container .norisk-pricing-row:last-child {
     border-bottom: none;
 }
 
-.norisk-pricing-total {
+.norisk-form-container .norisk-pricing-total {
     margin-top: 16px;
     padding-top: 16px;
     border-top: 2px solid var(--brand-primary);
@@ -723,7 +724,7 @@ input[type="checkbox"], input[type="radio"] {
     font-weight: 700;
 }
 
-.norisk-quote-note {
+.norisk-form-container .norisk-quote-note {
     color: var(--text-muted);
     font-style: italic;
     margin: 24px 0;
@@ -744,88 +745,88 @@ input[type="checkbox"], input[type="radio"] {
         font-size: 1.5rem;
     }
 
-    .norisk-form-section h3 {
+    .norisk-form-container .norisk-form-section h3 {
         font-size: 1.1rem;
     }
 
-    .norisk-subsection-title {
+    .norisk-form-container .norisk-subsection-title {
         font-size: 0.85rem;
     }
 
     /* All form rows stack to single column */
-    .norisk-form-row {
+    .norisk-form-container .norisk-form-row {
         grid-template-columns: 1fr;
         gap: 16px;
         margin-bottom: 16px;
     }
 
-    .norisk-form-group.full-width {
+    .norisk-form-container .norisk-form-group.full-width {
         grid-column: 1;
     }
 
     /* Inputs */
-    .norisk-form-group input[type="text"],
-    .norisk-form-group input[type="email"],
-    .norisk-form-group input[type="tel"],
-    .norisk-form-group input[type="number"],
-    .norisk-form-group input[type="date"],
-    .norisk-form-group select {
+    .norisk-form-container .norisk-form-group input[type="text"],
+    .norisk-form-container .norisk-form-group input[type="email"],
+    .norisk-form-container .norisk-form-group input[type="tel"],
+    .norisk-form-container .norisk-form-group input[type="number"],
+    .norisk-form-container .norisk-form-group input[type="date"],
+    .norisk-form-container .norisk-form-group select {
         font-size: 16px; /* Prevent iOS zoom */
         height: 44px;
     }
 
     /* Radio groups stack vertically */
-    .norisk-radio-group {
+    .norisk-form-container .norisk-radio-group {
         flex-direction: column;
         gap: 12px;
     }
 
     /* Coverage toggle */
-    .norisk-coverage-toggle {
+    .norisk-form-container .norisk-coverage-toggle {
         padding: 14px 16px;
     }
 
-    .norisk-coverage-title {
+    .norisk-form-container .norisk-coverage-title {
         font-size: 15px;
     }
 
-    .norisk-coverage-options {
+    .norisk-form-container .norisk-coverage-options {
         padding: 16px;
     }
 
     /* Guest entries stack vertically */
-    .norisk-guest-entry {
+    .norisk-form-container .norisk-guest-entry {
         grid-template-columns: 1fr;
         gap: 10px;
         padding: 12px;
     }
 
     /* Privacy row */
-    .norisk-privacy-row {
+    .norisk-form-container .norisk-privacy-row {
         margin: 24px 0;
         align-items: flex-start;
     }
 
     /* Submit button full width */
-    .norisk-submit-btn {
+    .norisk-form-container .norisk-submit-btn {
         width: 100%;
         padding: 14px 24px;
     }
 
     /* Results section */
-    .norisk-results {
+    .norisk-form-container .norisk-results {
         padding: 24px 16px;
     }
 
-    .norisk-pricing-table {
+    .norisk-form-container .norisk-pricing-table {
         padding: 16px;
     }
 
-    .norisk-pricing-row {
+    .norisk-form-container .norisk-pricing-row {
         font-size: 14px;
     }
 
-    .norisk-pricing-total {
+    .norisk-form-container .norisk-pricing-total {
         font-size: 16px;
     }
 }
@@ -843,14 +844,14 @@ input[type="checkbox"], input[type="radio"] {
     line-height: 1.6;
 }
 
-.norisk-summary-header {
+.norisk-summary-container .norisk-summary-header {
     text-align: center;
     margin-bottom: 40px;
     padding-bottom: 30px;
     border-bottom: 2px solid var(--brand-primary);
 }
 
-.norisk-summary-header h2 {
+.norisk-summary-container .norisk-summary-header h2 {
     font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     font-weight: 700;
     font-size: 1.75rem;
@@ -858,7 +859,7 @@ input[type="checkbox"], input[type="radio"] {
     margin-bottom: 8px;
 }
 
-.norisk-summary-header .norisk-quote-ref {
+.norisk-summary-container .norisk-summary-header .norisk-quote-ref {
     display: inline-block;
     font-size: 14px;
     color: var(--text-muted);
@@ -869,20 +870,20 @@ input[type="checkbox"], input[type="radio"] {
 }
 
 /* Logo hidden on web, visible only in PDF print (see @media print) */
-.norisk-logo-img {
+.norisk-summary-container .norisk-logo-img {
     display: none;
 }
 
 /* Event image removed - kept for backward compatibility */
-.norisk-event-img {
+.norisk-summary-container .norisk-event-img {
     display: none !important;
 }
 
-.norisk-summary-section {
+.norisk-summary-container .norisk-summary-section {
     margin-bottom: 32px;
 }
 
-.norisk-summary-section h3 {
+.norisk-summary-container .norisk-summary-section h3 {
     font-family: 'Montserrat', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     font-size: 1.1rem;
     font-weight: 600;
@@ -894,30 +895,30 @@ input[type="checkbox"], input[type="radio"] {
     letter-spacing: 0.5px;
 }
 
-.norisk-summary-row {
+.norisk-summary-container .norisk-summary-row {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid var(--border-default);
 }
 
-.norisk-summary-row:last-child {
+.norisk-summary-container .norisk-summary-row:last-child {
     border-bottom: none;
 }
 
-.norisk-summary-label {
+.norisk-summary-container .norisk-summary-label {
     font-weight: 500;
     color: var(--text-secondary);
     flex: 0 0 40%;
 }
 
-.norisk-summary-value {
+.norisk-summary-container .norisk-summary-value {
     color: var(--text-body);
     flex: 1;
     text-align: right;
 }
 
-.norisk-coverage-block {
+.norisk-summary-container .norisk-coverage-block {
     background: var(--bg-light);
     border-radius: var(--radius-sm);
     padding: 20px;
@@ -925,30 +926,30 @@ input[type="checkbox"], input[type="radio"] {
     border-left: 3px solid var(--brand-primary);
 }
 
-.norisk-coverage-block h4 {
+.norisk-summary-container .norisk-coverage-block h4 {
     font-weight: 600;
     font-size: 1rem;
     color: var(--text-main);
     margin: 0 0 12px 0;
 }
 
-.norisk-coverage-detail {
+.norisk-summary-container .norisk-coverage-detail {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
     font-size: 14px;
 }
 
-.norisk-coverage-detail .label {
+.norisk-summary-container .norisk-coverage-detail .label {
     color: var(--text-secondary);
 }
 
-.norisk-coverage-detail .value {
+.norisk-summary-container .norisk-coverage-detail .value {
     color: var(--text-body);
     font-weight: 500;
 }
 
-.norisk-summary-price {
+.norisk-summary-container .norisk-summary-price {
     background: var(--brand-primary);
     color: white;
     border-radius: var(--radius-sm);
@@ -957,7 +958,7 @@ input[type="checkbox"], input[type="radio"] {
     margin: 32px 0;
 }
 
-.norisk-summary-price .price-label {
+.norisk-summary-container .norisk-summary-price .price-label {
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -965,19 +966,19 @@ input[type="checkbox"], input[type="radio"] {
     margin-bottom: 8px;
 }
 
-.norisk-summary-price .price-value {
+.norisk-summary-container .norisk-summary-price .price-value {
     font-size: 2rem;
     font-weight: 700;
 }
 
-.norisk-summary-actions {
+.norisk-summary-container .norisk-summary-actions {
     display: flex;
     gap: 16px;
     justify-content: center;
     margin-top: 32px;
 }
 
-.norisk-print-btn {
+.norisk-summary-container .norisk-print-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -992,16 +993,16 @@ input[type="checkbox"], input[type="radio"] {
     transition: background-color 0.3s ease;
 }
 
-.norisk-print-btn:hover {
+.norisk-summary-container .norisk-print-btn:hover {
     background-color: var(--brand-primary-hover);
 }
 
-.norisk-print-btn svg {
+.norisk-summary-container .norisk-print-btn svg {
     width: 20px;
     height: 20px;
 }
 
-.norisk-new-quote-btn {
+.norisk-summary-container .norisk-new-quote-btn {
     display: inline-flex;
     align-items: center;
     padding: 16px 32px;
@@ -1015,7 +1016,7 @@ input[type="checkbox"], input[type="radio"] {
     transition: all 0.3s ease;
 }
 
-.norisk-new-quote-btn:hover {
+.norisk-summary-container .norisk-new-quote-btn:hover {
     background-color: var(--brand-primary-faint);
 }
 
@@ -1024,38 +1025,38 @@ input[type="checkbox"], input[type="radio"] {
         padding: 24px 16px;
     }
 
-    .norisk-summary-header h2 {
+    .norisk-summary-container .norisk-summary-header h2 {
         font-size: 1.4rem;
     }
 
-    .norisk-summary-row {
+    .norisk-summary-container .norisk-summary-row {
         flex-direction: column;
         gap: 4px;
     }
 
-    .norisk-summary-label {
+    .norisk-summary-container .norisk-summary-label {
         flex: none;
     }
 
-    .norisk-summary-value {
+    .norisk-summary-container .norisk-summary-value {
         text-align: left;
         font-weight: 500;
     }
 
-    .norisk-coverage-block {
+    .norisk-summary-container .norisk-coverage-block {
         padding: 16px;
     }
 
-    .norisk-summary-price .price-value {
+    .norisk-summary-container .norisk-summary-price .price-value {
         font-size: 1.5rem;
     }
 
-    .norisk-summary-actions {
+    .norisk-summary-container .norisk-summary-actions {
         flex-direction: column;
     }
 
-    .norisk-print-btn,
-    .norisk-new-quote-btn {
+    .norisk-summary-container .norisk-print-btn,
+    .norisk-summary-container .norisk-new-quote-btn {
         width: 100%;
         justify-content: center;
     }
@@ -1098,21 +1099,21 @@ input[type="checkbox"], input[type="radio"] {
         margin: 0;
     }
 
-    .norisk-summary-actions {
+    .norisk-summary-container .norisk-summary-actions {
         display: none !important;
     }
 
-    .norisk-summary-section {
+    .norisk-summary-container .norisk-summary-section {
         break-inside: avoid;
         page-break-inside: avoid;
     }
 
-    .norisk-coverage-block {
+    .norisk-summary-container .norisk-coverage-block {
         break-inside: avoid;
         page-break-inside: avoid;
     }
 
-    .norisk-summary-price {
+    .norisk-summary-container .norisk-summary-price {
         break-inside: avoid;
         page-break-inside: avoid;
         /* Ensure high contrast for price */
@@ -1122,26 +1123,26 @@ input[type="checkbox"], input[type="radio"] {
         print-color-adjust: exact;
     }
 
-    .norisk-summary-price .price-value {
+    .norisk-summary-container .norisk-summary-price .price-value {
         font-weight: 800 !important;
         text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
-    .norisk-summary-header {
+    .norisk-summary-container .norisk-summary-header {
         border-bottom: 2px solid #6B1C23;
     }
 
-    .norisk-summary-section h3 {
+    .norisk-summary-container .norisk-summary-section h3 {
         border-bottom: 1px solid rgba(107, 28, 35, 0.15);
     }
 
     /* Logo wrapper visible in PDF */
-    .norisk-pdf-logo {
+    .norisk-summary-container .norisk-pdf-logo {
         display: block !important;
     }
 
     /* Logo sizing for PDF - use CSS variable for easy tweaking */
-    .norisk-logo-img {
+    .norisk-summary-container .norisk-logo-img {
         max-height: var(--pdf-logo-height) !important;
         height: var(--pdf-logo-height) !important;
         width: auto !important;
@@ -1150,17 +1151,17 @@ input[type="checkbox"], input[type="radio"] {
     }
 
     /* Hide event image in PDF */
-    .norisk-event-img {
+    .norisk-summary-container .norisk-event-img {
         display: none !important;
     }
 
     /* Ensure text doesn't get cut off */
-    .norisk-summary-row {
+    .norisk-summary-container .norisk-summary-row {
         padding: 8px 0;
     }
 
-    .norisk-summary-label,
-    .norisk-summary-value {
+    .norisk-summary-container .norisk-summary-label,
+    .norisk-summary-container .norisk-summary-value {
         word-wrap: break-word;
         overflow-wrap: break-word;
     }
