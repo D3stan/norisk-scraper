@@ -1344,7 +1344,7 @@ function showSummary(result, formData) {
                 <div style="margin-bottom: 8px;">Per leggere condizioni polizza: <a href="<?php echo esc_url( $norisk['terms_url'] ); ?>" target="_blank">clicca qui</a></div>
                 <?php endif; ?>
                 <?php if ( $norisk['contact_email'] || $norisk['contact_phone'] ) : ?>
-                <strong>Per informazioni e acquisto:</strong><br>
+                <strong>Per informazioni e acquisto:</strong>
                 <?php endif; ?>
                 <?php if ( $norisk['contact_email'] ) : ?>
                 Email: <a href="mailto:<?php echo esc_attr( $norisk['contact_email'] ); ?>"><?php echo esc_html( $norisk['contact_email'] ); ?></a><br>

@@ -1,5 +1,4 @@
 /* NoRisk Quote Form Styles - Corporate Identity Aligned */
-
 :root {
     /* Color Palette */
     --brand-primary: #6B1C23;       /* Burgundy - Buttons, Active States */
@@ -971,6 +970,32 @@
     font-weight: 700;
 }
 
+/* Contacts / Terms footer — visible on web and in PDF */
+.norisk-summary-container .norisk-pdf-contacts {
+    margin: 24px 0 0;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--border-default);
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.norisk-summary-container .norisk-pdf-contacts a {
+    color: var(--brand-primary);
+    text-decoration: none;
+}
+
+.norisk-summary-container .norisk-pdf-contacts a:hover {
+    text-decoration: underline;
+}
+
+.norisk-summary-container .norisk-pdf-contact-block strong {
+    display: block;
+    margin-top: 12px;
+    color: var(--text-main);
+}
+
 .norisk-summary-container .norisk-summary-actions {
     display: flex;
     gap: 16px;
@@ -1069,7 +1094,7 @@
 @media print {
     :root {
         /* Configurable logo height for PDF - change this value to adjust logo size */
-        --pdf-logo-height: 100px;
+        --pdf-logo-height: 200px;
     }
 
     @page {
@@ -1152,6 +1177,23 @@
 
     /* Hide event image in PDF */
     .norisk-summary-container .norisk-event-img {
+        display: none !important;
+    }
+
+    /* Contacts/terms visible in PDF */
+    .norisk-summary-container .norisk-pdf-contacts {
+        border-top-color: #ddd;
+        page-break-inside: avoid;
+    }
+
+    .norisk-summary-container .norisk-pdf-contacts a {
+        color: #000 !important;
+        text-decoration: none;
+    }
+
+    /* Suppress browser default print behavior of appending (url) after links */
+    .norisk-summary-container .norisk-pdf-contacts a::after {
+        content: none !important;
         display: none !important;
     }
 
