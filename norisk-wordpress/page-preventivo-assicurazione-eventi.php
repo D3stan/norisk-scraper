@@ -17,6 +17,11 @@ get_header();
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="norisk-loading-overlay">
+        <?php if ( ! empty( $norisk['loading_image_url'] ) ) : ?>
+        <div class="norisk-loading-image">
+            <img src="<?php echo esc_url( $norisk['loading_image_url'] ); ?>" alt="">
+        </div>
+        <?php endif; ?>
         <div class="norisk-loading-bar-container">
             <div id="loadingBar" class="norisk-loading-bar"></div>
         </div>
@@ -246,9 +251,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_cancellation" name="coverage_cancellation" value="1">
                     <span class="norisk-coverage-title">Costi di Annullamento</span>
+                    <?php if ( ! empty( $norisk['cancellation_modal_include'] ) || ! empty( $norisk['cancellation_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="cancellation" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_cancellation">
                     <div class="norisk-form-group">
@@ -273,15 +280,25 @@ get_header();
                         </div>
                         <?php endif; ?>
                         <?php if ( $norisk['show_cancellation_weather'] ): ?>
-                        <label>
+                        <label class="norisk-subcategory-label">
                             <input type="checkbox" name="cancellation_reasons" value="extreme_weather">
-                            Annullamento per maltempo
+                            <span>Annullamento per maltempo</span>
+                            <?php if ( ! empty( $norisk['cancellation_weather_modal_include'] ) || ! empty( $norisk['cancellation_weather_modal_exclude'] ) ) : ?>
+                            <button type="button" class="norisk-info-btn norisk-info-btn-small" data-coverage="cancellation_weather" aria-label="Maggiori informazioni">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                            <?php endif; ?>
                         </label>
                         <?php endif; ?>
                         <?php if ( $norisk['show_cancellation_profit'] ): ?>
-                        <label>
+                        <label class="norisk-subcategory-label">
                             <input type="checkbox" name="cancellation_reasons" value="profit_max_50" id="cb_profit_max_50">
-                            Perdita Profitto (fino a massimo 50% dei costi di annullamento)
+                            <span>Perdita Profitto (fino a massimo 50% dei costi di annullamento)</span>
+                            <?php if ( ! empty( $norisk['cancellation_profit_modal_include'] ) || ! empty( $norisk['cancellation_profit_modal_exclude'] ) ) : ?>
+                            <button type="button" class="norisk-info-btn norisk-info-btn-small" data-coverage="cancellation_profit" aria-label="Maggiori informazioni">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                            <?php endif; ?>
                         </label>
                         <div class="norisk-sub-options" id="profit_max_50_container" style="display: none; margin-left: 30px; margin-top: 8px;">
                             <div class="norisk-form-group">
@@ -301,9 +318,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_liability" name="coverage_liability" value="1">
                     <span class="norisk-coverage-title">Responsabilità Civile</span>
+                    <?php if ( ! empty( $norisk['liability_modal_include'] ) || ! empty( $norisk['liability_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="liability" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_liability">
                     <div class="norisk-form-group">
@@ -329,9 +348,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_equipment" name="coverage_equipment" value="1">
                     <span class="norisk-coverage-title">Attrezzature</span>
+                    <?php if ( ! empty( $norisk['equipment_modal_include'] ) || ! empty( $norisk['equipment_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="equipment" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_equipment">
                     <div class="norisk-form-group">
@@ -348,9 +369,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_money" name="coverage_money" value="1">
                     <span class="norisk-coverage-title">Denaro</span>
+                    <?php if ( ! empty( $norisk['money_modal_include'] ) || ! empty( $norisk['money_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="money" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_money">
                     <div class="norisk-form-group">
@@ -367,9 +390,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_accidents" name="coverage_accidents" value="1">
                     <span class="norisk-coverage-title">Infortuni</span>
+                    <?php if ( ! empty( $norisk['accidents_modal_include'] ) || ! empty( $norisk['accidents_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="accidents" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_accidents">
                     <div class="norisk-form-group">
@@ -492,6 +517,13 @@ const CONFIG = {
     ACCIDENTS_MODAL_TITLE: '<?php echo esc_js( $norisk['accidents_modal_title'] ); ?>',
     ACCIDENTS_MODAL_INCLUDE: <?php echo json_encode( wp_kses_post( $norisk['accidents_modal_include'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
     ACCIDENTS_MODAL_EXCLUDE: <?php echo json_encode( wp_kses_post( $norisk['accidents_modal_exclude'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    // Subcategory modals
+    CANCELLATION_WEATHER_MODAL_TITLE: '<?php echo esc_js( $norisk['cancellation_weather_modal_title'] ); ?>',
+    CANCELLATION_WEATHER_MODAL_INCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_weather_modal_include'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    CANCELLATION_WEATHER_MODAL_EXCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_weather_modal_exclude'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    CANCELLATION_PROFIT_MODAL_TITLE: '<?php echo esc_js( $norisk['cancellation_profit_modal_title'] ); ?>',
+    CANCELLATION_PROFIT_MODAL_INCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_profit_modal_include'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    CANCELLATION_PROFIT_MODAL_EXCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_profit_modal_exclude'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
 };
 
 // DOM Elements
@@ -663,27 +695,38 @@ function restoreFormData(data) {
         // Cancellation
         if (c.cancellation_costs) {
             const cb = document.getElementById('coverage_cancellation');
-            cb.checked = true;
-            cb.dispatchEvent(new Event('change'));
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+            }
             if (c.budget) {
                 const el = document.getElementById('cancellation_total_cost');
-                el.value = parseInt(c.budget).toLocaleString('it-IT');
-                el.dataset.rawValue = c.budget;
+                if (el) {
+                    el.value = parseInt(c.budget).toLocaleString('it-IT');
+                    el.dataset.rawValue = c.budget;
+                }
             }
             if (c.cancellation_weather) {
-                document.querySelector('input[name="cancellation_reasons"][value="extreme_weather"]').checked = true;
+                const weatherCb = document.querySelector('input[name="cancellation_reasons"][value="extreme_weather"]');
+                if (weatherCb) weatherCb.checked = true;
             }
             if (c.cancellation_non_appearance) {
-                document.querySelector('input[name="cancellation_reasons"][value="non_appearance"]').checked = true;
-                document.getElementById('non_appearance_guests_container').style.display = 'block';
+                const nonAppearanceCb = document.querySelector('input[name="cancellation_reasons"][value="non_appearance"]');
+                if (nonAppearanceCb) nonAppearanceCb.checked = true;
+                const nonAppearanceContainer = document.getElementById('non_appearance_guests_container');
+                if (nonAppearanceContainer) nonAppearanceContainer.style.display = 'block';
             }
             if (c.cancellation_income) {
-                document.getElementById('cb_profit_max_50').checked = true;
-                document.getElementById('profit_max_50_container').style.display = 'block';
+                const profitCb = document.getElementById('cb_profit_max_50');
+                if (profitCb) profitCb.checked = true;
+                const profitContainer = document.getElementById('profit_max_50_container');
+                if (profitContainer) profitContainer.style.display = 'block';
                 if (c.cancellation_income_estimate) {
                     const el = document.getElementById('profit_estimate');
-                    el.value = parseInt(c.cancellation_income_estimate).toLocaleString('it-IT');
-                    el.dataset.rawValue = c.cancellation_income_estimate;
+                    if (el) {
+                        el.value = parseInt(c.cancellation_income_estimate).toLocaleString('it-IT');
+                        el.dataset.rawValue = c.cancellation_income_estimate;
+                    }
                 }
             }
         }
@@ -691,8 +734,10 @@ function restoreFormData(data) {
         // Liability
         if (c.liability) {
             const cb = document.getElementById('coverage_liability');
-            cb.checked = true;
-            cb.dispatchEvent(new Event('change'));
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+            }
             if (c.higher_liability) {
                 const radio = document.querySelector(`input[name="liability_amount"][value="${c.higher_liability}"]`);
                 if (radio) radio.checked = true;
@@ -702,12 +747,16 @@ function restoreFormData(data) {
         // Equipment
         if (c.equipment) {
             const cb = document.getElementById('coverage_equipment');
-            cb.checked = true;
-            cb.dispatchEvent(new Event('change'));
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+            }
             if (c.equipment_value) {
                 const el = document.getElementById('equipment_value');
-                el.value = parseInt(c.equipment_value).toLocaleString('it-IT');
-                el.dataset.rawValue = c.equipment_value;
+                if (el) {
+                    el.value = parseInt(c.equipment_value).toLocaleString('it-IT');
+                    el.dataset.rawValue = c.equipment_value;
+                }
             }
         }
 
@@ -786,7 +835,7 @@ function validateStartDate(input) {
     if (selected < minDate) {
         errorEl.textContent = `La data dell'evento deve essere almeno ${CONFIG.MIN_DAYS_ADVANCE} giorni dalla data odierna.`;
         errorEl.style.display = 'block';
-        input.setCustomValidity('La data deve essere almeno 15 giorni in anticipo.');
+        input.setCustomValidity(`La data deve essere almeno ${CONFIG.MIN_DAYS_ADVANCE} giorni in anticipo.`);
     } else {
         errorEl.textContent = '';
         errorEl.style.display = 'none';
@@ -1176,6 +1225,43 @@ function showSummary(result, formData) {
     };
     const environmentLabel = environmentLabels[formData.environment] || formData.environment;
 
+    // Format integer values consistently with Italian thousands separators
+    const formatIntegerDisplay = (value) => {
+        const numericValue = Number(String(value).replace(/[^0-9-]/g, ''));
+        return Number.isFinite(numericValue) ? numericValue.toLocaleString('it-IT') : (value ?? 'N/A');
+    };
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[char]));
+
+    const displayOrNA = (value) => {
+        const text = String(value ?? '').trim();
+        return text ? escapeHtml(text) : 'N/A';
+    };
+
+    const getSelectOptionLabel = (selectId, selectedValue, fallback = 'N/A') => {
+        if (!selectedValue) return fallback;
+        const select = document.getElementById(selectId);
+        if (!select) return String(selectedValue).toUpperCase();
+        const option = Array.from(select.options).find(opt => opt.value === selectedValue);
+        return option ? option.text : String(selectedValue).toUpperCase();
+    };
+
+    const companyCountryLabel = getSelectOptionLabel('company_country', formData.company_country);
+    const companyAddressRaw = `${formData.company_address || ''} ${formData.company_house_number || ''}, ${formData.company_zipcode || ''} ${formData.company_city || ''}`
+        .replace(/\s+,/g, ',')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const eventAddressRaw = `${formData.address || ''} ${formData.houseNumber || ''}, ${formData.zipcode || ''} ${formData.city || ''}`
+        .replace(/\s+,/g, ',')
+        .replace(/\s+/g, ' ')
+        .trim();
+
     // Build coverages HTML - only show selected coverages
     let coveragesHtml = '';
 
@@ -1213,7 +1299,7 @@ function showSummary(result, formData) {
                 <h4>Responsabilità Civile</h4>
                 <div class="norisk-coverage-detail"><span class="label">Massimale per sinistro</span><span class="value">€ ${liabilityAmount},00</span></div>
                 <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ ${CONFIG.LIABILITY_DEDUCTIBLE.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} per sinistro</span></div>
-                <div class="norisk-coverage-detail"><span class="label">Numero di visitatori</span><span class="value">${formData.visitors}</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Numero di visitatori</span><span class="value">${formatIntegerDisplay(formData.visitors)}</span></div>
             </div>
         `;
     }
@@ -1237,7 +1323,7 @@ function showSummary(result, formData) {
         coveragesHtml += `
             <div class="norisk-coverage-block">
                 <h4>Infortuni</h4>
-                <div class="norisk-coverage-detail"><span class="label">Numero assicurati (staff/partecipanti)</span><span class="value">${employees} / ${participants}</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Numero assicurati (staff/partecipanti)</span><span class="value">${escapeHtml(employees)} / ${escapeHtml(participants)}</span></div>
                 <div class="norisk-coverage-detail"><span class="label">Somma assicurata Invalidità Permanente</span><span class="value">€ ${CONFIG.ACCIDENTS_PERMANENT_DISABILITY.toLocaleString('it-IT')}</span></div>
                 <div class="norisk-coverage-detail"><span class="label">Somma assicurata Morte</span><span class="value">€ ${CONFIG.ACCIDENTS_DEATH.toLocaleString('it-IT')}</span></div>
                 <div class="norisk-coverage-detail"><span class="label">Sport incluso</span><span class="value">${sport}</span></div>
@@ -1256,9 +1342,18 @@ function showSummary(result, formData) {
         `;
     }
 
-    // Build full address strings
-    const companyAddress = `${formData.company_address} ${formData.company_house_number}, ${formData.company_zipcode} ${formData.company_city}`;
-    const eventAddress = `${formData.address} ${formData.houseNumber}, ${formData.zipcode} ${formData.city}`;
+    // Build escaped display strings for dynamic summary values
+    const companyAddress = displayOrNA(companyAddressRaw);
+    const eventAddress = displayOrNA(eventAddressRaw);
+    const safeQuoteKey = displayOrNA(quoteKey);
+    const safeCompanyName = displayOrNA(formData.company_name);
+    const safeCompanyCountryLabel = displayOrNA(companyCountryLabel);
+    const safeEventName = displayOrNA(formData.eventName);
+    const safeEventTypeLabel = displayOrNA(eventTypeLabel);
+    const safeDescription = displayOrNA(formData.description);
+    const safeFormattedDate = displayOrNA(formattedDate);
+    const safeVenueDescription = displayOrNA(formData.venueDescription);
+    const safeEnvironmentLabel = displayOrNA(environmentLabel);
 
     resultsSection.className = 'norisk-summary-container';
     resultsSection.innerHTML = `
@@ -1268,14 +1363,14 @@ function showSummary(result, formData) {
                 <img src="https://golinucci.it/wp-content/uploads/2026/02/WhatsApp-Image-2026-02-21-at-14.56.38-1.jpeg" alt="Golinucci Broker Assicurativo" class="norisk-logo-img" />
             </div>
             <h2>Preventivo Assicurazione Evento</h2>
-            <div class="norisk-quote-ref">Riferimento: ${quoteKey}</div>
+            <div class="norisk-quote-ref">Riferimento: ${safeQuoteKey}</div>
         </div>
 
         <div class="norisk-summary-section">
             <h3>Chi si assicura</h3>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Contraente</span>
-                <span class="norisk-summary-value">${formData.company_name || 'N/A'}</span>
+                <span class="norisk-summary-value">${safeCompanyName}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Indirizzo</span>
@@ -1283,11 +1378,11 @@ function showSummary(result, formData) {
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Paese</span>
-                <span class="norisk-summary-value">Italia</span>
+                <span class="norisk-summary-value">${safeCompanyCountryLabel}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Assicurato(i)</span>
-                <span class="norisk-summary-value">${formData.company_name || 'N/A'}</span>
+                <span class="norisk-summary-value">${safeCompanyName}</span>
             </div>
         </div>
 
@@ -1295,27 +1390,27 @@ function showSummary(result, formData) {
             <h3>Informazioni Evento</h3>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Titolo dell'evento</span>
-                <span class="norisk-summary-value">${formData.eventName}</span>
+                <span class="norisk-summary-value">${safeEventName}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Tipo di evento</span>
-                <span class="norisk-summary-value">${eventTypeLabel}</span>
+                <span class="norisk-summary-value">${safeEventTypeLabel}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Descrizione</span>
-                <span class="norisk-summary-value">${formData.description}</span>
+                <span class="norisk-summary-value">${safeDescription}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Primo giorno dell&#39;evento</span>
-                <span class="norisk-summary-value">${formattedDate}</span>
+                <span class="norisk-summary-value">${safeFormattedDate}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Numero di giorni</span>
-                <span class="norisk-summary-value">${formData.days}</span>
+                <span class="norisk-summary-value">${formatIntegerDisplay(formData.days)}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Posizione</span>
-                <span class="norisk-summary-value">${formData.venueDescription || 'N/A'}</span>
+                <span class="norisk-summary-value">${safeVenueDescription}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Indirizzo</span>
@@ -1323,7 +1418,7 @@ function showSummary(result, formData) {
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Ambiente</span>
-                <span class="norisk-summary-value">${environmentLabel}</span>
+                <span class="norisk-summary-value">${safeEnvironmentLabel}</span>
             </div>
         </div>
 
@@ -1368,6 +1463,12 @@ function showSummary(result, formData) {
             </button>
         </div>
     `;
+
+    // Ensure the summary opens from the top instead of leaving users at the previous scroll position
+    const summaryTopTarget = document.querySelector('.norisk-form-container') || resultsSection;
+    requestAnimationFrame(() => {
+        summaryTopTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 }
 
 // Legacy showSuccess function - kept for backward compatibility

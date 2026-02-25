@@ -103,6 +103,16 @@ function norisk_get_options(): array {
         'accidents_modal_title'      => 'Infortuni',
         'accidents_modal_include'    => '',
         'accidents_modal_exclude'    => '',
+        // Modal Sottocategorie - Annullamento Meteo
+        'cancellation_weather_modal_title'   => 'Condizioni Meteorologiche Estreme',
+        'cancellation_weather_modal_include' => '',
+        'cancellation_weather_modal_exclude' => '',
+        // Modal Sottocategorie - Perdita Profitto
+        'cancellation_profit_modal_title'    => 'Perdita di Profitto',
+        'cancellation_profit_modal_include'  => '',
+        'cancellation_profit_modal_exclude'  => '',
+        // Loading Image
+        'loading_image_url'          => '',
         // API
         'api_base_url'     => 'http://api.wordpress.home/api',
         'api_timeout'      => 120,
@@ -234,6 +244,30 @@ function norisk_ajax_send_quote(): void {
         wp_send_json_error( [ 'message' => $msg ], $result['status'] );
     }
 }
+
+// =========================================
+// WPTouch Override
+// =========================================
+
+add_filter('wptouch_should_show_mobile_theme', function ($show_mobile) {
+    if (is_admin()) {
+        return $show_mobile;
+    }
+
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+    $path = strtolower((string) parse_url($request_uri, PHP_URL_PATH));
+    $path = trailingslashit($path);
+
+    $excluded_paths = [
+        '/preventivo-assicurazione-eventi/',
+    ];
+
+    if (in_array($path, $excluded_paths, true)) {
+        return false; // serve desktop/normal WP theme for this URL
+    }
+
+    return $show_mobile;
+}, 20);
 
 // =========================================
 // NoRisk Settings API — WordPress Admin Panel
@@ -402,9 +436,24 @@ function norisk_register_settings(): void {
         add_settings_section( "norisk_modal_{$key}", "Modal: {$label}", '__return_false', 'norisk-settings' );
 
         add_settings_field( "{$key}_modal_title",   'Titolo modale',   'norisk_render_text_field',   'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_title" ] );
-        add_settings_field( "{$key}_modal_include", 'Cosa include',    'norisk_render_textarea_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_include" ] );
+        add_settings_field( "{$key}_modal_include", 'Cosa include (lasciare vuoto per nascondere il pulsante info)',    'norisk_render_textarea_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_include" ] );
         add_settings_field( "{$key}_modal_exclude", 'Cosa esclude',    'norisk_render_textarea_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_exclude" ] );
     }
+
+    // ----- Sezione G2: Modal Sottocategorie Annullamento -----
+    add_settings_section( 'norisk_modal_cancellation_weather', 'Modal: Annullamento - Condizioni Meteorologiche', '__return_false', 'norisk-settings' );
+    add_settings_field( 'cancellation_weather_modal_title',   'Titolo modale',   'norisk_render_text_field',   'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_title' ] );
+    add_settings_field( 'cancellation_weather_modal_include', 'Cosa include (lasciare vuoto per nascondere il pulsante info)', 'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_include' ] );
+    add_settings_field( 'cancellation_weather_modal_exclude', 'Cosa esclude',    'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_exclude' ] );
+
+    add_settings_section( 'norisk_modal_cancellation_profit', 'Modal: Annullamento - Perdita di Profitto', '__return_false', 'norisk-settings' );
+    add_settings_field( 'cancellation_profit_modal_title',   'Titolo modale',   'norisk_render_text_field',   'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_title' ] );
+    add_settings_field( 'cancellation_profit_modal_include', 'Cosa include (lasciare vuoto per nascondere il pulsante info)', 'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_include' ] );
+    add_settings_field( 'cancellation_profit_modal_exclude', 'Cosa esclude',    'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_exclude' ] );
+
+    // ----- Sezione H: Loading Image -----
+    add_settings_section( 'norisk_loading', 'Immagine Caricamento', '__return_false', 'norisk-settings' );
+    add_settings_field( 'loading_image_url', 'URL Immagine (mostrata durante il caricamento del preventivo)', 'norisk_render_text_field', 'norisk-settings', 'norisk_loading', [ 'key' => 'loading_image_url' ] );
 }
 
 /**
@@ -514,7 +563,7 @@ function norisk_sanitize_options( $input ): array {
     $sanitized['contact_email'] = sanitize_email( $input['contact_email'] ?? 'eventi@golinucci.it' );
     $sanitized['contact_phone'] = sanitize_text_field( $input['contact_phone'] ?? '' );
 
-    // Modal fields
+    // Modal fields - main categories
     $modal_fields = [
         'cancellation_modal_title', 'cancellation_modal_include', 'cancellation_modal_exclude',
         'liability_modal_title',    'liability_modal_include',    'liability_modal_exclude',
@@ -525,6 +574,18 @@ function norisk_sanitize_options( $input ): array {
     foreach ( $modal_fields as $key ) {
         $sanitized[ $key ] = wp_kses_post( $input[ $key ] ?? '' );
     }
+
+    // Modal fields - cancellation subcategories
+    $sub_modal_fields = [
+        'cancellation_weather_modal_title',   'cancellation_weather_modal_include', 'cancellation_weather_modal_exclude',
+        'cancellation_profit_modal_title',    'cancellation_profit_modal_include',  'cancellation_profit_modal_exclude',
+    ];
+    foreach ( $sub_modal_fields as $key ) {
+        $sanitized[ $key ] = wp_kses_post( $input[ $key ] ?? '' );
+    }
+
+    // Loading image URL
+    $sanitized['loading_image_url'] = esc_url_raw( $input['loading_image_url'] ?? '' );
 
     return $sanitized;
 }

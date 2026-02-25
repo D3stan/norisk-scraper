@@ -1212,3 +1212,76 @@
         overflow-wrap: break-word;
     }
 }
+
+/* =========================================
+   Loading Image
+   ========================================= */
+
+.norisk-loading-image {
+    margin-bottom: 24px;
+    max-width: 200px;
+}
+
+.norisk-loading-image img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* =========================================
+   Subcategory Labels with Info Buttons
+   ========================================= */
+
+.norisk-checkbox-group label.norisk-subcategory-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    cursor: pointer;
+}
+
+.norisk-subcategory-label input[type="checkbox"] {
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.norisk-subcategory-label > span {
+    flex: 1;
+    margin: 0;
+}
+
+/* Small info button for subcategories */
+.norisk-form-container .norisk-subcategory-label .norisk-info-btn-small,
+.norisk-info-btn-small {
+    background: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2px !important;
+    margin: 0 !important;
+    cursor: pointer;
+    color: var(--brand-primary);
+    opacity: 0.7;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    border-radius: 50%;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.norisk-form-container .norisk-subcategory-label .norisk-info-btn-small:hover,
+.norisk-info-btn-small:hover {
+    background: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    opacity: 1;
+    color: var(--brand-primary);
+}
+
+.norisk-info-btn-small svg {
+    display: block;
+}
