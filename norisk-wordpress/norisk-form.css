@@ -1212,3 +1212,64 @@
         overflow-wrap: break-word;
     }
 }
+
+/* =========================================
+   Loading Image
+   ========================================= */
+
+.norisk-loading-image {
+    margin-bottom: 24px;
+    max-width: 200px;
+}
+
+.norisk-loading-image img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* =========================================
+   Subcategory Labels with Info Buttons
+   ========================================= */
+
+.norisk-subcategory-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.norisk-subcategory-label input[type="checkbox"] {
+    flex-shrink: 0;
+}
+
+.norisk-subcategory-label span {
+    flex: 1;
+}
+
+/* Small info button for subcategories */
+.norisk-info-btn-small {
+    background: none;
+    border: none;
+    padding: 2px;
+    margin: 0;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    border-radius: 50%;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.norisk-info-btn-small:hover {
+    color: var(--brand-primary);
+    background-color: var(--brand-primary-faint);
+}
+
+.norisk-info-btn-small svg {
+    display: block;
+}

@@ -17,6 +17,11 @@ get_header();
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="norisk-loading-overlay">
+        <?php if ( ! empty( $norisk['loading_image_url'] ) ) : ?>
+        <div class="norisk-loading-image">
+            <img src="<?php echo esc_url( $norisk['loading_image_url'] ); ?>" alt="">
+        </div>
+        <?php endif; ?>
         <div class="norisk-loading-bar-container">
             <div id="loadingBar" class="norisk-loading-bar"></div>
         </div>
@@ -246,9 +251,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_cancellation" name="coverage_cancellation" value="1">
                     <span class="norisk-coverage-title">Costi di Annullamento</span>
+                    <?php if ( ! empty( $norisk['cancellation_modal_include'] ) || ! empty( $norisk['cancellation_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="cancellation" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_cancellation">
                     <div class="norisk-form-group">
@@ -273,15 +280,25 @@ get_header();
                         </div>
                         <?php endif; ?>
                         <?php if ( $norisk['show_cancellation_weather'] ): ?>
-                        <label>
+                        <label class="norisk-subcategory-label">
                             <input type="checkbox" name="cancellation_reasons" value="extreme_weather">
-                            Annullamento per condizioni meteorologiche estreme
+                            <span>Annullamento per condizioni meteorologiche estreme</span>
+                            <?php if ( ! empty( $norisk['cancellation_weather_modal_include'] ) || ! empty( $norisk['cancellation_weather_modal_exclude'] ) ) : ?>
+                            <button type="button" class="norisk-info-btn norisk-info-btn-small" data-coverage="cancellation_weather" aria-label="Maggiori informazioni">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                            <?php endif; ?>
                         </label>
                         <?php endif; ?>
                         <?php if ( $norisk['show_cancellation_profit'] ): ?>
-                        <label>
+                        <label class="norisk-subcategory-label">
                             <input type="checkbox" name="cancellation_reasons" value="profit_max_50" id="cb_profit_max_50">
-                            Perdita Profitto (fino a massimo 50% dei costi di annullamento)
+                            <span>Perdita Profitto (fino a massimo 50% dei costi di annullamento)</span>
+                            <?php if ( ! empty( $norisk['cancellation_profit_modal_include'] ) || ! empty( $norisk['cancellation_profit_modal_exclude'] ) ) : ?>
+                            <button type="button" class="norisk-info-btn norisk-info-btn-small" data-coverage="cancellation_profit" aria-label="Maggiori informazioni">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                            <?php endif; ?>
                         </label>
                         <div class="norisk-sub-options" id="profit_max_50_container" style="display: none; margin-left: 30px; margin-top: 8px;">
                             <div class="norisk-form-group">
@@ -301,9 +318,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_liability" name="coverage_liability" value="1">
                     <span class="norisk-coverage-title">Responsabilità Civile</span>
+                    <?php if ( ! empty( $norisk['liability_modal_include'] ) || ! empty( $norisk['liability_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="liability" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_liability">
                     <div class="norisk-form-group">
@@ -329,9 +348,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_equipment" name="coverage_equipment" value="1">
                     <span class="norisk-coverage-title">Attrezzature</span>
+                    <?php if ( ! empty( $norisk['equipment_modal_include'] ) || ! empty( $norisk['equipment_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="equipment" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_equipment">
                     <div class="norisk-form-group">
@@ -348,9 +369,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_money" name="coverage_money" value="1">
                     <span class="norisk-coverage-title">Denaro</span>
+                    <?php if ( ! empty( $norisk['money_modal_include'] ) || ! empty( $norisk['money_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="money" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_money">
                     <div class="norisk-form-group">
@@ -367,9 +390,11 @@ get_header();
                 <label class="norisk-coverage-toggle">
                     <input type="checkbox" id="coverage_accidents" name="coverage_accidents" value="1">
                     <span class="norisk-coverage-title">Infortuni</span>
+                    <?php if ( ! empty( $norisk['accidents_modal_include'] ) || ! empty( $norisk['accidents_modal_exclude'] ) ) : ?>
                     <button type="button" class="norisk-info-btn" data-coverage="accidents" aria-label="Maggiori informazioni">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     </button>
+                    <?php endif; ?>
                 </label>
                 <div class="norisk-coverage-options" id="options_accidents">
                     <div class="norisk-form-group">
@@ -492,6 +517,13 @@ const CONFIG = {
     ACCIDENTS_MODAL_TITLE: '<?php echo esc_js( $norisk['accidents_modal_title'] ); ?>',
     ACCIDENTS_MODAL_INCLUDE: <?php echo json_encode( wp_kses_post( $norisk['accidents_modal_include'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
     ACCIDENTS_MODAL_EXCLUDE: <?php echo json_encode( wp_kses_post( $norisk['accidents_modal_exclude'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    // Subcategory modals
+    CANCELLATION_WEATHER_MODAL_TITLE: '<?php echo esc_js( $norisk['cancellation_weather_modal_title'] ); ?>',
+    CANCELLATION_WEATHER_MODAL_INCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_weather_modal_include'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    CANCELLATION_WEATHER_MODAL_EXCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_weather_modal_exclude'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    CANCELLATION_PROFIT_MODAL_TITLE: '<?php echo esc_js( $norisk['cancellation_profit_modal_title'] ); ?>',
+    CANCELLATION_PROFIT_MODAL_INCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_profit_modal_include'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
+    CANCELLATION_PROFIT_MODAL_EXCLUDE: <?php echo json_encode( wp_kses_post( $norisk['cancellation_profit_modal_exclude'] ), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG ); ?>,
 };
 
 // DOM Elements
