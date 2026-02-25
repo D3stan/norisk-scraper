@@ -275,7 +275,7 @@ get_header();
                         <?php if ( $norisk['show_cancellation_weather'] ): ?>
                         <label>
                             <input type="checkbox" name="cancellation_reasons" value="extreme_weather">
-                            Annullamento per condizioni meteorologiche estreme
+                            Annullamento per maltempo
                         </label>
                         <?php endif; ?>
                         <?php if ( $norisk['show_cancellation_profit'] ): ?>

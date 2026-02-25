@@ -334,7 +334,7 @@ function norisk_register_settings(): void {
     $cancellation_sub_fields = [
         'show_cancellation_profit'         => 'Mostra Perdita Profitto',
         'show_cancellation_non_appearance' => 'Mostra Annullamento per mancata partecipazione (artista/ospite)',
-        'show_cancellation_weather'        => 'Mostra Annullamento per condizioni meteorologiche estreme',
+        'show_cancellation_weather'        => 'Mostra Annullamento per maltempo',
     ];
 
     foreach ( $cancellation_sub_fields as $key => $label ) {
