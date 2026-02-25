@@ -246,6 +246,30 @@ function norisk_ajax_send_quote(): void {
 }
 
 // =========================================
+// WPTouch Override
+// =========================================
+
+add_filter('wptouch_should_show_mobile_theme', function ($show_mobile) {
+    if (is_admin()) {
+        return $show_mobile;
+    }
+
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+    $path = strtolower((string) parse_url($request_uri, PHP_URL_PATH));
+    $path = trailingslashit($path);
+
+    $excluded_paths = [
+        '/preventivo-assicurazione-eventi/',
+    ];
+
+    if (in_array($path, $excluded_paths, true)) {
+        return false; // serve desktop/normal WP theme for this URL
+    }
+
+    return $show_mobile;
+}, 20);
+
+// =========================================
 // NoRisk Settings API — WordPress Admin Panel
 // Settings → NoRisk Form
 // =========================================
