@@ -1208,6 +1208,12 @@ function showSummary(result, formData) {
     };
     const environmentLabel = environmentLabels[formData.environment] || formData.environment;
 
+    // Format integer values consistently with Italian thousands separators
+    const formatIntegerDisplay = (value) => {
+        const numericValue = Number(String(value).replace(/[^0-9-]/g, ''));
+        return Number.isFinite(numericValue) ? numericValue.toLocaleString('it-IT') : (value ?? 'N/A');
+    };
+
     // Build coverages HTML - only show selected coverages
     let coveragesHtml = '';
 
@@ -1245,7 +1251,7 @@ function showSummary(result, formData) {
                 <h4>Responsabilità Civile</h4>
                 <div class="norisk-coverage-detail"><span class="label">Massimale per sinistro</span><span class="value">€ ${liabilityAmount},00</span></div>
                 <div class="norisk-coverage-detail"><span class="label">Franchigia</span><span class="value">€ ${CONFIG.LIABILITY_DEDUCTIBLE.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} per sinistro</span></div>
-                <div class="norisk-coverage-detail"><span class="label">Numero di visitatori</span><span class="value">${formData.visitors}</span></div>
+                <div class="norisk-coverage-detail"><span class="label">Numero di visitatori</span><span class="value">${formatIntegerDisplay(formData.visitors)}</span></div>
             </div>
         `;
     }
@@ -1343,7 +1349,7 @@ function showSummary(result, formData) {
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Numero di giorni</span>
-                <span class="norisk-summary-value">${formData.days}</span>
+                <span class="norisk-summary-value">${formatIntegerDisplay(formData.days)}</span>
             </div>
             <div class="norisk-summary-row">
                 <span class="norisk-summary-label">Posizione</span>
@@ -1400,6 +1406,12 @@ function showSummary(result, formData) {
             </button>
         </div>
     `;
+
+    // Ensure the summary opens from the top instead of leaving users at the previous scroll position
+    const summaryTopTarget = document.querySelector('.norisk-form-container') || resultsSection;
+    requestAnimationFrame(() => {
+        summaryTopTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 }
 
 // Legacy showSuccess function - kept for backward compatibility
