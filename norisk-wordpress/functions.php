@@ -435,21 +435,21 @@ function norisk_register_settings(): void {
     foreach ( $coverage_types as $key => $label ) {
         add_settings_section( "norisk_modal_{$key}", "Modal: {$label}", '__return_false', 'norisk-settings' );
 
-        add_settings_field( "{$key}_modal_title",   'Titolo modale',   'norisk_render_text_field',   'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_title" ] );
-        add_settings_field( "{$key}_modal_include", 'Cosa include (lasciare vuoto per nascondere il pulsante info)',    'norisk_render_textarea_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_include" ] );
-        add_settings_field( "{$key}_modal_exclude", 'Cosa esclude',    'norisk_render_textarea_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_exclude" ] );
+        add_settings_field( "{$key}_modal_title",   'Titolo modale',   'norisk_render_text_field',    'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_title" ] );
+        add_settings_field( "{$key}_modal_include", 'Cosa include (lasciare vuoto per nascondere il pulsante info)', 'norisk_render_wysiwyg_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_include" ] );
+        add_settings_field( "{$key}_modal_exclude", 'Cosa esclude',    'norisk_render_wysiwyg_field', 'norisk-settings', "norisk_modal_{$key}", [ 'key' => "{$key}_modal_exclude" ] );
     }
 
     // ----- Sezione G2: Modal Sottocategorie Annullamento -----
     add_settings_section( 'norisk_modal_cancellation_weather', 'Modal: Annullamento - Condizioni Meteorologiche', '__return_false', 'norisk-settings' );
-    add_settings_field( 'cancellation_weather_modal_title',   'Titolo modale',   'norisk_render_text_field',   'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_title' ] );
-    add_settings_field( 'cancellation_weather_modal_include', 'Cosa include (lasciare vuoto per nascondere il pulsante info)', 'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_include' ] );
-    add_settings_field( 'cancellation_weather_modal_exclude', 'Cosa esclude',    'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_exclude' ] );
+    add_settings_field( 'cancellation_weather_modal_title',   'Titolo modale',   'norisk_render_text_field',    'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_title' ] );
+    add_settings_field( 'cancellation_weather_modal_include', 'Cosa include (lasciare vuoto per nascondere il pulsante info)', 'norisk_render_wysiwyg_field', 'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_include' ] );
+    add_settings_field( 'cancellation_weather_modal_exclude', 'Cosa esclude',    'norisk_render_wysiwyg_field', 'norisk-settings', 'norisk_modal_cancellation_weather', [ 'key' => 'cancellation_weather_modal_exclude' ] );
 
     add_settings_section( 'norisk_modal_cancellation_profit', 'Modal: Annullamento - Perdita di Profitto', '__return_false', 'norisk-settings' );
-    add_settings_field( 'cancellation_profit_modal_title',   'Titolo modale',   'norisk_render_text_field',   'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_title' ] );
-    add_settings_field( 'cancellation_profit_modal_include', 'Cosa include (lasciare vuoto per nascondere il pulsante info)', 'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_include' ] );
-    add_settings_field( 'cancellation_profit_modal_exclude', 'Cosa esclude',    'norisk_render_textarea_field', 'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_exclude' ] );
+    add_settings_field( 'cancellation_profit_modal_title',   'Titolo modale',   'norisk_render_text_field',    'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_title' ] );
+    add_settings_field( 'cancellation_profit_modal_include', 'Cosa include (lasciare vuoto per nascondere il pulsante info)', 'norisk_render_wysiwyg_field', 'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_include' ] );
+    add_settings_field( 'cancellation_profit_modal_exclude', 'Cosa esclude',    'norisk_render_wysiwyg_field', 'norisk-settings', 'norisk_modal_cancellation_profit', [ 'key' => 'cancellation_profit_modal_exclude' ] );
 
     // ----- Sezione H: Loading Image -----
     add_settings_section( 'norisk_loading', 'Immagine Caricamento', '__return_false', 'norisk-settings' );
@@ -499,7 +499,7 @@ function norisk_render_checkbox_field( array $args ): void {
 }
 
 /**
- * Render a textarea field.
+ * Render a textarea field (plain HTML, kept as fallback).
  */
 function norisk_render_textarea_field( array $args ): void {
     $opts  = norisk_get_options();
@@ -509,6 +509,36 @@ function norisk_render_textarea_field( array $args ): void {
         '<textarea name="norisk_options[%s]" rows="5" class="large-text">%s</textarea>',
         esc_attr( $key ),
         esc_textarea( $value )
+    );
+}
+
+/**
+ * Render a WYSIWYG editor field (TinyMCE) for modal content.
+ * Each editor gets a unique ID derived from the option key so multiple
+ * editors can coexist on the same admin page without conflicts.
+ */
+function norisk_render_wysiwyg_field( array $args ): void {
+    $opts      = norisk_get_options();
+    $key       = $args['key'];
+    $value     = $opts[ $key ] ?? '';
+    // Editor ID must be lowercase letters, digits and underscores only.
+    $editor_id = 'norisk_' . $key;
+
+    wp_editor(
+        $value,
+        $editor_id,
+        [
+            'textarea_name' => "norisk_options[{$key}]",
+            'textarea_rows' => 6,
+            'media_buttons' => false,
+            'teeny'         => false,
+            'tinymce'       => [
+                'toolbar1' => 'bold,italic,underline,separator,bullist,numlist,separator,link,unlink,separator,undo,redo',
+                'toolbar2' => '',
+                'plugins'  => 'lists,link,paste,wordpress,wplink',
+            ],
+            'quicktags'     => [ 'buttons' => 'strong,em,ul,ol,li,link,close' ],
+        ]
     );
 }
 
