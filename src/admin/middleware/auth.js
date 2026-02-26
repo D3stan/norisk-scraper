@@ -26,9 +26,13 @@ export async function validateCredentials(username, password) {
         throw new Error('ADMIN_PASSWORD_HASH not configured');
     }
 
-    if (username !== CONFIG.ADMIN.USERNAME) {
-        return false;
+    try {
+        // Use dummy hash for invalid usernames to prevent timing attacks
+        const hashToCompare = username === CONFIG.ADMIN.USERNAME
+            ? CONFIG.ADMIN.PASSWORD_HASH
+            : '$2b$10$dummy.hash.for.timing.attack.prevention.XXXXXXXXXXXXXXXXXXXXX';
+        return await bcrypt.compare(password, hashToCompare);
+    } catch (error) {
+        throw new Error('Authentication validation failed');
     }
-
-    return await bcrypt.compare(password, CONFIG.ADMIN.PASSWORD_HASH);
 }
