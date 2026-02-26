@@ -12,6 +12,16 @@ export function initDatabase() {
 
     db = new Database(DB_PATH);
 
+    // Configure SQLite pragmas for better performance and safety
+    try {
+        db.pragma('journal_mode = WAL');
+        db.pragma('busy_timeout = 5000');  // 5 seconds
+        db.pragma('foreign_keys = ON');
+    } catch (error) {
+        console.error('Failed to configure SQLite pragmas:', error);
+        throw error;
+    }
+
     // Create submissions table
     db.exec(`
         CREATE TABLE IF NOT EXISTS submissions (
