@@ -72,9 +72,26 @@ router.get('/api/submissions', apiLimiter, requireAuth, validateQueryParams, (re
             dateTo: dateTo || undefined
         });
 
+        // Map database columns (snake_case) to frontend expected names (camelCase)
+        const mappedSubmissions = submissions.map(row => ({
+            id: row.id,
+            name: row.nome_cognome,
+            companyName: row.ragione_sociale,
+            vatNumber: row.partita_iva,
+            email: row.email,
+            phone: row.telefono,
+            quoteCode: row.codice_preventivo,
+            eventType: row.event_type,
+            eventDate: row.event_date,
+            premiumAmount: row.premium_amount,
+            currency: row.currency,
+            createdAt: row.created_at
+        }));
+
         res.json({
             success: true,
-            data: submissions,
+            submissions: mappedSubmissions,
+            total,
             pagination: {
                 page,
                 limit,

@@ -182,7 +182,7 @@ function renderTable() {
         });
 
         const name = submission.companyName ||
-            `${submission.firstName || ''} ${submission.lastName || ''}`.trim() ||
+            submission.name ||
             'N/D';
 
         return `
@@ -305,7 +305,7 @@ function showDetailModal(submission) {
     });
 
     const name = submission.companyName ||
-        `${submission.firstName || ''} ${submission.lastName || ''}`.trim() ||
+        submission.name ||
         'N/D';
 
     let html = `
@@ -420,9 +420,9 @@ function showDetailModal(submission) {
     }
 
     // Add raw data section for additional fields
-    const excludedFields = ['id', 'createdAt', 'updatedAt', 'quoteCode', 'firstName', 'lastName',
+    const excludedFields = ['id', 'createdAt', 'updatedAt', 'quoteCode', 'name',
         'companyName', 'email', 'phone', 'vatNumber', 'fiscalCode', 'eventType',
-        'eventDate', 'eventLocation', 'guestCount', 'coverages'];
+        'eventDate', 'eventLocation', 'guestCount', 'coverages', 'premiumAmount', 'currency'];
 
     const additionalFields = Object.keys(submission).filter(key =>
         !excludedFields.includes(key) && submission[key] !== null && submission[key] !== undefined

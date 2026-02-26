@@ -15,6 +15,9 @@ COPY . .
 # Create screenshots directory for debug mode
 RUN mkdir -p screenshots
 
+# Create database directory for SQLite persistence
+RUN mkdir -p database
+
 # Expose the port your Express app runs on
 EXPOSE 3000
 
