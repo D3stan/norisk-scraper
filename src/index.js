@@ -24,8 +24,14 @@ const SQLiteStore = SQLiteStoreFactory(session);
 dotenv.config();
 
 // Initialize SQLite database
-initDatabase();
-console.log('✅ Database initialized');
+try {
+    initDatabase();
+    console.log('✅ Database initialized');
+} catch (error) {
+    logger.error('Failed to initialize database', { error: error.message });
+    console.error('❌ Database initialization failed:', error.message);
+    process.exit(1);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,6 +69,7 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
+        sameSite: 'lax',
         maxAge: CONFIG.ADMIN.COOKIE_MAX_AGE
     }
 }));
