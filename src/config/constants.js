@@ -169,5 +169,14 @@ export const CONFIG = {
         INITIAL_FORM: /event-int/,
         COVERAGES: /coverages/,
         PROPOSAL: /proposal/,
+    },
+
+    // Admin Dashboard Configuration
+    ADMIN: {
+        USERNAME: process.env.ADMIN_USER || 'admin',
+        PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH,
+        SESSION_SECRET: process.env.ADMIN_SESSION_SECRET || 'change-this-secret-in-production',
+        COOKIE_MAX_AGE: 24 * 60 * 60 * 1000, // 24 hours
+        COOKIE_MAX_AGE_REMEMBER: 7 * 24 * 60 * 60 * 1000 // 7 days
     }
 };
