@@ -10,11 +10,22 @@ import { startEmailPolling } from './utils/emailReceiver.js';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import session from 'express-session';
+import SQLiteStoreFactory from 'better-sqlite3-session-store';
+import { initDatabase } from './utils/db.js';
+import loginRoutes from './admin/routes/login.js';
+import dashboardRoutes from './admin/routes/dashboard.js';
+import { requireAuth } from './admin/middleware/auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SQLiteStore = SQLiteStoreFactory(session);
 
 // Load environment variables
 dotenv.config();
+
+// Initialize SQLite database
+initDatabase();
+console.log('✅ Database initialized');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,23 +43,29 @@ if (process.env.NODE_ENV === 'development') {
 
 // Request logging middleware
 app.use((req, res, next) => {
-    logger.info(`${req.method} ${req.path}`, { 
+    logger.info(`${req.method} ${req.path}`, {
         ip: req.ip,
-        userAgent: req.get('user-agent') 
+        userAgent: req.get('user-agent')
     });
     next();
 });
 
-/**
- * Health check endpoint
- */
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-    });
-});
+// Session middleware for admin
+app.use(session({
+    store: new SQLiteStore({
+        dir: './database',
+        db: 'sessions.db'
+    }),
+    secret: CONFIG.ADMIN.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    name: 'norisk.admin.session',
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: CONFIG.ADMIN.COOKIE_MAX_AGE
+    }
+}));
 
 /**
  * Main automation endpoint
@@ -223,6 +240,18 @@ app.get('/api/quote/:quoteKey/status', (req, res) => {
     });
 });
 
+// Admin routes
+app.use('/admin', loginRoutes);
+app.use('/admin', dashboardRoutes);
+
+// Serve admin static files
+app.use('/admin/static', express.static(path.join(__dirname, 'admin/public')));
+
+// Admin dashboard page (protected)
+app.get('/admin', requireAuth, (req, res) => {
+    res.sendFile('index.html', { root: './src/admin/public' });
+});
+
 /**
  * Error handling middleware
  */
@@ -253,7 +282,7 @@ app.listen(PORT, () => {
     });
 
     console.log(`\n🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📝 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔐 Admin dashboard: http://localhost:${PORT}/admin`);
     console.log(`🎯 Quote endpoint: POST http://localhost:${PORT}/api/quote`);
     console.log(`📧 Send quote: POST http://localhost:${PORT}/api/quote/send`);
     console.log(`📊 Quote status: GET http://localhost:${PORT}/api/quote/:quoteKey/status`);
