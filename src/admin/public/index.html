@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NoRisk Admin</title>
+    <link rel="stylesheet" href="/admin/static/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>NoRisk Admin</h1>
+            <button id="logoutBtn" class="btn-secondary">Logout</button>
+        </header>
+
+        <main class="admin-main">
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="Cerca per nome, email, codice...">
+                <select id="dateFilter">
+                    <option value="">Tutte le date</option>
+                    <option value="today">Oggi</option>
+                    <option value="week">Ultimi 7 giorni</option>
+                    <option value="month">Ultimo mese</option>
+                </select>
+                <button id="searchBtn" class="btn-primary">Cerca</button>
+            </div>
+
+            <div class="table-container">
+                <table class="submissions-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Nome Cognome / Ragione Sociale</th>
+                            <th>Email</th>
+                            <th>Telefono</th>
+                            <th>Codice Preventivo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissionsTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="pagination">
+                <!-- Populated by JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="/admin/static/admin.js"></script>
+</body>
+</html>
