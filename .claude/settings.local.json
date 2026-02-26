@@ -5,7 +5,8 @@
       "Bash(ls:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(norisk-wordpress/style.css:*)"
+      "Bash(norisk-wordpress/style.css:*)",
+      "Bash(npm install better-sqlite3 express-session better-sqlite3-session-store bcrypt express-rate-limit)"
     ]
   }
 }

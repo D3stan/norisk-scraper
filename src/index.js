@@ -12,10 +12,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
 import SQLiteStoreFactory from 'better-sqlite3-session-store';
-import { initDatabase } from './utils/db.js';
+import { initDatabase, getDatabase } from './utils/db.js';
 import loginRoutes from './admin/routes/login.js';
 import dashboardRoutes from './admin/routes/dashboard.js';
 import { requireAuth } from './admin/middleware/auth.js';
+import Database from 'better-sqlite3';
+import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SQLiteStore = SQLiteStoreFactory(session);
@@ -32,6 +34,15 @@ try {
     console.error('❌ Database initialization failed:', error.message);
     process.exit(1);
 }
+
+// Ensure database directory exists for sessions
+const dbDir = path.join(__dirname, '../database');
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+// Create session database connection
+const sessionDb = new Database(path.join(dbDir, 'sessions.db'));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,8 +70,11 @@ app.use((req, res, next) => {
 // Session middleware for admin
 app.use(session({
     store: new SQLiteStore({
-        dir: './database',
-        db: 'sessions.db'
+        client: sessionDb,
+        expired: {
+            clear: true,
+            intervalMs: 900000 // 15 minutes
+        }
     }),
     secret: CONFIG.ADMIN.SESSION_SECRET,
     resave: false,
