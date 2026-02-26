@@ -3,6 +3,7 @@ import logger from '../utils/logger.js';
 import { CONFIG } from '../config/constants.js';
 import { fillFormFields, selectCoverages, fillGuestInfoPage, fillProposalForm } from './formFiller.js';
 import { createQuoteRecord, updateQuoteStatus, storePdfPath, getQuoteRecord } from '../utils/storage.js';
+import { saveSubmission } from '../utils/db.js';
 import { waitForQuoteEmail } from '../utils/emailReceiver.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -543,6 +544,26 @@ export async function automateFormSubmission(mappedData) {
 
         // Create quote record in storage; store urlKey so submitEmailQuote can navigate later
         createQuoteRecord(quoteKey, mappedData.email, mappedData, urlKey);
+
+        // Save to database
+        try {
+            saveSubmission({
+                nomeCognome: `${mappedData.name || ''} ${mappedData.surname || ''}`.trim(),
+                ragioneSociale: mappedData.companyName || null,
+                partitaIva: mappedData.vatNumber || null,
+                email: mappedData.email,
+                telefono: mappedData.phone,
+                codicePreventivo: quoteKey,
+                eventType: mappedData.eventType,
+                eventDate: mappedData.eventDate,
+                premiumAmount: pricing?.toPay ? parseFloat(pricing.toPay.replace(/[,.]/g, '')) : null,
+                currency: 'EUR'
+            });
+            logger.info('Submission saved to database', { quoteKey });
+        } catch (dbError) {
+            logger.error('Failed to save submission to database', { error: dbError.message, quoteKey });
+            // Don't fail the request if DB save fails
+        }
 
         // Re-establish main context after navigation
         const mainContextDetails = page.locator('main');
