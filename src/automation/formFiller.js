@@ -17,6 +17,20 @@ function getPage(context) {
 }
 
 /**
+ * Formats phone number - adds +39 prefix if less than 10 characters
+ * @param {string} phone - The phone number to format
+ * @returns {string} Formatted phone number
+ */
+function formatPhoneNumber(phone) {
+    if (!phone) return phone;
+    const cleaned = String(phone).trim();
+    if (cleaned.length < 10 && !cleaned.startsWith('+')) {
+        return '+39' + cleaned;
+    }
+    return cleaned;
+}
+
+/**
  * Fills a text input field
  * @param {Page|Frame|Locator} context - The page, frame, or locator context
  */
@@ -24,6 +38,15 @@ async function fillInput(context, selector, value, fieldName) {
     if (!value) {
         logger.debug(`Skipping empty field: ${fieldName}`);
         return;
+    }
+
+    // Format phone number if this is the phone field
+    if (fieldName === 'Phone' && value) {
+        const originalValue = value;
+        value = formatPhoneNumber(value);
+        if (originalValue !== value) {
+            logger.debug(`Formatted phone number: ${originalValue} -> ${value}`);
+        }
     }
     
     try {
@@ -86,21 +109,29 @@ async function selectDropdown(context, selector, value, fieldName) {
         
         const element = context.locator(selector).first();
         const count = await element.count();
-        
+
         if (count > 0) {
-            // Standard select element found
-            await element.selectOption(String(value), { timeout: 5000 });
-            logger.debug(`Selected dropdown: ${fieldName}`, { value });
-            return;
+            // Check if this is actually a standard <select> element
+            const isSelect = await element.evaluate(el => el.tagName.toLowerCase() === 'select').catch(() => false);
+
+            if (isSelect) {
+                // Standard select element found
+                await element.selectOption(String(value), { timeout: 5000 });
+                logger.debug(`Selected dropdown: ${fieldName}`, { value });
+                return;
+            }
+            // Not a select element, continue to custom UI handling
+            logger.debug(`Element found but not a <select>, trying custom UI approach: ${fieldName}`);
         }
         
         // Not found, try alternative approaches for custom UI components
         logger.debug(`Standard select not found, trying custom UI approach: ${fieldName}`);
         
-        // Extract field name from selector
+        // Extract field name/id from selector
         const fieldNameMatch = selector.match(/name="([^"]+)"/);
-        const fieldId = fieldNameMatch ? fieldNameMatch[1] : null;
-        
+        const fieldIdMatch = selector.match(/#([^\s\[]+)/); // Extract ID from #id pattern
+        const fieldId = fieldNameMatch ? fieldNameMatch[1] : (fieldIdMatch ? fieldIdMatch[1] : null);
+
         if (!fieldId) {
             logger.warn(`Could not extract field ID from selector: ${selector}`);
             return;
@@ -111,6 +142,7 @@ async function selectDropdown(context, selector, value, fieldName) {
         const customSelectTriggers = [
             `ui-select#${fieldId} input[role="combobox"]`,
             `ui-select[name="${fieldId}"] input[role="combobox"]`,
+            `[data-flux-select="${fieldId}"] input[role="combobox"]`,
             `button[data-flux-control="${fieldId}"]`,
             `[data-field="${fieldId}"] button`,
             `button[aria-controls*="${fieldId}"]`,
@@ -127,21 +159,43 @@ async function selectDropdown(context, selector, value, fieldName) {
                 // Click to open dropdown
                 await trigger.click();
                 await page.waitForTimeout(500);
-                
-                // Wait for options container to be visible
-                const optionsVisible = await context.locator('ui-options[role="listbox"]').isVisible().catch(() => false);
-                if (!optionsVisible) {
-                    logger.warn('Options container not visible after clicking trigger');
+
+                // Wait for options container to be visible and populated
+                const listbox = context.locator('ui-options[role="listbox"], ui-options[data-flux-options]').first();
+                try {
+                    await listbox.waitFor({ state: 'visible', timeout: 3000 });
+                    // Wait for options to be populated
+                    await page.waitForTimeout(300);
+                } catch {
+                    logger.warn('Options container not visible after clicking trigger, trying direct value set');
+                    // Try to set the hidden input directly
+                    const hiddenInput = context.locator(`input[name="${fieldId}"][data-flux-hidden]`).first();
+                    if (await hiddenInput.count() > 0) {
+                        await hiddenInput.evaluate((el, val) => {
+                            el.value = val;
+                            el.dispatchEvent(new Event('input', { bubbles: true }));
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        }, String(value));
+                        logger.debug(`Set hidden input directly for: ${fieldName}`, { value });
+                        return;
+                    }
                 }
                 
                 // Try to find and click the option by value attribute first
+                // Also try trimmed value (without trailing space) as fallback
+                const trimmedValue = String(value).trim();
                 const optionSelectors = [
                     `ui-option[value="${value}"]`,
+                    `ui-option[value="${trimmedValue}"]`,
+                    `ui-option[value^="${trimmedValue}"]`,
                     `[role="option"][value="${value}"]`,
+                    `[role="option"][value="${trimmedValue}"]`,
+                    `[role="option"][value^="${trimmedValue}"]`,
                     `[role="option"][data-value="${value}"]`,
-                    `[role="option"]:has-text("${value}")`,
+                    `[role="option"][data-value="${trimmedValue}"]`,
+                    `[role="option"]:has-text("${trimmedValue}")`,
                     `li[data-value="${value}"]`,
-                    `button:has-text("${value}")`,
+                    `li[data-value="${trimmedValue}"]`,
                 ];
                 
                 for (const optionSelector of optionSelectors) {
@@ -167,6 +221,23 @@ async function selectDropdown(context, selector, value, fieldName) {
             }
         }
         
+        // Last resort: try to find and set the hidden input directly
+        logger.debug(`Trying hidden input fallback for: ${fieldName}`);
+        try {
+            const hiddenInput = context.locator(`input[name="${fieldId}"][data-flux-hidden], input[name="${fieldId}"][type="hidden"]`).first();
+            if (await hiddenInput.count() > 0) {
+                await hiddenInput.evaluate((el, val) => {
+                    el.value = val;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }, String(value));
+                logger.debug(`Set hidden input directly for: ${fieldName}`, { value });
+                return;
+            }
+        } catch (hiddenError) {
+            logger.debug(`Hidden input fallback failed for: ${fieldName}`);
+        }
+
         logger.warn(`Could not find dropdown (standard or custom): ${fieldName}, skipping`);
     } catch (error) {
         logger.warn(`Failed to select dropdown: ${fieldName}`, { selector, error: error.message });

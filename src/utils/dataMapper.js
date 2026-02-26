@@ -68,15 +68,16 @@ export function mapFormData(italianData) {
         city: italianData.city || '',
         // region: normalizeCountryCode(italianData.country),
         region: italianData.country || '',
-        country: italianData.country || 'nl', // Country for proposal page
+        // Country for proposal page - Flux UI expects trailing space for most countries
+        country: normalizeCountryCode(italianData.country || 'nl'),
         environment: italianData.environment || 'both',
         
         // Proposal page specific fields
         is_business: italianData.isBusiness || false,
-        company_name: italianData.companyName || '',
-        company_commercial_number: italianData.companyCommercialNumber || '',
-        company_duns_number: italianData.companyDunsNumber || '',
-        company_legal_form: italianData.companyLegalForm || '',
+        company_name: italianData.company_name || italianData.companyName || '',
+        company_commercial_number: italianData.company_commercial_number || italianData.companyCommercialNumber || '',
+        company_duns_number: italianData.company_duns_number || italianData.companyDunsNumber || '',
+        company_legal_form: italianData.company_legal_form || italianData.companyLegalForm || '',
         birthdate: italianData.birthdate || '',
         
         // Coverages (if provided)

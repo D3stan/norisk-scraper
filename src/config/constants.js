@@ -148,7 +148,7 @@ export const CONFIG = {
             HOUSE_NUMBER: 'input[type="text"][name="house_number"]',
             ZIPCODE: 'input[type="text"][name="zipcode"]',
             CITY: 'input[type="text"][name="city"]',
-            COUNTRY: 'ui-select#region input[role="combobox"]',
+            COUNTRY: 'ui-select#country input[role="combobox"]',
             
             // Business-specific fields
             COMPANY_NAME: 'input[type="text"][name="company_name"]',

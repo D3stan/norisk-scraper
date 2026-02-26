@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import logger from '../utils/logger.js';
 import { CONFIG } from '../config/constants.js';
 import { fillFormFields, selectCoverages, fillGuestInfoPage, fillProposalForm } from './formFiller.js';
-import { createQuoteRecord, updateQuoteStatus, storePdfPath, getQuoteRecord } from '../utils/storage.js';
+import { createQuoteRecord, updateQuoteStatus, storePdfPath } from '../utils/storage.js';
 import { saveSubmission } from '../utils/db.js';
 import { waitForQuoteEmail } from '../utils/emailReceiver.js';
 import { fileURLToPath } from 'url';
@@ -501,15 +501,55 @@ export async function automateFormSubmission(mappedData) {
         const detailsUrl = await page.evaluate(() => window.location.href);
         logger.info('Navigated to "Your Details" page', { url: detailsUrl });
         
-        // Extract internal UUID from URL (needed only for NoRisk site navigation)
+        // Extract internal UUID from URL (needed for NoRisk site navigation)
         const urlParams = new URL(detailsUrl).searchParams;
         const urlKey = urlParams.get('key');
         logger.info('URL key extracted', { urlKey });
 
-        // Navigate to agents listing to extract the official NR quote code (e.g. NR000053118)
-        let noriskCode = urlKey; // fallback: use UUID if NR code cannot be found
+        // Temporarily use urlKey as quote key until we get the actual NR code after submission
+        let quoteKey = urlKey;
+        logger.info('Initial quote key (will be updated after submission)', { quoteKey });
+
+        // Re-establish main context after navigation
+        const mainContextDetails = page.locator('main');
+
+        // ========================================
+        // STEP 10: Fill "Your Details" Form
+        // ========================================
+        logger.info('Filling "Your Details" form');
+        await fillProposalForm(mainContextDetails, mappedData);
+        await takeScreenshot(page, 'your-details-filled');
+
+        // ========================================
+        // STEP 11: Submit Proposal and Extract NR Quote Code
+        // ========================================
+        // Check GDPR checkbox
+        logger.debug('Checking GDPR checkbox');
+        const gdprCheckbox = mainContextDetails.locator('input[type="checkbox"][name="gdpr"]');
+        if (await gdprCheckbox.count() > 0) {
+            const isChecked = await gdprCheckbox.isChecked();
+            if (!isChecked) {
+                await gdprCheckbox.check();
+                logger.debug('GDPR checkbox checked');
+            }
+        }
+
+        // Click Mail proposal button
+        logger.debug('Clicking Mail proposal button');
+        const mailButton = mainContextDetails.locator('button[type="submit"]');
+        await mailButton.click();
+
+        logger.debug('Waiting for submission to process...');
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        await page.waitForTimeout(2000);
+
+        await takeScreenshot(page, 'proposal-submitted');
+
+        // ========================================
+        // STEP 12: Navigate to agents page to extract NR quote code
+        // ========================================
+        logger.info('Navigating to agents page to extract NR quote code');
         try {
-            logger.info('Navigating to agents page to extract NR quote code');
             await page.goto('https://verzekeren.norisk.eu/agents', {
                 waitUntil: 'load',
                 timeout: CONFIG.NAVIGATION_TIMEOUT
@@ -518,32 +558,22 @@ export async function automateFormSubmission(mappedData) {
             await page.waitForTimeout(2000);
 
             // The NR code is the text of the <a> that points to this quote's proposal URL
-            const proposalLink = page.locator(`a[href*="/proposal/${urlKey}"]`).first();
-            if (await proposalLink.count() > 0) {
-                noriskCode = (await proposalLink.textContent()).trim();
-                logger.info('NR quote code extracted', { noriskCode });
+            // Look for the most recent quote (first in the list)
+            const quoteLink = page.locator('a[href*="/proposal/"]').first();
+            if (await quoteLink.count() > 0) {
+                const nrCode = (await quoteLink.textContent()).trim();
+                logger.info('NR quote code extracted', { nrCode });
+                quoteKey = nrCode;
             } else {
-                logger.warn('NR quote link not found on agents page, falling back to URL key');
+                logger.warn('Quote link not found on agents page, using URL key as fallback');
             }
         } catch (extractError) {
-            logger.warn('Failed to extract NR quote code, falling back to URL key', { error: extractError.message });
+            logger.warn('Failed to extract NR quote code, using URL key as fallback', { error: extractError.message });
         }
 
-        // Navigate back to Your Details page
-        logger.info('Navigating back to Your Details page', { url: detailsUrl });
-        await page.goto(detailsUrl, {
-            waitUntil: 'load',
-            timeout: CONFIG.NAVIGATION_TIMEOUT
-        });
-        await page.waitForLoadState('domcontentloaded');
-        await page.waitForTimeout(1000);
-
-        // Use NR code as the canonical key throughout; UUID kept internally for navigation
-        const quoteKey = noriskCode;
-        logger.info('Using NR code as quote key', { quoteKey, urlKey });
-
-        // Create quote record in storage; store urlKey so submitEmailQuote can navigate later
-        createQuoteRecord(quoteKey, mappedData.email, mappedData, urlKey);
+        // Create quote record with the actual NR code (or fallback to URL key)
+        createQuoteRecord(quoteKey, mappedData.email, mappedData);
+        updateQuoteStatus(quoteKey, 'submitted');
 
         // Save to database
         try {
@@ -562,115 +592,57 @@ export async function automateFormSubmission(mappedData) {
             logger.info('Submission saved to database', { quoteKey });
         } catch (dbError) {
             logger.error('Failed to save submission to database', { error: dbError.message, quoteKey });
-            // Don't fail the request if DB save fails
         }
 
-        // Re-establish main context after navigation
-        const mainContextDetails = page.locator('main');
-
         // ========================================
-        // STEP 10: Fill "Your Details" Form
+        // STEP 13: Handle COMPLETED mode (wait for email or not)
         // ========================================
-        logger.info('Filling "Your Details" form');
-        await fillProposalForm(mainContextDetails, mappedData);
-        await takeScreenshot(page, 'your-details-filled');
+        if (CONFIG.COMPLETED && CONFIG.IMAP.HOST) {
+            logger.info('COMPLETED mode enabled - waiting for quote email with PDF');
+            try {
+                const emailResult = await waitForQuoteEmail(quoteKey);
+                logger.info('Quote email received', {
+                    quoteKey,
+                    pdfPath: emailResult.pdfPath
+                });
 
-        // ========================================
-        // STEP 11: Handle COMPLETED mode
-        // ========================================
-        if (CONFIG.COMPLETED) {
-            logger.info('COMPLETED mode enabled - auto-submitting proposal');
-
-            // Check GDPR checkbox
-            logger.debug('Checking GDPR checkbox');
-            const gdprCheckbox = mainContextDetails.locator('input[type="checkbox"][name="gdpr"]');
-            if (await gdprCheckbox.count() > 0) {
-                const isChecked = await gdprCheckbox.isChecked();
-                if (!isChecked) {
-                    await gdprCheckbox.check();
-                    logger.debug('GDPR checkbox checked');
-                }
-            }
-
-            // Click Mail proposal button
-            logger.debug('Clicking Mail proposal button');
-            const mailButton = mainContextDetails.locator('button[type="submit"]');
-            await mailButton.click();
-
-            logger.debug('Waiting for submission to process...');
-            await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-            await page.waitForTimeout(2000);
-
-            await takeScreenshot(page, 'proposal-submitted');
-
-            // Update status
-            updateQuoteStatus(quoteKey, 'submitted');
-
-            // ========================================
-            // STEP 12: Wait for email with PDF (if IMAP configured)
-            // ========================================
-            if (CONFIG.IMAP.HOST) {
-                logger.info('Waiting for quote email with PDF');
-                try {
-                    const emailResult = await waitForQuoteEmail(quoteKey);
-                    logger.info('Quote email received', {
-                        quoteKey,
-                        pdfPath: emailResult.pdfPath
-                    });
-
-                    return {
-                        success: true,
-                        quoteKey,
-                        proposalUrl: detailsUrl,
-                        pricing,
-                        status: 'email_received',
-                        pdfPath: emailResult.pdfPath,
-                        message: 'Quote submitted and PDF received via email'
-                    };
-                } catch (error) {
-                    logger.error('Failed to receive quote email', { quoteKey, error: error.message });
-                    updateQuoteStatus(quoteKey, 'error', error.message);
-
-                    // Return success but with warning
-                    return {
-                        success: true,
-                        quoteKey,
-                        proposalUrl: detailsUrl,
-                        pricing,
-                        status: 'submitted_waiting_email',
-                        warning: 'Quote submitted but PDF not yet received via email'
-                    };
-                }
-            } else {
-                logger.info('IMAP not configured, skipping email wait');
                 return {
                     success: true,
                     quoteKey,
                     proposalUrl: detailsUrl,
                     pricing,
-                    status: 'submitted',
-                    message: 'Quote submitted, email reception not configured'
+                    status: 'email_received',
+                    pdfPath: emailResult.pdfPath,
+                    message: 'Quote submitted and PDF received via email'
+                };
+            } catch (error) {
+                logger.error('Failed to receive quote email', { quoteKey, error: error.message });
+                updateQuoteStatus(quoteKey, 'error', error.message);
+
+                // Return success but with warning
+                return {
+                    success: true,
+                    quoteKey,
+                    proposalUrl: detailsUrl,
+                    pricing,
+                    status: 'submitted_waiting_email',
+                    warning: 'Quote submitted but PDF not yet received via email'
                 };
             }
         } else {
-            // ========================================
-            // STEP 12: Draft mode - return without submission
-            // ========================================
-            logger.info('COMPLETED mode disabled - stopping at draft');
-
-            const htmlContent = await page.content();
-
-            updateQuoteStatus(quoteKey, 'draft');
-
+            // COMPLETED=false or IMAP not configured - just return after submission
+            if (!CONFIG.COMPLETED) {
+                logger.info('COMPLETED mode disabled - proposal submitted, not waiting for email');
+            } else {
+                logger.info('IMAP not configured, skipping email wait');
+            }
             return {
                 success: true,
                 quoteKey,
                 proposalUrl: detailsUrl,
                 pricing,
-                status: 'draft',
-                htmlContent,
-                csrfToken,
-                message: 'Draft ready - awaiting user confirmation to send'
+                status: 'submitted',
+                message: 'Quote submitted successfully'
             };
         }
         
@@ -750,12 +722,9 @@ export async function submitEmailQuote(quoteKey) {
         // ========================================
         // STEP 2: Navigate directly to Your Details page using quote key
         // ========================================
-        // quoteKey is now the NR code (e.g. NR000053118).
-        // Look up the internal UUID needed to construct the NoRisk URL.
-        const quoteRecord = getQuoteRecord(quoteKey);
-        const urlKey = quoteRecord?.urlKey || quoteKey;
-        const detailsUrl = `${CONFIG.FORM_URL.replace(/\?.*$/, '').replace(/\/event$/, '')}/your-details?key=${urlKey}`;
-        logger.info('Navigating to Your Details page', { url: detailsUrl, urlKey });
+        // quoteKey is the UUID from the URL (e.g. a1b2c3d4-...)
+        const detailsUrl = `${CONFIG.FORM_URL.replace(/\?.*$/, '').replace(/\/event$/, '')}/your-details?key=${quoteKey}`;
+        logger.info('Navigating to Your Details page', { url: detailsUrl, quoteKey });
 
         await page.goto(detailsUrl, {
             waitUntil: 'load',

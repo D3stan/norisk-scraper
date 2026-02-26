@@ -1106,7 +1106,8 @@ function collectFormData() {
         lastName: document.getElementById('lastName').value,
         phone: document.getElementById('phone').value,
         email: document.getElementById('email').value,
-        // Company info
+        // Company info - this form always represents a business entity
+        isBusiness: true,
         company_name: document.getElementById('company_name').value,
         company_commercial_number: document.getElementById('company_commercial_number').value,
         company_legal_form: document.getElementById('company_legal_form').value,
