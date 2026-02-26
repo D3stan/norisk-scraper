@@ -85,6 +85,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     name: 'norisk.admin.session',
+    proxy: true,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
