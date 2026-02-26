@@ -281,18 +281,20 @@ app.get('/api/quote/:quoteKey/status', (req, res) => {
     });
 });
 
-// Admin routes
-app.use('/admin', loginRoutes);
-app.use('/admin', dashboardRoutes);
-app.use('/admin', usersRoutes);
+// Admin routes (only if admin is enabled)
+if (CONFIG.ADMIN.ENABLED) {
+    app.use('/admin', loginRoutes);
+    app.use('/admin', dashboardRoutes);
+    app.use('/admin', usersRoutes);
 
-// Serve admin static files
-app.use('/admin/static', express.static(path.join(__dirname, 'admin/public')));
+    // Serve admin static files
+    app.use('/admin/static', express.static(path.join(__dirname, 'admin/public')));
 
-// Admin dashboard page (protected)
-app.get('/admin', requireAuth, (req, res) => {
-    res.sendFile('index.html', { root: './src/admin/public' });
-});
+    // Admin dashboard page (protected)
+    app.get('/admin', requireAuth, (req, res) => {
+        res.sendFile('index.html', { root: './src/admin/public' });
+    });
+}
 
 /**
  * Error handling middleware

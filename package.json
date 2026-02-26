@@ -27,6 +27,7 @@
         "express-rate-limit": "^8.2.1",
         "express-session": "^1.19.0",
         "imap": "^0.8.17",
+        "json2csv": "^6.0.0-alpha.2",
         "mailparser": "^3.6.5",
         "nodemailer": "^8.0.1",
         "playwright": "1.58.2",

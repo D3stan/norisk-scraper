@@ -107,4 +107,58 @@ router.get('/api/submissions', apiLimiter, requireAuth, validateQueryParams, (re
     }
 });
 
+// Export submissions as CSV
+router.get('/api/submissions/export', apiLimiter, requireAuth, (req, res) => {
+    try {
+        const { search = '', dateFrom = '', dateTo = '' } = req.query;
+
+        // Get all submissions (no pagination for export)
+        const filters = {
+            search: search || undefined,
+            dateFrom: dateFrom || undefined,
+            dateTo: dateTo || undefined,
+            limit: 10000, // Reasonable max
+            offset: 0
+        };
+
+        const submissions = getSubmissions(filters);
+
+        // Map to CSV-friendly format
+        const mappedSubmissions = submissions.map(row => ({
+            'ID': row.id,
+            'Data Richiesta': new Date(row.created_at).toLocaleDateString('it-IT'),
+            'Nome Cognome': row.nome_cognome || '',
+            'Ragione Sociale': row.ragione_sociale || '',
+            'Partita IVA': row.partita_iva || '',
+            'Email': row.email || '',
+            'Telefono': row.telefono || '',
+            'Codice Preventivo': row.codice_preventivo || '',
+            'Tipo Evento': row.event_type || '',
+            'Data Evento': row.event_date || '',
+            'Premio': row.premium_amount || '',
+            'Valuta': row.currency || 'EUR'
+        }));
+
+        // Generate CSV
+        const fields = [
+            'ID', 'Data Richiesta', 'Nome Cognome', 'Ragione Sociale',
+            'Partita IVA', 'Email', 'Telefono', 'Codice Preventivo',
+            'Tipo Evento', 'Data Evento', 'Premio', 'Valuta'
+        ];
+
+        const parser = new Parser({ fields, delimiter: ';' });
+        const csv = parser.parse(mappedSubmissions);
+
+        // Set headers for download
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="submissions_${new Date().toISOString().split('T')[0]}.csv"`);
+
+        res.send(csv);
+
+    } catch (error) {
+        console.error('Error exporting submissions:', error);
+        res.status(500).json({ error: 'Failed to export submissions' });
+    }
+});
+
 export default router;

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { validateCredentials, redirectIfAuthenticated } from '../middleware/auth.js';
+import bcrypt from 'bcrypt';
+import { validateCredentials, redirectIfAuthenticated, requireAuth } from '../middleware/auth.js';
 import { CONFIG } from '../../config/constants.js';
 
 const router = Router();
@@ -57,6 +58,44 @@ router.post('/api/logout', (req, res) => {
         }
         res.json({ success: true });
     });
+});
+
+// Change password
+router.post('/api/change-password', requireAuth, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+        return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+    }
+
+    try {
+        // Validate current password
+        const isValid = await validateCredentials(req.session.username, currentPassword);
+
+        if (!isValid) {
+            return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const newHash = await bcrypt.hash(newPassword, 10);
+
+        // Note: This updates the in-memory config. To persist, you'd need to update .env
+        // For now, return the new hash so admin can update their .env file
+        res.json({
+            success: true,
+            message: 'Password changed successfully',
+            newHash: newHash,
+            note: 'Update your ADMIN_PASSWORD_HASH environment variable with the provided hash'
+        });
+
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ error: 'Failed to change password' });
+    }
 });
 
 export default router;

@@ -23,9 +23,15 @@ const elements = {
     dateFilter: document.getElementById('dateFilter'),
     searchBtn: document.getElementById('searchBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
+    exportBtn: document.getElementById('exportBtn'),
+    changePasswordBtn: document.getElementById('changePasswordBtn'),
     detailModal: document.getElementById('detailModal'),
     modalBody: document.getElementById('modalBody'),
-    modalClose: document.querySelector('.modal-close')
+    modalClose: document.querySelector('.modal-close'),
+    passwordModal: document.getElementById('passwordModal'),
+    passwordModalClose: document.querySelector('.password-modal-close'),
+    changePasswordForm: document.getElementById('changePasswordForm'),
+    passwordMessage: document.getElementById('passwordMessage')
 };
 
 /**
@@ -56,6 +62,12 @@ function bindEvents() {
     // Logout
     elements.logoutBtn.addEventListener('click', handleLogout);
 
+    // Export CSV
+    elements.exportBtn.addEventListener('click', handleExportCSV);
+
+    // Change Password
+    elements.changePasswordBtn.addEventListener('click', openPasswordModal);
+
     // Modal close
     elements.modalClose.addEventListener('click', closeModal);
     elements.detailModal.addEventListener('click', (e) => {
@@ -66,10 +78,32 @@ function bindEvents() {
 
     // Escape key to close modal
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && elements.detailModal.classList.contains('active')) {
-            closeModal();
+        if (e.key === 'Escape') {
+            if (elements.detailModal.classList.contains('active')) {
+                closeModal();
+            }
+            if (elements.passwordModal.classList.contains('active')) {
+                closePasswordModal();
+            }
         }
     });
+
+    // Password modal close handlers
+    if (elements.passwordModalClose) {
+        elements.passwordModalClose.addEventListener('click', closePasswordModal);
+    }
+    if (elements.passwordModal) {
+        elements.passwordModal.addEventListener('click', (e) => {
+            if (e.target === elements.passwordModal) {
+                closePasswordModal();
+            }
+        });
+    }
+
+    // Change password form
+    if (elements.changePasswordForm) {
+        elements.changePasswordForm.addEventListener('submit', handleChangePassword);
+    }
 }
 
 /**
@@ -499,6 +533,110 @@ function formatFieldName(name) {
         .replace(/([A-Z])/g, ' $1')
         .replace(/^./, str => str.toUpperCase())
         .replace(/_/g, ' ');
+}
+
+/**
+ * Handle CSV export
+ */
+async function handleExportCSV() {
+    try {
+        const params = new URLSearchParams();
+        if (state.searchQuery) params.append('search', state.searchQuery);
+        if (state.dateFilter) params.append('dateFilter', state.dateFilter);
+
+        const response = await fetch(`/admin/api/submissions/export?${params}`);
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/admin/login';
+                return;
+            }
+            throw new Error('Export failed');
+        }
+
+        // Download the CSV file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `submissions_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+    } catch (error) {
+        console.error('Error exporting CSV:', error);
+        alert('Errore durante l\'esportazione. Riprova.');
+    }
+}
+
+/**
+ * Open password change modal
+ */
+function openPasswordModal() {
+    elements.passwordModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    elements.changePasswordForm.reset();
+    elements.passwordMessage.textContent = '';
+    elements.passwordMessage.className = 'message';
+}
+
+/**
+ * Close password change modal
+ */
+function closePasswordModal() {
+    elements.passwordModal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+/**
+ * Handle password change
+ */
+async function handleChangePassword(e) {
+    e.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (newPassword !== confirmPassword) {
+        elements.passwordMessage.textContent = 'Le password non coincidono';
+        elements.passwordMessage.className = 'message error';
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        elements.passwordMessage.textContent = 'La password deve essere di almeno 8 caratteri';
+        elements.passwordMessage.className = 'message error';
+        return;
+    }
+
+    try {
+        const response = await fetch('/admin/api/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            elements.passwordMessage.textContent = 'Password cambiata con successo! Aggiorna la variabile ADMIN_PASSWORD_HASH nel tuo file .env';
+            elements.passwordMessage.className = 'message success';
+            setTimeout(() => {
+                closePasswordModal();
+            }, 3000);
+        } else {
+            elements.passwordMessage.textContent = data.error || 'Errore durante il cambio password';
+            elements.passwordMessage.className = 'message error';
+        }
+    } catch (error) {
+        console.error('Error changing password:', error);
+        elements.passwordMessage.textContent = 'Errore di rete. Riprova.';
+        elements.passwordMessage.className = 'message error';
+    }
 }
 
 // Initialize when DOM is ready
