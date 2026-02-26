@@ -15,6 +15,7 @@ import SQLiteStoreFactory from 'better-sqlite3-session-store';
 import { initDatabase, getDatabase } from './utils/db.js';
 import loginRoutes from './admin/routes/login.js';
 import dashboardRoutes from './admin/routes/dashboard.js';
+import usersRoutes from './admin/routes/users.js';
 import { requireAuth } from './admin/middleware/auth.js';
 import Database from 'better-sqlite3';
 import fs from 'fs';
@@ -47,10 +48,22 @@ const sessionDb = new Database(path.join(dbDir, 'sessions.db'));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust proxy when behind reverse proxy (Dokploy, etc.)
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1);
-}
+// Trust proxy when behind reverse proxy (Cloudflare, Dokploy, etc.)
+// This is required for secure cookies to work behind a proxy
+app.set('trust proxy', true);
+
+// Health check endpoint for debugging
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        env: process.env.NODE_ENV,
+        secure: req.secure,
+        protocol: req.protocol,
+        'x-forwarded-proto': req.headers['x-forwarded-proto'],
+        'x-forwarded-for': req.headers['x-forwarded-for'],
+        ip: req.ip
+    });
+});
 
 // Middleware
 app.use(express.json());
@@ -73,6 +86,7 @@ app.use((req, res, next) => {
 });
 
 // Session middleware for admin
+const isProduction = process.env.NODE_ENV === 'production';
 app.use(session({
     store: new SQLiteStore({
         client: sessionDb,
@@ -87,9 +101,9 @@ app.use(session({
     name: 'norisk.admin.session',
     proxy: true,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: CONFIG.ADMIN.COOKIE_MAX_AGE
     }
 }));
@@ -270,6 +284,7 @@ app.get('/api/quote/:quoteKey/status', (req, res) => {
 // Admin routes
 app.use('/admin', loginRoutes);
 app.use('/admin', dashboardRoutes);
+app.use('/admin', usersRoutes);
 
 // Serve admin static files
 app.use('/admin/static', express.static(path.join(__dirname, 'admin/public')));

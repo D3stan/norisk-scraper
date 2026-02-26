@@ -173,6 +173,7 @@ export const CONFIG = {
 
     // Admin Dashboard Configuration
     ADMIN: {
+        ENABLED: process.env.ADMIN_ENABLED !== 'false', // Enabled by default, set to 'false' to disable
         USERNAME: process.env.ADMIN_USER || 'admin',
         PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH,
         SESSION_SECRET: process.env.ADMIN_SESSION_SECRET || 'change-this-secret-in-production',

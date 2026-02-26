@@ -54,6 +54,24 @@ export function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_date ON submissions(created_at)
     `);
 
+    // Create users table for admin management
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL UNIQUE,
+            nome_cognome TEXT,
+            is_admin INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Create index on users email
+    db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+        CREATE INDEX IF NOT EXISTS idx_users_admin ON users(is_admin)
+    `);
+
     return db;
 }
 
@@ -157,4 +175,130 @@ export function countSubmissions(filters = {}) {
 
     const stmt = db.prepare(query);
     return stmt.get(...params).count;
+}
+
+// User management functions
+export function getUsers(filters = {}) {
+    const db = getDatabase();
+
+    let query = 'SELECT id, email, nome_cognome, is_admin, created_at, updated_at FROM users WHERE 1=1';
+    const params = [];
+
+    if (filters.search) {
+        query += ` AND (email LIKE ? OR nome_cognome LIKE ?)`;
+        const searchTerm = `%${filters.search}%`;
+        params.push(searchTerm, searchTerm);
+    }
+
+    if (filters.isAdmin !== undefined) {
+        query += ' AND is_admin = ?';
+        params.push(filters.isAdmin ? 1 : 0);
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    // Pagination
+    const limit = filters.limit || 50;
+    const offset = filters.offset || 0;
+    query += ' LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const stmt = db.prepare(query);
+    return stmt.all(...params);
+}
+
+export function countUsers(filters = {}) {
+    const db = getDatabase();
+
+    let query = 'SELECT COUNT(*) as count FROM users WHERE 1=1';
+    const params = [];
+
+    if (filters.search) {
+        query += ` AND (email LIKE ? OR nome_cognome LIKE ?)`;
+        const searchTerm = `%${filters.search}%`;
+        params.push(searchTerm, searchTerm);
+    }
+
+    if (filters.isAdmin !== undefined) {
+        query += ' AND is_admin = ?';
+        params.push(filters.isAdmin ? 1 : 0);
+    }
+
+    const stmt = db.prepare(query);
+    return stmt.get(...params).count;
+}
+
+export function getUserById(id) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT id, email, nome_cognome, is_admin, created_at, updated_at FROM users WHERE id = ?');
+    return stmt.get(id);
+}
+
+export function getUserByEmail(email) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT id, email, nome_cognome, is_admin, created_at, updated_at FROM users WHERE email = ?');
+    return stmt.get(email);
+}
+
+export function createUser(data) {
+    const db = getDatabase();
+
+    const stmt = db.prepare(`
+        INSERT INTO users (email, nome_cognome, is_admin)
+        VALUES (?, ?, ?)
+        ON CONFLICT(email) DO UPDATE SET
+            nome_cognome = excluded.nome_cognome,
+            updated_at = CURRENT_TIMESTAMP
+    `);
+
+    const result = stmt.run(
+        data.email,
+        data.nomeCognome || null,
+        data.isAdmin ? 1 : 0
+    );
+
+    return result.lastInsertRowid || getUserByEmail(data.email).id;
+}
+
+export function updateUser(id, data) {
+    const db = getDatabase();
+
+    const fields = [];
+    const params = [];
+
+    if (data.nomeCognome !== undefined) {
+        fields.push('nome_cognome = ?');
+        params.push(data.nomeCognome);
+    }
+
+    if (data.isAdmin !== undefined) {
+        fields.push('is_admin = ?');
+        params.push(data.isAdmin ? 1 : 0);
+    }
+
+    if (fields.length === 0) {
+        return false;
+    }
+
+    fields.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(id);
+
+    const stmt = db.prepare(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`);
+    const result = stmt.run(...params);
+
+    return result.changes > 0;
+}
+
+export function deleteUser(id) {
+    const db = getDatabase();
+    const stmt = db.prepare('DELETE FROM users WHERE id = ?');
+    const result = stmt.run(id);
+    return result.changes > 0;
+}
+
+export function setUserAdminStatus(id, isAdmin) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE users SET is_admin = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+    const result = stmt.run(isAdmin ? 1 : 0, id);
+    return result.changes > 0;
 }

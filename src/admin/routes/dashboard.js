@@ -2,6 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { getSubmissions, countSubmissions } from '../../utils/db.js';
 import { requireAuth } from '../middleware/auth.js';
+import { Parser } from 'json2csv';
 
 const router = Router();
 
