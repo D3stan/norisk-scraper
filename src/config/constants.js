@@ -177,6 +177,7 @@ export const CONFIG = {
         USERNAME: process.env.ADMIN_USER || 'admin',
         PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH,
         SESSION_SECRET: process.env.ADMIN_SESSION_SECRET || 'change-this-secret-in-production',
+        RATE_LIMIT_SKIP_TRUST_PROXY_VALIDATION: process.env.ADMIN_RATE_LIMIT_SKIP_TRUST_PROXY_VALIDATION === 'true',
         COOKIE_MAX_AGE: 24 * 60 * 60 * 1000, // 24 hours
         COOKIE_MAX_AGE_REMEMBER: 7 * 24 * 60 * 60 * 1000 // 7 days
     }
