@@ -31,10 +31,97 @@ function formatPhoneNumber(phone) {
 }
 
 /**
+ * Waits for a field to become visible (not hidden)
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
+ * @param {string} selector - The field selector
+ * @param {string} fieldName - Human-readable field name for logging
+ * @param {number} timeout - Maximum wait time in ms (default: 5000)
+ * @returns {Promise<boolean>} True if field became visible, false otherwise
+ */
+async function waitForFieldVisible(context, selector, fieldName, timeout = 5000) {
+    const startTime = Date.now();
+    const pollInterval = 100; // Check every 100ms
+
+    while (Date.now() - startTime < timeout) {
+        try {
+            const element = context.locator(selector).first();
+            const count = await element.count();
+
+            if (count === 0) {
+                await new Promise(r => setTimeout(r, pollInterval));
+                continue;
+            }
+
+            // Check if element is hidden
+            const isHidden = await element.evaluate(el => {
+                return el.type === 'hidden' ||
+                       el.hasAttribute('data-flux-hidden') ||
+                       el.offsetParent === null || // Element or parent has display:none
+                       getComputedStyle(el).display === 'none' ||
+                       getComputedStyle(el).visibility === 'hidden';
+            }).catch(() => true);
+
+            if (!isHidden) {
+                logger.debug(`Field ${fieldName} is now visible`);
+                return true;
+            }
+
+            // Wait and check again
+            await new Promise(r => setTimeout(r, pollInterval));
+        } catch {
+            await new Promise(r => setTimeout(r, pollInterval));
+        }
+    }
+
+    logger.warn(`Timeout waiting for field ${fieldName} to become visible after ${timeout}ms`);
+    return false;
+}
+
+/**
+ * Verifies that a field value was actually set correctly
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
+ * @param {string} selector - The field selector
+ * @param {string} expectedValue - The expected value
+ * @param {string} fieldName - Human-readable field name for logging
+ * @returns {Promise<boolean>} True if value matches, false otherwise
+ */
+async function verifyFieldValue(context, selector, expectedValue, fieldName) {
+    try {
+        const element = context.locator(selector).first();
+        const count = await element.count();
+
+        if (count === 0) {
+            logger.warn(`Cannot verify ${fieldName} - element not found`);
+            return false;
+        }
+
+        const actualValue = await element.inputValue().catch(async () => {
+            // Fallback for hidden fields or elements without inputValue
+            return await element.evaluate(el => el.value);
+        });
+
+        // Normalize values for comparison (handle numeric strings)
+        const normalizedExpected = String(expectedValue).trim();
+        const normalizedActual = String(actualValue).trim();
+
+        if (normalizedActual === normalizedExpected) {
+            logger.debug(`Field ${fieldName} verified - value set correctly: ${normalizedActual}`);
+            return true;
+        }
+
+        logger.warn(`Field ${fieldName} value mismatch - expected: "${normalizedExpected}", actual: "${normalizedActual}"`);
+        return false;
+    } catch (error) {
+        logger.warn(`Failed to verify field ${fieldName}: ${error.message}`);
+        return false;
+    }
+}
+
+/**
  * Fills a text input field
  * @param {Page|Frame|Locator} context - The page, frame, or locator context
  */
-async function fillInput(context, selector, value, fieldName) {
+async function fillInput(context, selector, value, fieldName, options = {}) {
     if (!value) {
         logger.debug(`Skipping empty field: ${fieldName}`);
         return;
@@ -48,45 +135,94 @@ async function fillInput(context, selector, value, fieldName) {
             logger.debug(`Formatted phone number: ${originalValue} -> ${value}`);
         }
     }
-    
-    try {
-        // Add configurable delay before filling
-        if (CONFIG.FIELD_DELAY > 0) {
-            const page = getPage(context);
-            await page.waitForTimeout(CONFIG.FIELD_DELAY);
+
+    const maxRetries = options.maxRetries || 3;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+        attempt++;
+
+        try {
+            // Add configurable delay before filling
+            if (CONFIG.FIELD_DELAY > 0) {
+                const page = getPage(context);
+                await page.waitForTimeout(CONFIG.FIELD_DELAY);
+            }
+
+            const element = context.locator(selector).first();
+            const count = await element.count();
+
+            if (count === 0) {
+                if (attempt === maxRetries) {
+                    logger.warn(`Field not found: ${fieldName}`, { selector });
+                    return;
+                }
+                await new Promise(r => setTimeout(r, 200));
+                continue;
+            }
+
+            // Check if element is hidden
+            const isHidden = await element.evaluate(el => {
+                return el.type === 'hidden' || el.hasAttribute('data-flux-hidden');
+            });
+
+            if (isHidden && !options.waitForVisible) {
+                // For hidden fields, set value directly via JavaScript
+                logger.debug(`Setting hidden field via JS: ${fieldName}`);
+                await element.evaluate((el, val) => {
+                    el.value = val;
+                    // Dispatch input and change events to trigger Livewire
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }, String(value));
+
+                // Verify the value was set
+                await new Promise(r => setTimeout(r, 100)); // Small delay for DOM update
+                const verified = await verifyFieldValue(context, selector, value, fieldName);
+                if (verified || attempt === maxRetries) {
+                    if (!verified) {
+                        logger.warn(`Field ${fieldName} value verification failed after ${attempt} attempts`);
+                    }
+                    return;
+                }
+                // Retry if verification failed
+                continue;
+            } else {
+                // For visible fields, use fill on the element
+                // Clear the field first to ensure fresh input
+                await element.clear({ timeout: 5000 });
+                await element.fill(String(value), { timeout: 5000 });
+
+                // Trigger input event to ensure Livewire registers the change
+                await element.evaluate(el => {
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+
+                // Verify the value was set
+                await new Promise(r => setTimeout(r, 100)); // Small delay for DOM update
+                const verified = await verifyFieldValue(context, selector, value, fieldName);
+                if (verified) {
+                    logger.debug(`Filled field: ${fieldName}`, { value });
+                    return;
+                }
+
+                if (attempt === maxRetries) {
+                    logger.error(`Failed to verify field ${fieldName} after ${maxRetries} attempts`);
+                    throw new Error(`Field ${fieldName} verification failed - value not set correctly`);
+                }
+
+                logger.debug(`Retrying field ${fieldName} (attempt ${attempt + 1}/${maxRetries})`);
+                await new Promise(r => setTimeout(r, 300));
+            }
+        } catch (error) {
+            if (attempt === maxRetries) {
+                logger.error(`Failed to fill field: ${fieldName}`, { selector, error: error.message });
+                throw error;
+            }
+            logger.debug(`Retrying field ${fieldName} after error: ${error.message} (attempt ${attempt + 1}/${maxRetries})`);
+            await new Promise(r => setTimeout(r, 300));
         }
-        
-        const element = context.locator(selector).first();
-        const count = await element.count();
-        
-        if (count === 0) {
-            logger.warn(`Field not found: ${fieldName}`, { selector });
-            return;
-        }
-        
-        // Check if element is hidden
-        const isHidden = await element.evaluate(el => {
-            return el.type === 'hidden' || el.hasAttribute('data-flux-hidden');
-        });
-        
-        if (isHidden) {
-            // For hidden fields, set value directly via JavaScript
-            logger.debug(`Setting hidden field via JS: ${fieldName}`);
-            await element.evaluate((el, val) => {
-                el.value = val;
-                // Dispatch input and change events to trigger Livewire
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-            }, String(value));
-        } else {
-            // For visible fields, use fill on the element
-            await element.fill(String(value), { timeout: 5000 });
-        }
-        
-        logger.debug(`Filled field: ${fieldName}`, { value });
-    } catch (error) {
-        logger.error(`Failed to fill field: ${fieldName}`, { selector, error: error.message });
-        throw error;
     }
 }
 
@@ -359,31 +495,55 @@ export async function selectCoverages(context, coverages = {}) {
  */
 async function handleRoleConditionalFields(context, mappedData) {
     const role = mappedData.role;
-    
+
     // Only intermediary and proxy roles require additional fields
     if (role !== 'intermediary' && role !== 'proxy') {
         return;
     }
-    
+
     try {
         const page = getPage(context);
         // Wait for conditional fields to appear (Alpine.js/Livewire)
-        await page.waitForTimeout(300);
-        
+        await page.waitForTimeout(100);
+
         // Fill company name
         if (mappedData.role_company) {
-            await fillInput(context, CONFIG.SELECTORS.COMPANY_NAME, mappedData.role_company, 'Role Company Name');
+            const companyVisible = await waitForFieldVisible(
+                context,
+                CONFIG.SELECTORS.COMPANY_NAME,
+                'Role Company Name',
+                3000
+            );
+
+            if (companyVisible) {
+                await fillInput(context, CONFIG.SELECTORS.COMPANY_NAME, mappedData.role_company, 'Role Company Name');
+            } else {
+                logger.warn('Role Company Name field did not become visible - trying to fill anyway');
+                await fillInput(context, CONFIG.SELECTORS.COMPANY_NAME, mappedData.role_company, 'Role Company Name');
+            }
         } else {
             logger.warn(`Company name not provided for role: ${role}`);
         }
-        
+
         // Fill AFM/verification number
         if (mappedData.role_verification) {
-            await fillInput(context, CONFIG.SELECTORS.AFM_NUMBER, mappedData.role_verification, 'AFM/Verification Number');
+            const afmVisible = await waitForFieldVisible(
+                context,
+                CONFIG.SELECTORS.AFM_NUMBER,
+                'AFM/Verification Number',
+                3000
+            );
+
+            if (afmVisible) {
+                await fillInput(context, CONFIG.SELECTORS.AFM_NUMBER, mappedData.role_verification, 'AFM/Verification Number');
+            } else {
+                logger.warn('AFM/Verification Number field did not become visible - trying to fill anyway');
+                await fillInput(context, CONFIG.SELECTORS.AFM_NUMBER, mappedData.role_verification, 'AFM/Verification Number');
+            }
         } else {
             logger.warn(`Verification number not provided for role: ${role}`);
         }
-        
+
         logger.debug(`Filled conditional fields for role: ${role}`);
     } catch (error) {
         logger.error(`Failed to fill role conditional fields for ${role}`, { error: error.message });
@@ -401,27 +561,55 @@ async function handleConditionalFields(context, coverageType, coverages) {
     logger.debug(`handleConditionalFields called for: ${coverageType}`);
     try {
         const page = getPage(context);
-        // Wait for conditional fields to appear (Alpine.js x-show)
-        await page.waitForTimeout(300);
-        
+
+        // First, wait a bit for Alpine.js/Livewire to start processing
+        await page.waitForTimeout(100);
+
         switch (coverageType) {
             case 'cancellation_costs':
                 // Budget field appears
                 if (coverages.budget) {
-                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET, coverages.budget, 'Budget');
+                    // Wait for the field to become visible first
+                    const budgetVisible = await waitForFieldVisible(
+                        context,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET,
+                        'Budget',
+                        5000
+                    );
+
+                    if (budgetVisible) {
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET, coverages.budget, 'Budget');
+                    } else {
+                        logger.warn('Budget field did not become visible - trying to fill anyway with retries');
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET, coverages.budget, 'Budget');
+                    }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
-              
+
             case 'cancellation_income':
                 // Income estimate field appears
                 if (coverages.cancellation_income_estimate) {
-                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE, 
-                                   coverages.cancellation_income_estimate, 'Income Estimate');
+                    // Wait for the field to become visible first
+                    const incomeVisible = await waitForFieldVisible(
+                        context,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE,
+                        'Income Estimate',
+                        5000
+                    );
+
+                    if (incomeVisible) {
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE,
+                                       coverages.cancellation_income_estimate, 'Income Estimate');
+                    } else {
+                        logger.warn('Income Estimate field did not become visible - trying to fill anyway with retries');
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE,
+                                       coverages.cancellation_income_estimate, 'Income Estimate');
+                    }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
-              
+
             case 'liability':
                 logger.debug('Handling liability conditional fields');
                 // Radio buttons for liability amount appear (€2.5M or €5M)
@@ -429,6 +617,9 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 const liabilityAmount = coverages.higher_liability || coverages.liability?.amount || '2500000';
                 logger.debug(`Liability amount to select: ${liabilityAmount}`);
                 if (liabilityAmount) {
+                    // Wait a bit for radio buttons to appear
+                    await page.waitForTimeout(300);
+
                     // Try multiple selector patterns
                     const selectorsToTry = [
                         `${CONFIG.SELECTORS.CONDITIONAL_FIELDS.HIGHER_LIABILITY}[value="${liabilityAmount}"]`,
@@ -465,25 +656,51 @@ async function handleConditionalFields(context, coverageType, coverages) {
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
-              
+
             case 'equipment':
                 // Equipment value field appears
                 if (coverages.equipment_value) {
-                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE, 
-                                   coverages.equipment_value, 'Equipment Value');
+                    const equipmentVisible = await waitForFieldVisible(
+                        context,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE,
+                        'Equipment Value',
+                        5000
+                    );
+
+                    if (equipmentVisible) {
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE,
+                                       coverages.equipment_value, 'Equipment Value');
+                    } else {
+                        logger.warn('Equipment Value field did not become visible - trying to fill anyway with retries');
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE,
+                                       coverages.equipment_value, 'Equipment Value');
+                    }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
-              
+
             case 'money':
                 // Money value field appears
                 if (coverages.money_value) {
-                    await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE, 
-                                   coverages.money_value, 'Money Value');
+                    const moneyVisible = await waitForFieldVisible(
+                        context,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE,
+                        'Money Value',
+                        5000
+                    );
+
+                    if (moneyVisible) {
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE,
+                                       coverages.money_value, 'Money Value');
+                    } else {
+                        logger.warn('Money Value field did not become visible - trying to fill anyway with retries');
+                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE,
+                                       coverages.money_value, 'Money Value');
+                    }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
-              
+
             case 'accident':
                 // Multiple accident-related fields appear inside an Alpine.js x-show div.
                 // We must wait for each select to be visible before interacting,
