@@ -49,8 +49,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Trust proxy when behind reverse proxy (Cloudflare, Dokploy, etc.)
-// This is required for secure cookies to work behind a proxy
-app.set('trust proxy', true);
+// This is required for secure cookies to work behind a proxy.
+// Use explicit hop count (not boolean true) to avoid permissive trust-proxy behavior.
+const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS || '1', 10);
+app.set('trust proxy', Number.isNaN(trustProxyHops) ? 1 : trustProxyHops);
 
 // Health check endpoint for debugging
 app.get('/health', (req, res) => {

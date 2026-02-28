@@ -12,7 +12,10 @@ const loginLimiter = rateLimit({
     max: 5,
     message: { error: 'Too many login attempts. Please try again later.' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    validate: {
+        trustProxy: !CONFIG.ADMIN.RATE_LIMIT_SKIP_TRUST_PROXY_VALIDATION
+    }
 });
 
 // Serve login page
