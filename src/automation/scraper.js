@@ -557,15 +557,35 @@ export async function automateFormSubmission(mappedData) {
             await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(2000);
 
-            // The NR code is the text of the <a> that points to this quote's proposal URL
-            // Look for the most recent quote (first in the list)
-            const quoteLink = page.locator('a[href*="/proposal/"]').first();
-            if (await quoteLink.count() > 0) {
-                const nrCode = (await quoteLink.textContent()).trim();
-                logger.info('NR quote code extracted', { nrCode });
-                quoteKey = nrCode;
+            // Extract NR code robustly. Some proposal links now have label text like "Download PDF".
+            // Accept only values that match NR code format, otherwise keep URL key fallback.
+            const nrCodePattern = /^NR\d+$/i;
+            const quoteLinks = page.locator('a[href*="/proposal/"]');
+            const linkCount = await quoteLinks.count();
+
+            let extractedNrCode = null;
+            for (let i = 0; i < linkCount; i++) {
+                const link = quoteLinks.nth(i);
+                const linkText = ((await link.textContent()) || '').trim();
+                const href = (await link.getAttribute('href')) || '';
+
+                if (nrCodePattern.test(linkText)) {
+                    extractedNrCode = linkText.toUpperCase();
+                    break;
+                }
+
+                const hrefMatch = href.match(/(NR\d+)/i);
+                if (hrefMatch?.[1]) {
+                    extractedNrCode = hrefMatch[1].toUpperCase();
+                    break;
+                }
+            }
+
+            if (extractedNrCode) {
+                logger.info('NR quote code extracted', { nrCode: extractedNrCode });
+                quoteKey = extractedNrCode;
             } else {
-                logger.warn('Quote link not found on agents page, using URL key as fallback');
+                logger.warn('NR quote code not found on agents page, using URL key as fallback');
             }
         } catch (extractError) {
             logger.warn('Failed to extract NR quote code, using URL key as fallback', { error: extractError.message });
