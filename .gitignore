@@ -7,3 +7,4 @@ screenshots/
 package-lock.json
 *.db
 *.db*
+storage/
