@@ -557,27 +557,54 @@ export async function automateFormSubmission(mappedData) {
             await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(2000);
 
-            // Extract NR code robustly. Some proposal links now have label text like "Download PDF".
-            // Accept only values that match NR code format, otherwise keep URL key fallback.
+            // Extract NR code robustly using the agents list item that matches this proposal UUID.
+            // The visible NR code is in links like /agents/proposals/{uuid}, while /proposal/... links may be "Download PDF".
             const nrCodePattern = /^NR\d+$/i;
-            const quoteLinks = page.locator('a[href*="/proposal/"]');
-            const linkCount = await quoteLinks.count();
-
             let extractedNrCode = null;
-            for (let i = 0; i < linkCount; i++) {
-                const link = quoteLinks.nth(i);
-                const linkText = ((await link.textContent()) || '').trim();
-                const href = (await link.getAttribute('href')) || '';
 
-                if (nrCodePattern.test(linkText)) {
-                    extractedNrCode = linkText.toUpperCase();
-                    break;
+            const tryExtractFromLinks = async (links) => {
+                const count = await links.count();
+                for (let i = 0; i < count; i++) {
+                    const link = links.nth(i);
+                    const linkText = ((await link.textContent()) || '').trim();
+                    const href = (await link.getAttribute('href')) || '';
+
+                    if (nrCodePattern.test(linkText)) {
+                        return linkText.toUpperCase();
+                    }
+
+                    const hrefMatch = href.match(/(NR\d+)/i);
+                    if (hrefMatch?.[1]) {
+                        return hrefMatch[1].toUpperCase();
+                    }
                 }
+                return null;
+            };
 
-                const hrefMatch = href.match(/(NR\d+)/i);
-                if (hrefMatch?.[1]) {
-                    extractedNrCode = hrefMatch[1].toUpperCase();
-                    break;
+            // Primary selector: exact proposal row by URL key
+            if (urlKey) {
+                const exactProposalLinks = page.locator(`a[href*="/agents/proposals/${urlKey}"]`);
+                extractedNrCode = await tryExtractFromLinks(exactProposalLinks);
+            }
+
+            // Fallback 1: any proposal id link in list
+            if (!extractedNrCode) {
+                const proposalIdLinks = page.locator('a[href*="/agents/proposals/"]');
+                extractedNrCode = await tryExtractFromLinks(proposalIdLinks);
+            }
+
+            // Fallback 2: global NR-looking anchor text
+            if (!extractedNrCode) {
+                const nrTextLinks = page.locator('a');
+                extractedNrCode = await tryExtractFromLinks(nrTextLinks);
+            }
+
+            // Fallback 3: parse entire HTML as last resort
+            if (!extractedNrCode) {
+                const html = await page.content();
+                const htmlMatch = html.match(/\bNR\d{6,}\b/i);
+                if (htmlMatch?.[0]) {
+                    extractedNrCode = htmlMatch[0].toUpperCase();
                 }
             }
 
