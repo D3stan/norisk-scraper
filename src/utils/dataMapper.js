@@ -60,7 +60,7 @@ export function mapFormData(italianData) {
         visitors: italianData.visitors || 0,
         description: italianData.description || '',
         
-        // Location (used in both page 1 and proposal page)
+        // Event location (page 1)
         venue_description: italianData.venueDescription || '',
         address: italianData.address || '',
         house_number: italianData.houseNumber || '',
@@ -69,8 +69,15 @@ export function mapFormData(italianData) {
         // region: normalizeCountryCode(italianData.country),
         region: italianData.country || '',
         // Country for proposal page - Flux UI expects trailing space for most countries
-        country: normalizeCountryCode(italianData.country || 'nl'),
+        // Prefer policyholder/company country when available
+        country: normalizeCountryCode(italianData.company_country || italianData.companyCountry || italianData.country || 'nl'),
         environment: italianData.environment || 'both',
+
+        // Policyholder address (Your Details page)
+        policyholder_address: italianData.company_address || italianData.companyAddress || italianData.address || '',
+        policyholder_house_number: italianData.company_house_number || italianData.companyHouseNumber || italianData.houseNumber || '',
+        policyholder_zipcode: italianData.company_zipcode || italianData.companyZipcode || italianData.zipcode || '',
+        policyholder_city: italianData.company_city || italianData.companyCity || italianData.city || '',
         
         // Proposal page specific fields
         is_business: italianData.isBusiness || false,

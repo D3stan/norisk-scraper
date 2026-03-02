@@ -869,11 +869,16 @@ export async function fillProposalForm(context, mappedData) {
             // STEP 3: Fill Common Address Fields
             // ========================================
             logger.debug('Filling common address fields');
+
+            const policyholderAddress = mappedData.policyholder_address || mappedData.address;
+            const policyholderHouseNumber = mappedData.policyholder_house_number || mappedData.house_number;
+            const policyholderZipcode = mappedData.policyholder_zipcode || mappedData.zipcode;
+            const policyholderCity = mappedData.policyholder_city || mappedData.city;
             
-            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ADDRESS, mappedData.address, 'Address');
-            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.HOUSE_NUMBER, mappedData.house_number, 'House Number');
-            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ZIPCODE, mappedData.zipcode, 'Zipcode');
-            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.CITY, mappedData.city, 'City');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ADDRESS, policyholderAddress, 'Policyholder Address');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.HOUSE_NUMBER, policyholderHouseNumber, 'Policyholder House Number');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.ZIPCODE, policyholderZipcode, 'Policyholder Zipcode');
+            await fillInput(context, CONFIG.SELECTORS.YOUR_DETAILS.CITY, policyholderCity, 'Policyholder City');
             
             // Country selector (custom UI component)
             await selectDropdown(context, CONFIG.SELECTORS.YOUR_DETAILS.COUNTRY, mappedData.country, 'Country');
