@@ -6,7 +6,7 @@ TARGET_DIR="~/norisk-scraper"
 ARCHIVE_NAME="norisk-scraper-deploy.tar.gz"
 
 echo "📦 Creating archive (excluding node_modules, .git, and storage)..."
-tar --exclude="node_modules" --exclude=".git" --exclude="storage" --exclude="logs" --exclude="screenshots" --exclude="norisk-wordpress" -czf $ARCHIVE_NAME .
+tar --exclude="node_modules" --exclude=".git" --exclude="storage" --exclude="logs" --exclude="screenshots" --exclude="norisk-wordpress" --exclude="docs" --exclude="package-lock.json" --exclude="database" -czf $ARCHIVE_NAME .
 
 echo "🚀 Uploading to VPS ($VPS)..."
 # Create target directory if it doesn't exist and upload
