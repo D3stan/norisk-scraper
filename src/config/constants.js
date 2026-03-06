@@ -110,10 +110,14 @@ export const CONFIG = {
         // Conditional Fields (Step 2)
         CONDITIONAL_FIELDS: {
             BUDGET: 'input[name="budget"]',
+            BUDGET_FORMATTED: 'input[name="budget_formatted"]',
             INCOME_ESTIMATE: 'input[name="cancellation_income_estimate"]',
+            INCOME_ESTIMATE_FORMATTED: 'input[name="cancellation_income_estimate_formatted"]',
             HIGHER_LIABILITY: 'input[name="higher_liability"]',
             EQUIPMENT_VALUE: 'input[name="equipment_value"]',
+            EQUIPMENT_VALUE_FORMATTED: 'input[name="equipment_value_formatted"]',
             MONEY_VALUE: 'input[name="money_value"]',
+            MONEY_VALUE_FORMATTED: 'input[name="money_value_formatted"]',
             ACCIDENT_MAN_DAYS: 'select[name="accident_man_days"]',
             ACCIDENT_PARTICIPANTS: 'select[name="accident_man_days_participants"]',
             ACCIDENT_SPORT: 'input[type="checkbox"][name="accident_man_days_participants_sport"]'

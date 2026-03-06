@@ -31,6 +31,50 @@ function formatPhoneNumber(phone) {
 }
 
 /**
+ * Fills a money-masked input field (Alpine.js x-mask:dynamic)
+ * This fills the visible formatted input and triggers events so Alpine.js updates the hidden field
+ * @param {Page|Frame|Locator} context - The page, frame, or locator context
+ * @param {string} visibleSelector - The visible formatted input selector (e.g., input[name="budget_formatted"])
+ * @param {string} value - The numeric value to enter
+ * @param {string} fieldName - Human-readable field name for logging
+ */
+async function fillMoneyMaskedField(context, visibleSelector, value, fieldName) {
+    logger.debug(`Filling money-masked field: ${fieldName}`, { value, selector: visibleSelector });
+
+    try {
+        const visibleInput = context.locator(visibleSelector).first();
+        const count = await visibleInput.count();
+
+        if (count === 0) {
+            throw new Error(`Visible input not found for ${fieldName}: ${visibleSelector}`);
+        }
+
+        // Clear and fill the visible input
+        await visibleInput.fill('');
+        await visibleInput.fill(String(value));
+
+        // Trigger input event for Alpine.js x-model binding
+        await visibleInput.evaluate((el, val) => {
+            el.value = val;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }, String(value));
+
+        // Wait a moment for Alpine.js mask to process
+        await getPage(context).waitForTimeout(300);
+
+        // Verify the value was set
+        const actualValue = await visibleInput.inputValue();
+        logger.debug(`Field ${fieldName} verified - value set: ${actualValue}`);
+
+        return true;
+    } catch (error) {
+        logger.error(`Failed to fill money-masked field: ${fieldName}`, { error: error.message });
+        throw error;
+    }
+}
+
+/**
  * Waits for a field to become visible (not hidden)
  * @param {Page|Frame|Locator} context - The page, frame, or locator context
  * @param {string} selector - The field selector
@@ -562,49 +606,62 @@ async function handleConditionalFields(context, coverageType, coverages) {
     try {
         const page = getPage(context);
 
-        // First, wait a bit for Alpine.js/Livewire to start processing
-        await page.waitForTimeout(100);
+        // Wait for Alpine.js/Livewire to process the checkbox change
+        // The money-masked fields need time to initialize
+        await page.waitForTimeout(800);
 
         switch (coverageType) {
             case 'cancellation_costs':
-                // Budget field appears
+                // Budget field appears (money-masked, use visible formatted input)
                 if (coverages.budget) {
-                    // Wait for the field to become visible first
+                    // Wait for Alpine.js to process the checkbox change first
+                    await page.waitForTimeout(500);
+
+                    // Wait for the visible formatted field to become visible
                     const budgetVisible = await waitForFieldVisible(
                         context,
-                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET_FORMATTED,
                         'Budget',
                         5000
                     );
 
                     if (budgetVisible) {
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET, coverages.budget, 'Budget');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET_FORMATTED,
+                            coverages.budget, 'Budget');
                     } else {
-                        logger.warn('Budget field did not become visible - trying to fill anyway with retries');
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET, coverages.budget, 'Budget');
+                        logger.warn('Budget field did not become visible - trying to fill anyway');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.BUDGET_FORMATTED,
+                            coverages.budget, 'Budget');
                     }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
 
             case 'cancellation_income':
-                // Income estimate field appears
+                // Income estimate field appears (money-masked, use visible formatted input)
                 if (coverages.cancellation_income_estimate) {
-                    // Wait for the field to become visible first
+                    // Wait for Alpine.js to process the checkbox change first
+                    await page.waitForTimeout(500);
+
+                    // Wait for the visible formatted field to become visible
                     const incomeVisible = await waitForFieldVisible(
                         context,
-                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE_FORMATTED,
                         'Income Estimate',
                         5000
                     );
 
                     if (incomeVisible) {
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE,
-                                       coverages.cancellation_income_estimate, 'Income Estimate');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE_FORMATTED,
+                            coverages.cancellation_income_estimate, 'Income Estimate');
                     } else {
-                        logger.warn('Income Estimate field did not become visible - trying to fill anyway with retries');
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE,
-                                       coverages.cancellation_income_estimate, 'Income Estimate');
+                        logger.warn('Income Estimate field did not become visible - trying to fill anyway');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.INCOME_ESTIMATE_FORMATTED,
+                            coverages.cancellation_income_estimate, 'Income Estimate');
                     }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
@@ -658,44 +715,54 @@ async function handleConditionalFields(context, coverageType, coverages) {
                 break;
 
             case 'equipment':
-                // Equipment value field appears
+                // Equipment value field appears (money-masked, use visible formatted input)
                 if (coverages.equipment_value) {
+                    // Wait for Alpine.js to process the checkbox change first
+                    await page.waitForTimeout(500);
+
                     const equipmentVisible = await waitForFieldVisible(
                         context,
-                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE_FORMATTED,
                         'Equipment Value',
                         5000
                     );
 
                     if (equipmentVisible) {
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE,
-                                       coverages.equipment_value, 'Equipment Value');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE_FORMATTED,
+                            coverages.equipment_value, 'Equipment Value');
                     } else {
-                        logger.warn('Equipment Value field did not become visible - trying to fill anyway with retries');
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE,
-                                       coverages.equipment_value, 'Equipment Value');
+                        logger.warn('Equipment Value field did not become visible - trying to fill anyway');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.EQUIPMENT_VALUE_FORMATTED,
+                            coverages.equipment_value, 'Equipment Value');
                     }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
                 break;
 
             case 'money':
-                // Money value field appears
+                // Money value field appears (money-masked, use visible formatted input)
                 if (coverages.money_value) {
+                    // Wait for Alpine.js to process the checkbox change first
+                    await page.waitForTimeout(500);
+
                     const moneyVisible = await waitForFieldVisible(
                         context,
-                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE,
+                        CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE_FORMATTED,
                         'Money Value',
                         5000
                     );
 
                     if (moneyVisible) {
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE,
-                                       coverages.money_value, 'Money Value');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE_FORMATTED,
+                            coverages.money_value, 'Money Value');
                     } else {
-                        logger.warn('Money Value field did not become visible - trying to fill anyway with retries');
-                        await fillInput(context, CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE,
-                                       coverages.money_value, 'Money Value');
+                        logger.warn('Money Value field did not become visible - trying to fill anyway');
+                        await fillMoneyMaskedField(context,
+                            CONFIG.SELECTORS.CONDITIONAL_FIELDS.MONEY_VALUE_FORMATTED,
+                            coverages.money_value, 'Money Value');
                     }
                     await page.waitForTimeout(CONFIG.FIELD_DELAY || 500);
                 }
